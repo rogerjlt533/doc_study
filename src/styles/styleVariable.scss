@@ -1,0 +1,19 @@
+// 颜色变量
+$purple: #6C56F6;
+$purple2: #44445F;
+$green: #49d3bd;
+$yellow: #EFCB6C;
+$yellow-tag: #f5dfa5;
+$warning: #E6A23C;
+$error: #b22222;
+
+.error{
+    color: $error !important
+}
+
+
+@mixin flexAlignJustify($align, $justify){
+    display: flex;
+    align-items: $align;
+    justify-content: $justify;
+}
