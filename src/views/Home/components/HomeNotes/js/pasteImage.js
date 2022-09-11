@@ -1,11 +1,19 @@
-import { Node, nodeInputRule, Extension } from '@tiptap/core';
+import  { Node, nodeInputRule, Extension }  from  '@tiptap/core' ;
 import { Plugin } from 'prosemirror-state';
 // 用于图片粘贴上传
 import {ElLoading, ElMessage} from "element-plus";
 import axios from "axios";
 import { getToken } from "@/utils/auth";
-import bus from '@/utils/bus'
+// import  { dropImagePlugin, UploadFn }  from  './drop_image' ;
 
+/**
+ * Matches following attributes in Markdown-typed image: [, alt, src, title]
+ *
+ * Example:
+ * ![Lorem](image.jpg) -> [, "Lorem", "image.jpg"]
+ * ![](image.jpg "Ipsum") -> [, "", "image.jpg", "Ipsum"]
+ * ![Lorem](image.jpg "Ipsum") -> [, "Lorem", "image.jpg", "Ipsum"]
+ */
 const IMAGE_INPUT_REGEX = /!\[(.+|:?)\]\((\S+)(?:(?:\s+)["'](\S+)["'])?\)/;
 export const inputRegex = /(!\[(.+|:?)]\((\S+)(?:(?:\s+)["'](\S+)["'])?\))/
 
@@ -41,10 +49,11 @@ async function uploadFn(file) {
     }
 }
 
-export function createImageExtension ( func ) {
+export function createImageExtension () {
     return Node.create({
         name: 'image',
-        group: 'block',
+        inline: true,
+        group: 'inline',
         draggable: true,
         addAttributes: () => ({
             src: {},
@@ -69,6 +78,7 @@ export function createImageExtension ( func ) {
             },
         }],
         renderHTML: ({ HTMLAttributes }) => {
+            console.log("123123123asdasdasd")
             return ['img', HTMLAttributes]
         } ,
 
@@ -113,13 +123,11 @@ export function createImageExtension ( func ) {
 
                                     if (uploadFn && image) {
                                         uploadFn(image).then((src) => {
-                                            func(src)
-                                            // bus.emit('handlePasteImage', { type, src })
-                                            // const node = schema.nodes.image.create({
-                                            // 	src: src
-                                            // });
-                                            // const transaction = view.state.tr.replaceSelectionWith(node);
-                                            // view.dispatch(transaction);
+                                            const node = schema.nodes.image.create({
+                                                src: src,
+                                            });
+                                            const transaction = view.state.tr.replaceSelectionWith(node);
+                                            view.dispatch(transaction);
                                         });
                                     }
                                 } else {

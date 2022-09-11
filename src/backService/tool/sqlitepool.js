@@ -9,13 +9,12 @@ exports.empty = function (value) {
     return false
 }
 
-
 /**
  * 创建链接
  * @returns {sqlite3.cached.Database|*|*}
  */
 exports.connect = function () {
-    return new Database(path.join(env.binDir(), 'tnote.db'), { verbose: null })
+    return new Database(path.join(env.binDir(), 'tnote.db'), { verbose: console.log })
 }
 
 exports.insert = function (query, params = [], retries = 0) {
