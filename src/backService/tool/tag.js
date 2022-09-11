@@ -10,9 +10,8 @@ const sd = require('silly-datetime');
  */
 exports.create = async function (user_id, tag_name) {
     const save_time = common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
-    const initial = common.initial(tag_name)
-    const sql = "INSERT INTO tags(user_id, tag, initial, created_at, updated_at) VALUES (?, ?, ?, ?, ?)"
-    return await sqlite.insert(sql, [user_id, tag_name, initial, save_time, save_time])
+    const sql = "INSERT INTO tags(user_id, tag, created_at, updated_at) VALUES (?, ?, ?, ?)"
+    return await sqlite.insert(sql, [user_id, tag_name, save_time, save_time])
 }
 
 /**
@@ -24,45 +23,6 @@ exports.create = async function (user_id, tag_name) {
 exports.findByTag = async function (user_id, tag) {
     const sql = "SELECT * FROM tags WHERE tag=? and user_id=? and deleted_at is null"
     return await sqlite.get(sql, [tag, user_id])
-}
-
-/**
- * 获取对应标签记录
- * @param id
- * @returns {Promise<any>}
- */
-exports.get = async function (id) {
-    const sql = "SELECT * FROM tags WHERE id=? and deleted_at is null"
-    return await sqlite.get(sql, [id])
-}
-
-/**
- * 修改声母
- * @param tag_id
- * @param initial
- * @returns {Promise<boolean>}
- */
-exports.setInitial = async function (tag_id, initial) {
-    if (common.empty(tag_id)) {
-        return false
-    }
-    const save_time = sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
-    const sql = "UPDATE tags SET initial=?, updated_at=? WHERE id=? and deleted_at is null"
-    const res = await sqlite.update(sql, [initial, save_time, tag_id])
-    return res > 0 ? true : false
-}
-
-/**
- * 空声母标签
- * @param columns
- * @returns {Promise<void>}
- */
-exports.emptyInitialTags = async function (columns = ['id', 'tag']) {
-    columns = columns.join(',')
-    const options = []
-    let sql = "select #COLUMNS# from tags where initial is null OR LENGTH(initial)=0"
-    sql = sql.replace('#COLUMNS#', columns)
-    return await sqlite.all(sql, options)
 }
 
 /**
@@ -102,12 +62,10 @@ exports.noteRelations = async function (note_id) {
  * @param user_id
  * @param collection_id
  * @param is_group
- * @param keyword
- * @param note_type
  * @param columns
  * @returns {Promise<any>}
  */
-exports.tags = async function (user_id, collection_id, is_group, keyword, note_type = 0, columns = ['tags.id', 'tags.tag', 'tags.is_top']) {
+exports.tags = async function (user_id, collection_id, is_group, columns = ['tags.id', 'tags.tag', 'tags.is_top']) {
     columns = columns.join(',')
     const condition = [], options = []
     let sql = "select DISTINCT #COLUMNS# from tags" +
@@ -120,56 +78,9 @@ exports.tags = async function (user_id, collection_id, is_group, keyword, note_t
         condition.push('notes.collection_id=?')
         options.push(collection_id)
     }
-    if (!common.empty(keyword)) {
-        condition.push("tags.tag like '%" + keyword + "%'")
-    }
     if (is_group === 1) {
         condition.push('tags.user_id=?')
         options.push(user_id)
-    }
-    if (!common.empty(note_type) && note_type > 0) {
-        condition.push('notes.note_type=?')
-        options.push(note_type)
-    }
-    condition.push('notes.deleted_at is null and collections.deleted_at is null')
-    sql = sql.replace('#COLUMNS#', columns)
-    sql = sql.replace('#CONDITION#', condition.join(' and '))
-    return await sqlite.all(sql, options)
-}
-
-/**
- * 获取标签列表
- * @param user_id
- * @param collection_id
- * @param is_group
- * @param keyword
- * @param note_type
- * @param columns
- * @returns {Promise<any>}
- */
-exports.trashTags = async function (user_id, collection_id, is_group, keyword, note_type = 0, columns = ['tags.id', 'tags.tag', 'tags.is_top']) {
-    columns = columns.join(',')
-    const condition = [], options = []
-    let sql = "select DISTINCT #COLUMNS# from tags" +
-        " left join note_tag_relation on tags.id=note_tag_relation.tag_id" +
-        " left join notes on notes.id=note_tag_relation.note_id" +
-        " left join collections on collections.id=notes.collection_id" +
-        " where #CONDITION#"
-    condition.push('notes.status=0')
-    if (!common.empty(collection_id)) {
-        condition.push('notes.collection_id=?')
-        options.push(collection_id)
-    }
-    if (!common.empty(keyword)) {
-        condition.push("tags.tag like '%" + keyword + "%'")
-    }
-    if (is_group === 1) {
-        condition.push('tags.user_id=?')
-        options.push(user_id)
-    }
-    if (!common.empty(note_type) && note_type > 0) {
-        condition.push('notes.note_type=?')
-        options.push(note_type)
     }
     condition.push('notes.deleted_at is null and collections.deleted_at is null')
     sql = sql.replace('#COLUMNS#', columns)
@@ -197,11 +108,10 @@ exports.noteTags = async function (note_id) {
  * 标签对应的笔记数
  * @param tag_id
  * @param collections
- * @param note_type
  * @param group_id
  * @returns {Promise<*>}
  */
-exports.noteCount = async function (tag_id, collections = [], note_type = 0, group_id = 'sum') {
+exports.noteCount = async function (tag_id, collections = [], group_id = 'sum') {
     if (common.empty(tag_id)) {
         return 0
     }
@@ -219,52 +129,6 @@ exports.noteCount = async function (tag_id, collections = [], note_type = 0, gro
     if (group_id !== 'sum') {
         condition.push('note_tag_relation.group_id=?')
         options.push(group_id)
-    }
-    if (!common.empty(note_type)) {
-        condition.push('notes.note_type=?')
-        options.push(note_type)
-    }
-    condition.push('notes.deleted_at is null and collections.deleted_at is null')
-    sql = sql.replace('#CONDITION#', condition.join(' and '))
-    const row = await sqlite.get(sql, options)
-    if (common.empty(row)) {
-        return 0
-    } else if (common.empty(row.ts_count)) {
-        return 0
-    }
-    return row.ts_count
-}
-
-/**
- * 标签对应的笔记数
- * @param tag_id
- * @param collections
- * @param note_type
- * @param group_id
- * @returns {Promise<*>}
- */
-exports.trashNoteCount = async function (tag_id, collections = [], note_type = 0, group_id = 'sum') {
-    if (common.empty(tag_id)) {
-        return 0
-    }
-    const condition = [], options = []
-    let sql = "select COUNT(DISTINCT notes.id) AS ts_count from tags" +
-        " left join note_tag_relation on tags.id=note_tag_relation.tag_id" +
-        " left join notes on notes.id=note_tag_relation.note_id" +
-        " left join collections on collections.id=notes.collection_id" +
-        " where #CONDITION#"
-    condition.push('notes.status=?', 'tags.id=?')
-    options.push(0, tag_id)
-    if (collections.length > 0) {
-        condition.push('notes.collection_id in (' +  collections.join(',') + ')')
-    }
-    if (group_id !== 'sum') {
-        condition.push('note_tag_relation.group_id=?')
-        options.push(group_id)
-    }
-    if (!common.empty(note_type)) {
-        condition.push('notes.note_type=?')
-        options.push(note_type)
     }
     condition.push('notes.deleted_at is null and collections.deleted_at is null')
     sql = sql.replace('#CONDITION#', condition.join(' and '))
@@ -600,15 +464,6 @@ exports.clearNoteTagNode = async function (note_id) {
 }
 
 /**
- * 清空笔记相关卡片标签
- * @param note_id
- * @returns {Promise<void>}
- */
-exports.clearNoteTag = async function (note_id) {
-    await sqlite.delete('note_tag_relation', 'note_id=' + note_id)
-}
-
-/**
  * 创建笔记相关结构化标签节点
  * @param note_id
  * @param tag
@@ -696,35 +551,7 @@ exports.formatTagContent = function (tag) {
     return result
 }
 
-/**
- * 转化标签为结构化标签
- * @param tags
- * @returns {Promise<Array>}
- */
-exports.convertTagToStruct = async function (tags) {
-    const struct_tags = [], value_list = []
-    if (common.empty(tags)) {
-        return struct_tags
-    }
-    for (const item of tags) {
-        let item_value = item.replace("-", '/')
-        const tag_list = item_value.split('/')
-        for (const tag_item of tag_list) {
-            if (value_list.indexOf(tag_item) === -1) {
-                value_list.push(tag_item)
-            }
-        }
-    }
-    if (value_list.length > 0) {
-        const unit = {
-            tag: '',
-            level: 0,
-            data: []
-        }
-        for (const tag of value_list) {
-            unit.data.push({tag, level: 0, data: []})
-        }
-        struct_tags.push(unit)
-    }
-    return struct_tags
-}
+
+
+
+

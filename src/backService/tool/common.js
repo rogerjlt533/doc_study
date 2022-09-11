@@ -3,7 +3,6 @@ const Hashids = require('hashids/cjs')
 const sd = require('silly-datetime');
 const NodeRSA = require('node-rsa');
 const adm_zip = require("adm-zip")
-const pinyin = require('tiny-pinyin')
 
 let hashids = null, hashidDesktop = null;
 
@@ -204,31 +203,4 @@ exports.rmdir = function (file) {
             console.log('目录已删除')
         }
     })
-}
-
-/**
- * 获取拼音
- * @param value
- * @param space
- * @returns {*}
- */
-exports.tinypinyin = function (value, space = '/') {
-    if (pinyin.isSupported()) {
-        return pinyin.convertToPinyin(value, space, true)
-    }
-    return ''
-}
-
-/**
- * 获取声母
- * @param value
- * @param space
- * @returns {string}
- */
-exports.initial = function (value, space = '/') {
-    const words = this.tinypinyin(value, space).split('')
-    if (words.length > 0) {
-        return words[0].toLocaleUpperCase()
-    }
-    return ''
 }
