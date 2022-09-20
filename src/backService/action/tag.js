@@ -38,20 +38,22 @@ exports.list = async function (user_id, collection_id) {
  * 分组标签列表
  * @param user_id
  * @param collection_id
+ * @param keyword
  * @returns {Promise<*>}
  */
-exports.group = async function (user_id, collection_id) {
+exports.group = async function (user_id, collection_id, keyword) {
     user_id = common.decode(user_id)
     if (!common.empty(collection_id)) {
         collection_id = common.decode(collection_id)
     } else {
         collection_id = 0
     }
+    keyword = keyword.trim()
     const group_res = await collectionService.collectionTool.getIsGroup(user_id, collection_id)
     if (!group_res.status) {
         return {status_code: 400, message: group_res.message, data: []}
     }
-    const tags = await tagService.tagTool.tags(user_id, collection_id, group_res.is_group)
+    const tags = await tagService.tagTool.tags(user_id, collection_id, group_res.is_group, keyword)
     if (common.empty(tags)) {
         return {status_code: 200, message: 'success', data: []}
     }
@@ -63,6 +65,40 @@ exports.group = async function (user_id, collection_id) {
         return b.note_count - a.note_count
     })
     const data = await tagService.parseGroup(tags, user_id, collection_id)
+    return {status_code: 200, message: 'success', data}
+}
+
+/**
+ * 声母标签分组
+ * @param user_id
+ * @param collection_id
+ * @param keyword
+ * @returns {Promise<*>}
+ */
+exports.groupInitial = async function (user_id, collection_id, keyword) {
+    user_id = common.decode(user_id)
+    if (!common.empty(collection_id)) {
+        collection_id = common.decode(collection_id)
+    } else {
+        collection_id = 0
+    }
+    keyword = keyword.trim()
+    const group_res = await collectionService.collectionTool.getIsGroup(user_id, collection_id)
+    if (!group_res.status) {
+        return {status_code: 400, message: group_res.message, data: []}
+    }
+    const tags = await tagService.tagTool.tags(user_id, collection_id, group_res.is_group, keyword)
+    if (common.empty(tags)) {
+        return {status_code: 200, message: 'success', data: []}
+    }
+    for (const index in tags) {
+        tags[index].group_id = ''
+        tags[index].note_count = await tagService.getNoteCount(user_id, tags[index].id, collection_id)
+    }
+    tags.sort((a, b) => {
+        return b.note_count - a.note_count
+    })
+    const data = await tagService.parseGroupByInitial(tags, user_id, collection_id)
     return {status_code: 200, message: 'success', data}
 }
 
@@ -117,4 +153,21 @@ exports.append = async function (user_id, tag_list = []) {
         }
     }
     return {status_code: 200, message: 'success', data}
+}
+
+/**
+ * 更新标签声母，填充空声母
+ * 启动调用一次
+ * @returns {Promise<*>}
+ */
+exports.fillTagInitial = async function () {
+    const tags = await tagService.tagTool.emptyInitialTags()
+    if (common.empty(tags)) {
+        return {status_code: 200, message: 'success', data: []}
+    }
+    for (const index in tags) {
+        const initial = common.initial(tags[index].tag)
+        await tagService.tagTool.setInitial(tags[index].id, initial)
+    }
+    return {status_code: 200, message: 'success', data: tags}
 }
