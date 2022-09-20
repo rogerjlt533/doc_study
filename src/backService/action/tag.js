@@ -48,7 +48,9 @@ exports.group = async function (user_id, collection_id, keyword) {
     } else {
         collection_id = 0
     }
-    keyword = keyword.trim()
+    if (!common.empty(keyword)) {
+        keyword = keyword.trim()
+    }
     const group_res = await collectionService.collectionTool.getIsGroup(user_id, collection_id)
     if (!group_res.status) {
         return {status_code: 400, message: group_res.message, data: []}
@@ -82,7 +84,9 @@ exports.groupInitial = async function (user_id, collection_id, keyword) {
     } else {
         collection_id = 0
     }
-    keyword = keyword.trim()
+    if (!common.empty(keyword)) {
+        keyword = keyword.trim()
+    }
     const group_res = await collectionService.collectionTool.getIsGroup(user_id, collection_id)
     if (!group_res.status) {
         return {status_code: 400, message: group_res.message, data: []}
