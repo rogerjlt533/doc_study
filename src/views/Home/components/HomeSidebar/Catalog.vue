@@ -1,17 +1,24 @@
 <template>
+    <!--<div class="container-catalog default-catalog">-->
+    <!--    <div class="catalog-title unselectable" @click="showNotes(index)" v-for="(item,index) in catalogList" :key="index" :class="{ 'actived-style' : classifyActived === index }">-->
+    <!--        <font-awesome-icon :icon="item.path" style="font-size: 14px;" :color="classifyActived === index ? '#7885d1' : '#9EA0AD'" />-->
+    <!--        <span style="display:inline-block;width: 100%;">{{item.title}}</span>-->
+    <!--        <span class="number">{{item.number}}</span>-->
+    <!--    </div>-->
+    <!--</div>-->
     <div class="container-catalog">
-        <div class="unselectable container-catalog-title" @click="handleShowCatalog('self')">
+        <div class="unselectable container-catalog-title" @click="showCollection = !showCollection">
             <div class="flex align-center">
                 <div class="arrowRight mr6">
-                    <el-icon :size="16" :class="!showSelfCollection ? 'is_rotate_arrow_back' : 'is_rotate_arrow_go'" color="#6F7A93"><CaretRight/></el-icon>
+                    <el-icon :size="16" :class="!showCollection ? 'is_rotate_arrow_back' : 'is_rotate_arrow_go'" color="#6F7A93"><CaretRight/></el-icon>
                 </div>
                 <svgFont class="font-16" color="#6F7A93" icon="books"></svgFont>
                 <span class="ml10 pt2">笔记本</span>
             </div>
-            <svgFont class="add-btn" color="#6F7A93" icon="plus" @click.stop="addCollection"></svgFont>
+            <svgFont class="add-btn" color="#6F7A93" icon="plus" @click.stop="showAddProject = true"></svgFont>
         </div>
         <FCollapse>
-            <div class="project-list" v-show="showSelfCollection">
+            <div class="project-list" v-show="showCollection">
                 <collectionItem
                         type="self"
                         ref="collectionItemRef"
@@ -22,7 +29,7 @@
                 ></collectionItem>
             </div>
         </FCollapse>
-        <div class="unselectable container-catalog-title" @click="handleShowCatalog('team')">
+        <div class="unselectable container-catalog-title" @click="showTeamCollection = !showTeamCollection">
             <div class="flex align-center">
                 <div class="arrowRight mr6">
                     <el-icon :size="16" :class="!showTeamCollection ? 'is_rotate_arrow_back' : 'is_rotate_arrow_go'" color="#6F7A93"><CaretRight/></el-icon>
@@ -43,6 +50,52 @@
                 ></collectionItem>
             </div>
         </FCollapse>
+
+
+        <!--<div class="collection-box">-->
+        <!--    <el-collapse v-model="defaultCollectionType" v-if="projectListTeam.length">-->
+        <!--        <el-collapse-item name="self">-->
+        <!--            <template #title>-->
+        <!--                <p class="unselectable color-9 pl10 font-12">我的笔记本</p>-->
+        <!--            </template>-->
+        <!--            <div class="project-list">-->
+        <!--                <collectionItem-->
+        <!--                    type="self"-->
+        <!--                    ref="collectionItemRef"-->
+        <!--                    @editCollection="editCollection"-->
+        <!--                    @knowledgeGraph="knowledgeGraph"-->
+        <!--                    @basics="basics"-->
+        <!--                    @removeCollection="removeCollection"-->
+        <!--                ></collectionItem>-->
+        <!--            </div>-->
+        <!--        </el-collapse-item>-->
+        <!--        <el-collapse-item name="team">-->
+        <!--            <template #title>-->
+        <!--                <p class="unselectable color-9 pl10 font-12">共享笔记本</p>-->
+        <!--            </template>-->
+        <!--            <div class="project-list">-->
+        <!--                <collectionItem-->
+        <!--                    type="team"-->
+        <!--                    ref="collectionItemRef"-->
+        <!--                    @editCollection="editCollection"-->
+        <!--                    @knowledgeGraph="knowledgeGraph"-->
+        <!--                    @basics="basics"-->
+        <!--                    @removeCollection="removeCollection"-->
+        <!--                ></collectionItem>-->
+        <!--            </div>-->
+        <!--        </el-collapse-item>-->
+        <!--    </el-collapse>-->
+        <!--    <div class="project-list" v-else>-->
+        <!--        <collectionItem-->
+        <!--            type="self"-->
+        <!--            ref="collectionItemRef"-->
+        <!--            @editCollection="editCollection"-->
+        <!--            @knowledgeGraph="knowledgeGraph"-->
+        <!--            @basics="basics"-->
+        <!--            @removeCollection="removeCollection"-->
+        <!--        ></collectionItem>-->
+        <!--    </div>-->
+        <!--</div>-->
     </div>
 
     <!-- 添加/编辑项目 -->
@@ -52,7 +105,7 @@
                 <div style="padding: 10px 10px 0 10px;">
                     <div class="input-box">
                         <div class="input-emoji">
-                            <el-popover placement="bottom" :width="370" trigger="click" :visible="showEmoji">
+                            <el-popover placement="right-start" :width="344" trigger="click" :visible="showEmoji">
                                 <VuemojiPicker @emojiClick="handleEmojiClick" :isDark="false" />
                                 <template #reference>
                                     <el-button type="text" size="medium" @click="showEmoji = true">
@@ -140,10 +193,11 @@
             </el-dialog>
         </template>
 
+
         <template #footer>
             <span class="dialog-footer">
-                <el-button plain color="#aaaaaa" @click="showAddProject = false">取 消</el-button>
-                <el-button color="#6C56F6" type="primary" @click="confirmModify">确 定</el-button>
+                <el-button class="color-white" color="#aaaaaa" @click="showAddProject = false">取 消</el-button>
+                <el-button class="color-white" color="#7885d1" type="primary" @click="sureMession">确 定</el-button>
             </span>
         </template>
     </el-dialog>
@@ -196,8 +250,8 @@
 
         <template #footer>
             <span class="dialog-footer">
-                <el-button plain color="#aaaaaa" @click="showRemoveCollection = false">取 消</el-button>
-                <el-button color="#6C56F6" type="primary" @click="sureRemoveCollection">确 定</el-button>
+                <el-button class="color-white" color="#aaaaaa" @click="showRemoveCollection = false">取 消</el-button>
+                <el-button class="color-white" color="#7885d1" type="primary" @click="sureRemoveCollection">确 定</el-button>
             </span>
         </template>
     </el-dialog>
@@ -214,7 +268,7 @@
         </el-dialog>
     </div>
 
-    <maskCom v-if="showEmoji" :opacity="0" :zIndex="2000" @click="showEmoji = false"></maskCom>
+    <mask-com v-if="showEmoji" :opacity="0" :zIndex="2000" @click="showEmoji = false"></mask-com>
 </template>
 
 <script setup>
@@ -226,6 +280,7 @@
     import { getGraph, closeEcharts } from "./js/echart"
     import { showBasicsGraph, notionBasicsLoading, database, syncAct, databaseList, bindNotionDatabase, basics } from "./js/syncNotion"
     import { isDeleteTeam, collectionParams, inviteData, shiftTeamCollection, signOutApiCollection, inviteTeam } from "./js/team"
+    import handleFileOperation from '../HomeNotes/js/handleFile'
     // 组件
     import { ElNotification } from "element-plus"
     import { Plus, InfoFilled, CaretRight } from "@element-plus/icons-vue"
@@ -233,25 +288,66 @@
     import collectionItem from './components/collectionItem'
     import FCollapse from '@/components/FCollapse'
     // 异步组件
-    const maskCom = defineAsyncComponent(() => import('@/components/maskCom'))
+    const maskCom = defineAsyncComponent(() => import('@/components/mask'))
 
+    // service
+    const collectionService = require('service/action/collection.js')
     const store = useStore();
 
     // ref
     const collectionItemRef = ref(null)
+    const showCollection = ref(false)
+    const showTeamCollection = ref(false)
 
     // 获取个人笔记本项目
     let projectListSelf = computed(() => store.state.collection.projectListSelf)
+    // 获取团队笔记本项目
+    // let projectListTeam = computed(() => store.state.collection.projectListTeam)
+    // 笔记的本的选中的索引值
+    let classifyActived = computed(() => store.state.notes.classifyObj.actived)
+    let collectionType = computed(() => store.state.notes.classifyObj.collectionType)
+    let collectionActived = computed(() => store.state.notes.classifyObj.collectionActived)
 
-    // 控制笔记本分类的是否展开的状态
-    const showSelfCollection = computed(() => store.state.notes.catalogState.showSelfCollection)
-    const showTeamCollection = computed(() => store.state.notes.catalogState.showTeamCollection)
-    function handleShowCatalog(type){
-        store.commit('notes/CHANGE_CATALOG_STATE', {
-            showSelfCollection: type === 'self' ? !showSelfCollection.value : showSelfCollection.value,
-            showTeamCollection: type === 'team' ? !showTeamCollection.value : showTeamCollection.value
-        })
-    }
+    // 初始化一个默认打开的collection，并保证他没有响应式
+    const defaultCollectionType = collectionType.value
+    console.log('defaultCollectionType', defaultCollectionType);
+
+    // let catalogList = ref([
+    //     {
+    //         title: "我的笔记",
+    //         id: "Notes",
+    //         path: "poll-h",
+    //         number: computed(() => store.state.user.userBase.notes)
+    //     }, {
+    //         title: "最近三日",
+    //         id: "Today",
+    //         path: "calendar-day",
+    //         number: computed(() => store.state.user.userBase.today)
+    //     },
+    //     {
+    //         title: "废纸篓",
+    //         id: "Trash",
+    //         path: "trash-alt",
+    //         number: computed(() => store.state.user.userBase.trash)
+    //     }
+    // ])
+    // 笔记筛选
+    // function showNotes(index){
+    //     store.commit("notes/CHANGE_CLASSIFY_ACTIVED",{
+    //         title: catalogList.value[index].title,
+    //         index,
+    //         id: catalogList.value[index].id
+    //     })
+    //     bus.emit('CHANGE_NOTE_MODE', false)
+    //     setTimeout(()=>{
+    //         store.dispatch("notes/getTagsList")
+    //         store.dispatch('notes/getTagsGroup')
+
+    //         store.commit("user/SHOW_NOTICE",{data: false})
+    //         bus.emit("CLEAR_KAYWORD");
+    //         bus.emit("MAKE_LIST_TOP");
+    //     })
+    // }
 
     // 获取默认collection的笔记
     function handleWriteNote(item){
@@ -287,7 +383,7 @@
         project.form.color = e;
     }
 
-    // emoji 选择器
+    // emoij 选择器
     let showEmoji = ref(false);
     let collectionRef = ref(null);
     function handleEmojiClick(detail) {
@@ -297,7 +393,7 @@
         project.form.collection = `${startText}${detail.emoji.unicode}${endText}`;
     }
 
-    bus.on('handleAddCollection', () => {
+    bus.on('ADD_COLLECTION', () => {
         addCollection()
     })
     // 添加笔记本
@@ -325,22 +421,24 @@
     }
 
     // 删除collection
-    let showRemoveCollection = ref(false)
-    let checkedCollectionId = ''
-    let defaultCollection = computed(() => { return store.state.user.userSetting.default })
+    let showRemoveCollection = ref(false);
+    let checkedCollectionId = '';
+    let defaultCollection = computed(() => { return store.state.user.userSetting.default });
     let canTransferProjectList = ref([])
     let showMoveSelect = ref(false)
     let moveCollectionId = ref(null)
     async function removeCollection({item, index}){
-        checkedCollectionId = item.id
+        checkedCollectionId = item.id;
         let res = await store.dispatch("collection/removeCollection", {
             collection_id: item.id,
             operate: '',
             dest_collection_id: ''
         })
-        canTransferProjectList.value = projectListSelf.value.filter((proj) => proj.id !== item.id )
+        canTransferProjectList.value = projectListSelf.value.filter((proj) => {
+            return proj.id !== item.id
+        })
         if(res.status_code === 501 && res.data.note_count > 0){
-            showRemoveCollection.value = true
+            showRemoveCollection.value = true;
             showMoveSelect.value = false
             moveCollectionId.value = null
         }
@@ -378,19 +476,28 @@
                 ElNotification({
                     message: '转移成功',
                     type: 'success'
-                })
+                });
             }else{
                 ElNotification({
                     message: '删除成功',
                     type: 'success'
-                })
+                });
             }
         }
     }
     // 删除笔记本的回调
     function removeCollectionCallback(checkedCollectionId){
-        const collectionItem = projectListSelf.value[0]
-        collectionItemRef.value.clickProject(collectionItem)
+        store.commit("notes/CHANGE_CLASSIFY_ACTIVED",{
+            collectionTitle: catalogList.value[0].title,
+            index: 0,
+            id: catalogList.value[0].id
+        })
+        store.dispatch("notes/getTagsList");
+        store.commit("notes/RECORD_COLLECTION",{
+            checked_collection: projectListSelf.value[0].collection,
+            collection_id: projectListSelf.value[0].id
+        });
+        bus.emit("CLEAR_KAYWORD");
 
         // 判断删除的是不是默认笔记
         if(checkedCollectionId === defaultCollection.value){
@@ -409,7 +516,7 @@
     };
 
     // 确认修改
-    function confirmModify(){
+    function sureMession(){
         const form = unref(projectFormRef);
         form.validate(async (valid) => {
             if(!valid) return false;
@@ -422,16 +529,13 @@
                 }).then((res) => {
                     projectLoad.value = false
                     if(res) showAddProject.value = false
-
-                    store.commit('notes/CHANGE_CATALOG_ACTIVE_STATE',{
-                        collectionTitle: project.form.collection,
-                    })
                 })
             }else{
                 store.dispatch("collection/addCollection",{
                     collection: project.form.collection,
                     color: project.form.color
                 }).then((res) => {
+                    console.log(res)
                     projectLoad.value = false;
                     if(res.data){
                         showAddProject.value = false;
@@ -448,31 +552,23 @@
 
     // 展示知识图谱
     let showKnowledgeGraph = ref(false)
-    async function knowledgeGraph({item}){
+    async function knowledgeGraph({item, index}){
         const user_id = store.state.user.userInfo.id
-        getGraph(user_id, item, showKnowledgeGraph)
-    }
-    bus.on('showKnowledgeGraph',() => {
-        let item = {
-            collection: store.state.notes.catalogActiveState.collectionTitle,
-            id: store.state.notes.catalogActiveState.collectionActive
-        }
-        knowledgeGraph({item})
-    })
-
-    // 判断刚进入时笔记本有没有选中,没有的话默认选中第一个
-    function checkCollectionActive(){
-        const activeCol = store.state.notes.catalogActiveState.collectionActive
-        if(!activeCol){
-            const collectionItem = projectListSelf.value[0]
-            collectionItemRef.value.clickProject(collectionItem)
-            handleShowCatalog('self')
-        }
+        getGraph(user_id, item, showKnowledgeGraph);
     }
 
     onMounted( async () => {
-        await store.dispatch("collection/getCollection")
-        checkCollectionActive()
+        // store.dispatch("target/getCollection", { use_group: "team" });
+        await store.dispatch("collection/getCollection", { user_id: store.state.user.userInfo.id, page: 1, size: 100 });
+
+        // store.dispatch("user/getUserSetting");
+        store.dispatch("user/getUserBase");
+        // store.dispatch("user/getUserInfo");
+
+        // if(store.state.notes.classifyObj.collectionTitle) {
+        //     let data = { collection: store.state.notes.classifyObj.collectionTitle }
+        //     handleWriteNote(data)
+        // }
     })
 </script>
 
@@ -576,20 +672,24 @@
             cursor: pointer;
             &:hover{
                 background: #eeeeee;
+                .add-btn{
+                    opacity: 1;
+                }
             }
             span{
                 font-size: 14px;
                 color: #6F7A93;
             }
             .add-btn{
+                opacity: 0;
                 padding: 4px;
                 border-radius: 4px;
                 cursor: pointer;
                 &:hover{
-                    background: #e6e6e6;
+                    background: #f5f5f5;
                 }
                 &:active{
-                    background: #e1e1e1;
+                    background: #ffffff;
                 }
             }
         }
@@ -615,7 +715,7 @@
             border-right: 1px solid #ccc;
         }
         .collection-input{
-            width: 220px;
+            width: 240px;
             padding-left: 4px;
             font-size: 14px;
             color: #333;
@@ -705,4 +805,6 @@
             color: $purple;
         }
     }
+
+
 </style>

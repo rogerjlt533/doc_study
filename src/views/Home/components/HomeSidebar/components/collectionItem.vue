@@ -11,8 +11,8 @@
     >
         <template #item="{element, index}">
             <div class="project"
-                 :class="{ 'active-project' : collectionActive === element.id }"
-                 @click="clickProject(element)"
+                 :class="{ 'active-project' : collectionType === type && collectionActived === index }"
+                 @click="clickProject(element, index)"
                  @mouseenter="element.showOpt = true"
                  @mouseleave="element.showOpt = false"
             >
@@ -24,6 +24,35 @@
                     <div class="options handle" :class="[element.showOpt ? '' : 'opacity0']" @click.stop>
                         <svgFont class="font-icon font-14" icon="move"></svgFont>
                     </div>
+                    <!-- <div class="options" :class="[element.showOpt ? '' : 'opacity0']" @click.stop>
+                        <el-dropdown size="small" trigger="click" style="vertical-align: text-bottom;">
+                            <font-awesome-icon icon="ellipsis-h" style="font-size: 16px;padding:0 10px" color="#9EA0AD" />
+                            <template #dropdown>
+                                <el-dropdown-menu>
+                                    <el-dropdown-item @click="editCollection(element,index)">
+                                        <font-awesome-icon icon="edit" style="width:22px!important;" class="font-icon" color="#9EA0AD" />
+                                        编辑
+                                    </el-dropdown-item>
+                                    <el-dropdown-item @click="knowledgeGraph(element,index)">
+                                        <font-awesome-icon icon="layer-group" class="font-icon" color="#9EA0AD" />
+                                        知识图谱
+                                        <proIcon />
+                                    </el-dropdown-item>
+                                    <el-dropdown-item @click="basics(element,index)">
+                                        <font-awesome-icon icon="info-circle" class="font-icon" color="#9EA0AD" />
+                                        同步Notion
+                                        <proIcon />
+                                    </el-dropdown-item>
+                                    <div class="delete">
+                                        <el-dropdown-item divided @click="removeCollection(element,index)">
+                                            <font-awesome-icon class="font-icon" icon="trash-alt" color="#9EA0AD" />
+                                            删除
+                                        </el-dropdown-item>
+                                    </div>
+                                </el-dropdown-menu>
+                            </template>
+                        </el-dropdown>
+                    </div> -->
                 </div>
             </div>
         </template>
@@ -34,9 +63,8 @@
     import {ref, defineProps, defineEmits, computed, defineExpose} from 'vue'
     import { useStore } from "vuex"
     import bus from '@/utils/bus'
-    // 组件
     import draggable from 'vuedraggable'
-    import {ElMessageBox} from "element-plus"
+    // import proIcon from "@/components/element/pro.vue"
 
     const remote = require('electron').remote;
     const Menu = remote.Menu;
@@ -63,9 +91,10 @@
     const emits = defineEmits(['editCollection', 'knowledgeGraph', 'basics', 'removeCollection'])
 
     // computed
-    const collectionActive = computed(() => store.state.notes.catalogActiveState.collectionActive)
-    const projectListSelf = computed(() => store.state.collection.projectListSelf)
-    const projectListTeam = computed(() => store.state.collection.projectListTeam)
+    const collectionType = computed(() =>  store.state.notes.classifyObj.collectionType)
+    const collectionActived = computed(() => store.state.notes.classifyObj.collectionActived)
+    let projectListSelf = computed(() => store.state.collection.projectListSelf)
+    let projectListTeam = computed(() => store.state.collection.projectListTeam)
     const collectionList = computed({
         get: () => props.type === 'self' ? projectListSelf.value : projectListTeam.value,
         set: (value) => {
@@ -106,57 +135,25 @@
     }
 
     // 项目筛选
-    function clickProject(item){
-        const editNoteCount = store.state.notes.editNoteCount
-        if(editNoteCount > 0){
-            ElMessageBox.confirm('还有正在编辑的卡片哦~', {
-                type: 'warning',
-                customClass: 'edit-note-message-box',
-                confirmButtonText: "返回编辑 ",
-                confirmButtonClass: 'edit-note-confirm-btn',
-                cancelButtonText: '放弃保存',
-                cancelButtonClass: 'edit-note-cancel-btn',
-                showClose: false,
-                closeOnClickModal: false,
-                closeOnPressEscape: false,
-                distinguishCancelAndClose: true
-            }).then().catch(() => {
-                bus.emit('closeEditorInstance')
-                store.commit('notes/SET_EDIT_NOTE_COUNT')
-                handleChangeCollection(item)
-            })
-            return false
-        }
-        bus.emit("changeNotesListHeight")
-        handleChangeCollection(item)
-        bus.emit("clearFilterValue")
-    }
-    function handleChangeCollection(item){
-        store.commit('notes/CHANGE_FILTER_NOTE_PARAMS', {
-            collection_id: item.id,
-            group_id: '',
-            tag_id: '',
-            trash: ''
-        })
-        store.commit('notes/CHANGE_CATALOG_ACTIVE_STATE', {
-            collectionActive: item.id,
+    function clickProject(item, index){
+        store.commit("notes/CHANGE_CLASSIFY_ACTIVED",{
             collectionTitle: item.collection,
-            tagGroupTitle: '',
-            tagTitle: '',
-            tagActive: '',
-            trashActive: ''
+            collectionActived: index,
+            collectionType: props.type,
+            collection_id: item.id
         })
-        store.commit("user/SHOW_NOTICE",{data: false})
-
-        // writeInfo
-        setTimeout(() => {
-            bus.emit("clearSearchKeyword")
-            bus.emit("handleMakeListTop")
-        })
+        bus.emit('CHANGE_NOTE_MODE', false)
         setTimeout(() => {
             store.dispatch("notes/getTagsList")
-            store.dispatch("notes/getGroupInitial")
-        }, 100)
+            store.dispatch('notes/getTagsGroup')
+            store.commit("notes/RECORD_COLLECTION",{
+                checked_collection: item.collection,
+                collection_id: item.id
+            });
+            store.commit("user/SHOW_NOTICE",{data: false})
+            bus.emit("CLEAR_KAYWORD")
+            bus.emit("MAKE_LIST_TOP")
+        })
     }
 
     function editCollection(){
@@ -178,8 +175,8 @@
     /**
      * 逻辑：
      * 1.选中样式拖拽，样式跟着走
-     * 2.active上面的移动到下面，active向上移
-     * 3.active下面的移动到上面，active向下移
+     * 2.actived上面的移动到下面，actived向上移
+     * 3.actived下面的移动到上面，actived向下移
      */
     let drag = ref(false)
     let nowCollectionType = ""
@@ -188,11 +185,12 @@
         nowCollectionType = props.type
     }
     function endDrag(e){
+        if(nowCollectionType !== collectionType.value) return
         drag.value = false
         const oldVal = e.oldIndex
         const newVal = e.newIndex
 
-        const colVal = collectionActive.value
+        const colVal = collectionActived.value
 
         if(colVal === oldVal){  // 移动的是选中的哪个
             sortCollection(newVal)
@@ -205,18 +203,17 @@
         }
     }
     function sortCollection(value){
-        console.log('value', value)
-
-        store.commit("notes/SORT_CHANGE_COLLECTION_ACTIVE",{
-            collectionActive: value
+        store.commit("notes/SORT_CHANGE_COLLECTION_ACTIVED",{
+            collectionActived: value
         })
     }
 
     function handleSortCollection(finishValues, value){
         if(!finishValues.length > 0) return
-        store.commit("collection/SORT_COLLECTION", { type: props.type, result: value })
         store.dispatch("collection/sortCollection", {
-            collection_ids: finishValues.join(",")
+            collection_ids: finishValues.join(","),
+            type: props.type,
+            result: value
         })
     }
 
@@ -279,42 +276,5 @@
     }
     .opacity1{
         opacity: 1;
-    }
-</style>
-<style lang="scss">
-    .edit-note-message-box{
-        width: 300px !important;
-        .edit-note-confirm-btn{
-            background: $purple !important;
-            border-color: $purple !important;
-            &:focus-visible {
-                outline: none;
-                outline-offset: 0;
-            }
-            &:focus{
-                background: $purple !important;
-                opacity: 0.8;
-            }
-            &:hover{
-                background: $purple !important;
-                opacity: 0.8;
-            }
-        }
-        .edit-note-cancel-btn{
-            &:focus-visible {
-                outline: none;
-                outline-offset: 0;
-            }
-            &:focus{
-                background: #eeeeee !important;
-                color: #999999;
-                border-color: #cccccc;
-            }
-            &:hover{
-                background: #eeeeee !important;
-                color: #999999;
-                border-color: #cccccc;
-            }
-        }
     }
 </style>

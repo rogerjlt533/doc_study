@@ -1,43 +1,43 @@
 <template>
     <div class="home" id="homeBox">
-        <div class="home-left" :style="{ paddingTop: catalogPaddingTop, height: `calc(100vh - ${catalogPaddingTop})` }">
+        <div class="home-left" v-show="showCatalog">
+            <div class="fold-catalog">
+                <font-awesome-icon class="icon-angles-left" @click="handleShowCatalog" icon="angles-left" />
+            </div>
             <div class="home-menu" id="homeLeft">
                 <home-notes-catalog />
                 <home-notes-tag />
-            </div>
-            <div class="trash-btn unselectable" :class="trashActive ? 'active' : '' " @click="showTrash">
-                <svgFont class="font-16" :color="trashActive ? '#ffffff' : '#6F7A93'" icon="trash"></svgFont>
-                <span class="pl6">废纸篓</span>
+                <div class="trash-btn unselectable" @click="showNotes">
+                    <svgFont class="font-16" color="#6F7A93" icon="trash"></svgFont>
+                    <span class="pl10">废纸篓</span>
+                </div>
             </div>
         </div>
-        <div id="resizeL"></div>
-        <div class="home-right" id="homeRight" :style="{ width: homeWidth }">
-            <NoteToolbar></NoteToolbar>
-            <div class="short-note" v-show="noteTypeActive === 1">
-                <div v-show="!trashActive">
-                    <home-notes-editor />
-                </div>
+        <div id="resizeL" v-show="showCatalog"></div>
+        <div class="home-right" id="homeRight" :style="{ width: showCatalog ? homeWidth : '100%' }">
+            <NoteToolbar @switch="changeWriteModel" :isWrite="isWrite"></NoteToolbar>
+            <div class="short-note" v-show="!isWrite">
+                <home-notes-editor />
                 <home-notes-list />
             </div>
-            <write-editor v-show="noteTypeActive === 2"></write-editor>
+            <write-editor v-show="isWrite"></write-editor>
         </div>
     </div>
 
     <el-dialog
-            title="应用更新"
+            title="应用更新......"
             v-model="showUpdater"
             :close-on-click-modal="false"
             :close-on-press-escape="false"
             :show-close="false"
-            top="30vh"
-            width="400px"
-            center
-    >
-        <div class="pb20 pl10 pr10 pt6" v-if="downloadProcess">
-            <p class="mb10">{{'当前:' + downloadProcess.transferred + '   /   共' + downloadProcess.total}}</p>
-            <el-progress color="#6C56F6" :text-inside="true" :stroke-width="18" :percentage="downloadProcess.percent"></el-progress>
-            <p class="mt10">正在下载：({{downloadProcess.speed}})</p>
-        </div>
+            width="450px"
+            top="26vh"
+            center>
+        <template v-if="downloadProcess">
+            <p>{{'当前:' + downloadProcess.transferred + '   /   共' + downloadProcess.total}}</p>
+            <el-progress :text-inside="true" :stroke-width="18" :percentage="downloadProcess.percent"></el-progress>
+            <p>正在下载({{downloadProcess.speed}})......</p>
+        </template>
     </el-dialog>
 </template>
 
@@ -48,8 +48,12 @@
     // hooks
     import bus from '@/utils/bus'
     import { homeWidth, dragControllerDivL } from './components/js/columnDrop'
+    import { showCatalog, handleShowCatalog } from './components/HomeSidebar/js/controlShowCatalog'
+    // import { writeInfo } from './components/HomeNotes/js/writeEditor.js'
     import { showUpdater, downloadProcess, handleUpdate } from './components/js/update'
+    import openUrlByBrowser from "@/assets/js/openUrlByBrowser";
     // 组件
+    // import { Delete } from '@element-plus/icons-vue'
     import HomeNotesCatalog from './components/HomeSidebar/Catalog.vue'
     // 异步组件
     const HomeNotesTag = defineAsyncComponent(() => import('./components/HomeSidebar/Tags.vue'))
@@ -61,53 +65,75 @@
     let store = useStore();
     let route = useRoute();
 
+    // 骨架屏loading
+    let loading = ref(false)
+
     // computed ---------------
-    let trashActive = computed(() => store.state.notes.catalogActiveState.trashActive)
-    let noteTypeActive = computed(() => store.state.notes.catalogActiveState.noteTypeActive)
-    const catalogPaddingTop = computed(() => process.platform === 'darwin' ? '50px' : '20px')
+    let isNotice = computed(() => store.state.user.isShowNotice)
+    let userInfo = computed(() => store.state.user.userInfo)
+    const catalogMarginLeft = computed(() => process.platform === 'darwin' ? '70px' : '10px')
 
     // methods --------------
     // 获取标签
-    function getTags() {
-        store.dispatch("notes/getTagsList")
-        store.dispatch("notes/getTagsAllList")
+    async function getTags() {
+        await store.dispatch("notes/getTagsList", { user_id: store.state.user.userInfo.id});
+        await store.dispatch("notes/getTagsAllList", { user_id: store.state.user.userInfo.id});
     }
     // 获取笔记列表
     function getNotesList(){
-        store.dispatch("notes/getShortNotesList",{
+        store.dispatch("notes/getNotesList",{
             page: 1,
-            keyword: undefined
-        })
-        store.dispatch('notes/getWriteNotesList',{
-            page: 1,
-            keyword: undefined
+            keyword: undefined,
+        }).then(() => {
+            loading.value = false
         })
     }
 
-    // 获取废纸篓中的数据
-    function showTrash(){
-        store.commit('notes/CHANGE_FILTER_NOTE_PARAMS', {
-            collection_id: '',
-            group_id: '',
-            tag_id: '',
-            trash: 1,
-        })
-        store.commit('notes/CHANGE_CATALOG_ACTIVE_STATE', {
-            collectionActive: '',
-            collectionTitle: '',
-            tagGroupTitle: '',
-            tagTitle: '',
-            tagActive: '',
-            trashActive: 1
-        })
-        store.commit('notes/SET_NOTES_LIST_HEIGHT',  0)
+    // 保护 防止列表接口卡主导致页面无法恢复的问题
+    function timeoutLoading(){
+        setTimeout(() => {
+            loading.value = false
+        }, 5000)
+    }
 
+    // 切换写作模式
+    let isWrite = ref(store.state.notes.notes.note_type === 2 )
+    function changeWriteModel(){
+        isWrite.value = !isWrite.value
+        store.commit('notes/FILTER_NOTES_TYPE', { type: isWrite.value ? 2 : 1 })
+
+        // if(isWrite.value){
+        //     addNote()
+        // }else{
+        //     saveWriteNote()
+        // }
+    }
+    // async function addNote(){
+    //     let params = {
+    //         contentJson: {"type":"doc","content":[{"type":"paragraph"}]} ,
+    //         contentHtml: '<p></p>',
+    //         note_type: 2
+    //     }
+    //     const res = await store.dispatch("notes/addNotes", params)
+    //     bus.emit("READ_ARTICLE", { item: res.data, index: 0})
+    // }
+    // function saveWriteNote(){
+    //     // bus.emit('SAVE_WRITE_NOTE')
+    // }
+
+    function showNotes(){
+        store.commit("notes/CHANGE_CLASSIFY_ACTIVED", {
+            title: '废纸篓',
+            id: 'trash'
+        })
+        bus.emit('CHANGE_NOTE_MODE', false)
         setTimeout(()=>{
             store.dispatch("notes/getTagsList")
+            store.dispatch('notes/getTagsGroup')
+
             store.commit("user/SHOW_NOTICE", {data: false})
-            bus.emit("clearSearchKeyword")
-            bus.emit("handleMakeListTop")
-            bus.emit("clearFilterValue")
+            bus.emit("CLEAR_KAYWORD");
+            bus.emit("MAKE_LIST_TOP");
         })
     }
 
@@ -117,8 +143,9 @@
         handleUpdate()
 
         getTags()
-        store.commit("notes/RESET_NOTES_LIST")
+        store.commit("notes/RESET_NOTES_LIST");
         getNotesList()
+        timeoutLoading()
 
         dragControllerDivL()
         // dragControllerDivR()
@@ -142,70 +169,58 @@
 
 <style lang="scss" scoped>
     .home{
+        display: flex;
+        will-change: auto;
+        >div{
+            flex-shrink: 0;
+        }
         .home-left{
-            position: relative;
-            float: left;
             background: #F6F8FC;
+
             .fold-catalog{
                 display: flex;
                 flex-direction: row-reverse;
                 overflow: hidden;
-                padding: 13px 10px;
+                padding: 7px 10px;
                 -webkit-app-region: drag;
             }
             .home-menu{
                 width: 220px;
                 max-width: 300px;
-                min-width: 160px;
-                height: calc(100vh - 100px);
-                padding: 0 15px 10px;
+                min-width: 150px;
+                height: calc(100vh - 70px);
+                padding: 10px 15px;
                 overflow: scroll;
                 scrollbar-color: transparent transparent;
                 &::-webkit-scrollbar {
                     display: none;
                 }
-            }
-            .trash-btn{
-                position: absolute;
-                bottom: 18px;
-                left: 10px;
-                right: 10px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: #eeeeee;
-                color: #6F7A93;
-                padding: 8px 10px;
-                border-radius: 4px;
-                cursor: pointer;
-                &:hover{
-                    background: #e5e5e5;
-                }
-                span{
+
+                .trash-btn{
+                    color: #6F7A93;
                     font-size: 14px;
-                    line-height: 14px;
+                    padding: 4px 10px 4px 36px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    &:hover{
+                        background: #eeeeee;
+                    }
                 }
-            }
-            .active{
-                background: $purple !important;
-                color: #FFFFFF !important;
             }
         }
 
         #resizeL{
-            width: 2px;
-            background: #F6F8FC;
+            width: 1px;
+            background: #DEDEDE;
             cursor: col-resize;
-            float: left;
-            height: 100vh;
             &:hover{
-                transform: scaleX(3);
+                transform: scaleX(6);
                 background: #f5f5f5;
             }
         }
 
         .home-right{
-            float: left;
+            min-width: 600px;
             .short-note{
                 padding: 10px 10px 0 10px;
             }

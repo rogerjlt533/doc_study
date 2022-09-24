@@ -1,25 +1,24 @@
 import { computed } from 'vue'
 import openUrlByBrowser from "@/assets/js/openUrlByBrowser";
-import previewImg from "@/components/imagePreview";
+import previewImg from "@/lib/imagePreview";
 import bus from '@/utils/bus'
 import store from "@/store/index.js"
 
 /**
  * 点击笔记中的元素时的操作
  * @param e
- * @param type
  * @returns {boolean}
  */
-export function getNoteNodeClick(e, type){
+export function getNoteNodeClick(e){
     // 当点击到图片时
-    if(!type && e.target.src){
+    if(e.target.src){
         previewImg({
             url: e.target.src,
             show: true
         })
     }
     // 当点击的是tag时
-    if(!type && e.target.className === "hashtag-suggestion"){
+    if(e.target.className === "hashtag-suggestion"){
         let id = getClickTagId(e.target.dataset.id);
         filterTagsNotes(id, e.target.dataset.id);
     }
@@ -31,15 +30,6 @@ export function getNoteNodeClick(e, type){
         return false
     }
 }
-export const dblclickNote = (e) => {
-    if(e.target.src){
-        previewImg({
-            url: e.target.src,
-            show: true
-        })
-    }
-}
-
 function getClickTagId(name){
     let tagsList = store.state.notes.tagsAllList;
     for(let i = 0; i < tagsList.length; i++){
@@ -49,17 +39,19 @@ function getClickTagId(name){
     }
 }
 function filterTagsNotes(id, tag){
-    bus.emit("setTagToEditor", {
+    bus.emit("SET_TEXT_EDITOR_TAG", {
         tag: tag
     })
-    store.commit('notes/CHANGE_FILTER_NOTE_PARAMS', {
-        tag_id: id
-    })
-    store.commit('notes/CHANGE_CATALOG_ACTIVE_STATE', {
-        tagActive: id,
+    store.commit("notes/CHANGE_CLASSIFY_ACTIVED",{
+        collectionTitle: store.state.notes.classifyObj.collectionTitle,
         tagTitle: `#${tag}`,
+        tag_id: id,
+        activedTag: id,
+        collectionType: store.state.notes.classifyObj.collectionType,
+        collectionActived: store.state.notes.classifyObj.collectionActived,
+        collection_id: store.state.notes.tagToCollectionId
     })
     store.commit("user/SHOW_NOTICE",{data: false});
-    bus.emit("clearSearchKeyword");
+    bus.emit("CLEAR_KAYWORD");
 }
 

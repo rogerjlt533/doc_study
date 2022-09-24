@@ -1,31 +1,37 @@
 <template>
     <div class="topbar">
         <div class="info flex align-center">
-            <span class="mr10 line-1">{{trashActive ? '废纸篓' : nowNotes}}</span>
-            <font-awesome-icon class="font-14 cursor-p" :class="[!ifRefresh ? 'is_loading' : '']" @click="debounceFun(refreshList)" icon="sync-alt" color="#9EA0AD" />
-            <div class="knowledge-graph ml10" v-if="!trashActive && nowNotes" @click="showKnowledgeGraph">
-                <svgFont icon="knowledgeGraph" class=" color-9"></svgFont>
-            </div>
-            <div class="clear-trash ml20" v-if="trashActive" @click="cleanTrash">
+            <span class="mr10">{{nowNotes}}</span>
+            <font-awesome-icon class="font-14 cursor-p" :class="[!ifRefresh ? 'is_loading' : '']" @click="refreshList" icon="sync-alt" color="#9EA0AD" />
+            <div class="clear-trash ml20" v-if="nowNotes === '废纸篓'" @click="cleanTrash">
                 <span>清空</span>
-                <font-awesome-icon class="font-icon font-12" icon="trash-alt" color="#FF6347" />
+                <font-awesome-icon class="font-icon" icon="trash-alt" color="#FF6347" style="font-size: 12px" />
             </div>
         </div>
         <div class="filter">
-            <div class="font-12 color-9 pr20">
-                <span @click="changeMaxNum">卡片总数：{{ notesCount }}</span>
-                <template v-if="!trashActive">
-                    <el-tooltip v-if="ifChangeMaxNum" content="为你的卡片笔记设置的容量大小，双击可以修改" placement="bottom">
-                        <span @dblclick="changeMaxNum" class="cursor-p"> / {{ notesMaxNum }}</span>
-                    </el-tooltip>
-                    <template v-else>
-                        / <input class="input-num" ref="maxNumInputRef" v-model="notesMaxNum" type="number" @blur="setMaxNum" @keyup.enter="$event.target.blur()">
-                    </template>
-                    <span class="block ml10" :class="statusClass"></span>
-                </template>
-            </div>
+            <!--<el-dropdown trigger="click">-->
+            <!--    <span class="el-dropdown-link">-->
+            <!--        <font-awesome-icon :icon="typeDefault.icon" class="mr4"></font-awesome-icon>-->
+            <!--        {{typeDefault.label}}-->
+            <!--        <el-icon class="el-icon&#45;&#45;right"><arrow-down /></el-icon>-->
+            <!--    </span>-->
+            <!--    <template #dropdown>-->
+            <!--        <el-dropdown-menu>-->
+            <!--            <el-dropdown-item-->
+            <!--                v-for="item in filterTypeList"-->
+            <!--                :key="item.value"-->
+            <!--                @click="changeTypeFilter(item)"-->
+            <!--                :class="[item.label === typeDefault.label ? 'activeFilter' : '']"-->
+            <!--            >-->
+            <!--                <font-awesome-icon :icon="item.icon" class="mr4"></font-awesome-icon>-->
+            <!--                {{item.label}}-->
+            <!--            </el-dropdown-item>-->
+            <!--        </el-dropdown-menu>-->
+            <!--    </template>-->
+            <!--</el-dropdown>-->
             <el-dropdown trigger="click">
                 <span class="el-dropdown-link mr10">
+                    <font-awesome-icon :icon="sortDefault.icon" class="mr4"></font-awesome-icon>
                     {{sortDefault.label}}
                     <el-icon class="el-icon--right"><arrow-down /></el-icon>
                 </span>
@@ -37,6 +43,7 @@
                                 @click="changeFilter(item)"
                                 :class="[item.label === sortDefault.label ? 'activeFilter' : '']"
                         >
+                            <font-awesome-icon :icon="item.icon" class="mr4"></font-awesome-icon>
                             {{item.label}}
                         </el-dropdown-item>
                     </el-dropdown-menu>
@@ -45,17 +52,17 @@
         </div>
     </div>
 
-    <template v-if="notesList.length > 0">
-        <el-scrollbar ref="notesListRef" :height="finallyHeight" :always="false">
-            <div class="container"
+    <div v-loading="loadingList">
+        <el-scrollbar ref="noteslistRef" :height="finallyHeight" class="mt10" :always="false">
+            <div class="container noteslistDom"
                  v-infinite-scroll="loadPage"
                  :infinite-scroll-immediate="false"
                  :infinite-scroll-distance="30"
             >
-                <template v-for="(item,index) in notesList" :key="item.id">
+                <template v-if="noteslist.length > 0">
                     <div
+                            v-for="(item,index) in noteslist" :key="item.id"
                             class="content-list"
-                            v-show="!item.ifEditCon"
                             @dragover="dropNoteFun.handleDragover($event, item)"
                             @dragenter="dropNoteFun.handleDragenter($event, item)"
                             @dragleave="dropNoteFun.handleDragleave($event, item)"
@@ -74,14 +81,28 @@
                                 </div>
                             </div>
                         </div>
-                        <!--短笔记-->
+                        <!-- 短笔记-->
                         <template v-if="item.note_type === 1">
                             <shortNotesItem
+                                    v-show="!item.ifEditCon"
                                     :item="item"
                                     :index="index"
+                                    :audioIndex="audioIndex"
                                     :isTrash="isTrash"
+                                    @changeAudio="changeAudio"
                                     @deleteNote="deleteNote"
                                     @dragstart="dropNoteFun.handlerDragstart(item, index)"
+                            />
+                            <home-notes-editor
+                                    v-if="item.ifEditCon"
+                                    ref="notesEditorChild"
+                                    :item="item"
+                                    :content="item.note"
+                                    :index="index"
+                                    :edit="true"
+                                    :noteId="item.id"
+                                    :collectionId="item.collection_id"
+                                    @editNotesContent="closeEdit(item)"
                             />
                             <NoteAnnotation
                                     v-for="(quote,qi) in item.quote"
@@ -92,188 +113,163 @@
                                     @close="closeQuote(item, qi)"
                             ></NoteAnnotation>
                         </template>
-                    </div>
-                    <div v-if="item.ifEditCon" class="mb20">
-                        <home-notes-editor
-                                ref="notesEditorChild"
+                        <!--                        长笔记-->
+                        <writeNotesItem
+                                v-if="item.note_type === 2"
                                 :item="item"
-                                :content="item.note"
                                 :index="index"
-                                :edit="true"
-                                :noteId="item.id"
-                                :collectionId="item.collection_id"
-                                @editNotesContent="closeEdit(item)"
+                                :isTrash="isTrash"
+                                @deleteNote="deleteNote"
                         />
                     </div>
+                    <el-divider>
+                        <template v-if="isFinish">
+                            <el-icon v-if="isLoading" class="is_loading"><loading/></el-icon>
+                            <span v-else style="color:#999">加载更多 ~ </span>
+                        </template>
+                        <span v-else style="color: #999999; font-style: italic;">Organized your digital life</span>
+                    </el-divider>
                 </template>
-                <el-divider>
-                    <span v-if="isFinish" style="color:#999">加载更多 ~ </span>
-                    <span v-else style="color: #999999; font-style: italic;">Organized your digital life</span>
-                </el-divider>
+                <!-- <p class="empty" v-else>方寸笔迹 · Organized your digital life</p> -->
+                <el-empty v-else description="方寸笔迹 · Organized your digital life"></el-empty>
             </div>
         </el-scrollbar>
-    </template>
-    <el-empty v-else description="方寸笔迹 · Organized your digital life"></el-empty>
+    </div>
 </template>
 
 <script setup>
-    import {ref, nextTick, computed, reactive, defineAsyncComponent, onBeforeUnmount} from "vue";
+    import {ref, nextTick, computed, reactive, defineAsyncComponent} from "vue";
     import { useStore } from "vuex"
-    // hooks -----
-    import { clearTrashNoteApi } from "@/apiDesktop/trash";
-    import { removePostilApi } from "@/apiDesktop/notes";
-    import { setMaxNumApi } from "@/apiDesktop/collection";
-    import dropNoteFun from "./js/dropNote"
     import bus from '@/utils/bus'
-    import { debounceFun } from "@/utils/tools"
     // 组件 -----
     import { Search, ArrowDown, Loading } from '@element-plus/icons-vue'
     import { ElMessageBox, ElNotification } from "element-plus"
-
-    // 异步组件 -----
+    // import HomeNotesEditor from './Editor.vue';
+    // import NoteAnnotation from "./components/NoteAnnotation.vue"
+    // import shortNotesItem from "./components/shortNotesItem.vue"
+    // import writeNotesItem from "./components/writeNotesItem.vue"
     const HomeNotesEditor = defineAsyncComponent(() => import('./Editor.vue'))
-    const shortNotesItem = defineAsyncComponent(() => import('./components/shortNotesItem.vue'))
     const NoteAnnotation = defineAsyncComponent(() => import('./components/NoteAnnotation.vue'))
+    const shortNotesItem = defineAsyncComponent(() => import('./components/shortNotesItem.vue'))
+    const writeNotesItem = defineAsyncComponent(() => import('./components/writeNotesItem.vue'))
+    // hooks -----
+    import { clearTrashNoteApi } from "@/apiDesktop/trash";
+    import { removePostilApi } from "@/apiDesktop/notes";
+    import dropNoteFun from "./js/dropNote"
+
 
     const store = useStore();
+
     // 监听用户筛选Notes下的笔记
-    let notesListRef = ref(null)
-    let trashActive = computed(() => store.state.notes.catalogActiveState.trashActive)
+    let noteslistRef = ref(null);
+    let titles = ['我的笔记', '最近三日', '废纸篓']
     let nowNotes = computed(() => {
-        let collectionTitle = store.state.notes.catalogActiveState.collectionTitle || ''
-        let groupTitle = store.state.notes.catalogActiveState.tagGroupTitle || ''
-        let tagTitle = store.state.notes.catalogActiveState.tagTitle || ''
+        let title = store.state.notes.classifyObj.title || ''
+        let collectionTitle = store.state.notes.classifyObj.collectionTitle || ''
+        let groupTitle = store.state.notes.classifyObj.groupTitle || ''
+        let tagTitle = store.state.notes.classifyObj.tagTitle || ''
 
-        return `${collectionTitle}${groupTitle ? collectionTitle ? '/' + groupTitle : groupTitle : ''}${tagTitle ? groupTitle || collectionTitle ? '/' + tagTitle : tagTitle : ''}`
+        return `${title}${collectionTitle}${groupTitle ? collectionTitle ? '/' + groupTitle : groupTitle : ''}${tagTitle ? groupTitle || collectionTitle ? '/' + tagTitle : tagTitle : ''}`
     })
-    // 根据编辑框高度动态修改列表的高度;
-    let finallyHeight = computed(() => store.state.notes.notesListHeight )
+
     // 当前笔记分类参数
-    let isFinish = computed(() => store.state.notes.isFinish )
-    let isTrash = computed(() => store.state.notes.notes.trash )
-    let notesList = computed(() => store.state.notes.noteslist )
-    let notesCount = computed(() => store.state.notes.catalogActiveState.short_note_count )
-    let setMaxTimer = null
-    let notesMaxNum = computed({
-        get(){
-            let collectionActive = store.state.notes.catalogActiveState.collectionActive
-            let collection = store.state.collection.projectListSelf.find(item => item.id === collectionActive)
-            return collection ? collection.max_num : 0
-        },
-        set(val){
-            let collectionActive = store.state.notes.catalogActiveState.collectionActive
-            store.commit('collection/SET_COLLECTION_MAX_NUM', { collectionActive, val })
-        }
-    })
-    let statusClass = computed(() => {
-        let number = Math.floor( (notesCount.value / notesMaxNum.value) * 100 )
-        let style = ''
-        if( number < 60 ){
-            style = 'block-success'
-        } else if ( number > 90 ) {
-            style = 'block-error'
-        } else {
-            style = 'block-warning'
-        }
-        return style
-    })
-
-    // 翻页的页数
-    let page = 1
+    let isFinish = computed(() => { return store.state.notes.isFinish });
+    let isTrash = computed(() => { return store.state.notes.notes.trash });
+    let noteslist = computed(() => { return store.state.notes.noteslist });
 
     // 刷新笔记列表
     let ifRefresh = ref(true);
     function refreshList(){
         ifRefresh.value = false;
-        notesListRef.value?.setScrollTop(0)
-        bus.emit('clearSearchKeyword')
+        noteslistRef.value?.setScrollTop(0)
+        getNotesList();
     }
+
     // 搜索笔记列表方法
-    bus.on('handleSearchNote', (e) => {
-        getNotesList({
-            keyword: e.keyword,
-            start_time: e.start_time,
-            end_time: e.end_time
-        })
+    let keyword = ''
+    let loadingList = ref(false)
+    bus.on('INPUT_SEARCH', (e) => {
+        keyword = e.keyword
+        getNotesList();
     })
-    bus.on("clearSearchKeyword", () => {
-        page = 1
-        getNotesList({})
-    })
-    bus.on("handleMakeListTop", () => {
+    bus.on("CLEAR_KAYWORD", () => {
+        keyword = "";
+        page = 1;
+        getNotesList();
+    });
+    bus.on("MAKE_LIST_TOP", () => {
         nextTick(() => {
-            notesListRef.value?.setScrollTop(0)
+            noteslistRef.value?.setScrollTop(0)
         })
     })
 
     // 筛选笔记方法
     let filterList = [
         {
-            label: "创建时间 ↓",
+            label: "按更新时间从新到旧",
             value: "desc",
-            orderby_create: 1,
             icon: 'arrow-down-1-9'
         },{
-            label: "创建时间 ↑",
+            label: "按更新时间从旧到新",
             value: "asc",
-            orderby_create: 1,
-            icon: 'arrow-down-9-1'
-        },{
-            label: "更新时间 ↓",
-            value: "desc",
-            orderby_create: 0,
-            icon: 'arrow-down-1-9'
-        },{
-            label: "更新时间 ↑",
-            value: "asc",
-            orderby_create: 0,
             icon: 'arrow-down-9-1'
         }
     ]
+    let filterTypeList = [
+        {
+            label: '全部笔记',
+            value: -1,
+            icon: 'grip'
+        },{
+            label: '笔记卡片',
+            value: 1,
+            icon: 'lightbulb'
+        },{
+            label: '我的写作',
+            value: 2,
+            icon: 'file-lines'
+        }
+    ]
     let sortDefault = reactive({
-        label: "更新时间 ↓",
-        value: "desc",
-        orderby_create: 0,
+        label: '按更新时间从新到旧',
         icon: 'arrow-down-1-9'
     })
-
+    let typeDefault = reactive({
+        label: '全部笔记',
+        icon: 'grip'
+    })
+    filterTypeList.forEach(item => {
+        if(store.state.notes.notes.note_type === item.value){
+            typeDefault.label = item.label
+            typeDefault.icon = item.icon
+        }
+    })
     filterList.forEach(item => {
         if(store.state.notes.notes.sort === item.value){
             sortDefault.label = item.label
+            sortDefault.icon = item.icon
         }
     })
     function changeFilter(e){
-        store.commit("notes/CHANGE_FILTER_NOTE_PARAMS",{
-            orderby_create: e.orderby_create,
+        store.commit("notes/FILTER_NOTES_LIST",{
             sort: e.value
         })
         sortDefault.label = e.label
-        getNotesList({})
+        sortDefault.icon = e.icon
+        getNotesList()
     }
-
-    // 设置最大笔记数
-    let ifChangeMaxNum = ref(true)
-    let maxNumInputRef = ref(null)
-    function changeMaxNum(){
-        ifChangeMaxNum.value = false
-        setTimeout(() => maxNumInputRef.value.focus())
-    }
-    function setMaxNum(){
-        let collectionActive = store.state.notes.catalogActiveState.collectionActive
-        ifChangeMaxNum.value = true
-        setMaxNumApi({
-            user_id: store.state.user.userInfo.id,
-            collection_id: collectionActive,
-            max_num: notesMaxNum.value
-        })
-    }
+    // function changeTypeFilter(e){
+    //     store.commit('notes/FILTER_NOTES_TYPE', { type: e.value })
+    //     typeDefault.label = e.label
+    //     typeDefault.icon = e.icon
+    //     getNotesList()
+    // }
 
     // 编辑该笔记
-    const notesEditorChild = ref(null)
+    const notesEditorChild = ref(null);
     function closeEdit(item){
-        item.ifEditCon = false
+        item.ifEditCon = false;
     }
-
     // 关闭笔记引用
     function closeQuote(item, i){
         ElMessageBox.confirm('确定删除该引用吗？',{
@@ -299,48 +295,44 @@
     }
 
     // 查询笔记列表
-    function getNotesList({ page = 1, keyword = undefined, start_time = undefined, end_time = undefined }){
-        if(page === 1) store.commit("notes/RESET_NOTES_LIST")
-        store.dispatch("notes/getShortNotesList",{
-            page, keyword, start_time, end_time
-        }).then((res) => {
+    let isLoading = ref(false)
+    function getNotesList(page){
+        isLoading.value = true
+        store.dispatch("notes/getNotesList",{
+            page: page ? page : 1,
+            keyword: keyword || undefined,
+        }).then(() => {
+            isLoading.value = false
             ifRefresh.value = true
-            store.commit('notes/CHANGE_CATALOG_ACTIVE_STATE', {
-                short_note_count: res.data.count || 0
-            })
+            loadingList.value = false
         })
-        if(page === 1){
-            store.dispatch('notes/getWriteNotesList',{
-                page, keyword, start_time, end_time
-            }).then((res) => {
-                bus.emit('readWriteNoteData')
-                store.commit('notes/CHANGE_CATALOG_ACTIVE_STATE', {
-                    long_note_count: res.data.count || 0
-                })
-            })
-        }
+    }
+
+    // 监听出发了当前那个列表的音频文件
+    let audioIndex = ref(null)
+    function changeAudio(e){
+        audioIndex.value = e;
     }
 
     // 监听列表滚动
+    let page = 1
     function loadPage(){
         if(isFinish.value){
             page ++
-            getNotesList({page})
+            getNotesList(page)
         }
     }
 
     // 监听删除note
     function deleteNote(){
-        if(isFinish.value && notesList.value.length < 10){
+        if(isFinish.value && noteslist.value.length < 10){
             page ++;
-            getNotesList({page})
+            getNotesList(page)
         }
     }
 
-    // 展示知识图谱
-    function showKnowledgeGraph(){
-        bus.emit('showKnowledgeGraph')
-    }
+    // 根据编辑框高度动态修改列表的高度;
+    let finallyHeight = computed(() => { return store.state.notes.notesListHeight });
 
     // 清倒废纸篓
     function cleanTrash(){
@@ -352,6 +344,7 @@
             const res = await clearTrashNoteApi({
                 user_id: store.state.user.userInfo.id
             })
+            console.log(res)
             if(res.status_code === 200){
                 ElNotification.success("删除成功")
                 store.commit("notes/RESET_NOTES_LIST")
@@ -359,16 +352,47 @@
             }
         }).catch(()=>{})
     }
-
-    // 组件销毁前移除所有的监听
-    onBeforeUnmount(() => {
-        bus.off('handleSearchNote')
-        bus.off('clearSearchKeyword')
-        bus.off('handleMakeListTop')
-    })
 </script>
 
 <style lang="scss">
+    .content-html{
+        font-size: 14px;
+        color: #323334;
+        white-space: pre-wrap;
+        line-height: 30px;
+        .hashtag-suggestion {
+            display: inline-block;
+            color: $purple;
+            border-radius: 2px;
+            padding: 0 2px;
+            margin: 0 1px;
+            font-size: 14px;
+            background: rgba($purple, 0.1);
+            white-space: normal;
+            line-height: 20px;
+            cursor: pointer;
+            transition: all 300ms;
+            &:hover{
+                color: #fff;
+                background: rgba($purple, 0.8);
+            }
+        }
+        img{
+            max-width: 100%;
+        }
+        p{
+            min-height: 22px;
+        }
+        ol, ul{
+            margin: 0;
+            padding-left: 20px;
+        }
+    }
+    .el-divider__text{
+        background: #fafafc !important;
+    }
+
+
     .activeFilter{
         color: $purple;
         background-color: rgba(120, 133, 209, 0.1) !important
@@ -383,7 +407,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        height: 40px;
+        margin-top: 10px;
         .info{
             padding: 0 10px;
             span{
@@ -391,25 +415,16 @@
                 font-size: 16px;
                 color: #333;
                 display: inline-block;
-                max-width: 300px;
+                max-width: 210px;
+                overflow: hidden;
                 vertical-align: bottom;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
             i{
                 font-size: 18px;
                 color: #999;
                 cursor: pointer;
-            }
-            .knowledge-graph{
-                padding: 0 4px;
-                border-radius: 4px;
-                cursor: pointer;
-                transition: all .3s;
-                &:hover{
-                    background: #f5f5f5;
-                }
-                &:active{
-                    background: #eeeeee;
-                }
             }
             .clear-trash{
                 display: flex;
@@ -439,44 +454,15 @@
                 align-items: center;
                 margin-left: 10px;
             }
-            .input-num{
-                width: 22px;
-                height: 10px;
-                line-height: 10px;
-                color: #999999;
-                border: 1px solid #999999;
-                border-radius: 2px;
-                font-size: 12px;
-                &::-webkit-outer-spin-button,
-                &::-webkit-inner-spin-button {
-                    -webkit-appearance: none !important;
-                    margin: 0;
-                }
-                &[type="number"] {
-                    -moz-appearance: textfield;
-                }
-            }
-            .block{
-                display: inline-block;
-                width: 8px;
-                height: 8px;
-                border-radius: 4px;
-            }
-            .block-success{
-                background: $success;
-            }
-            .block-warning{
-                background: $warning;
-            }
-            .block-error{
-                background: $error;
-            }
         }
     }
     .container{
+        position: relative;
+        padding: 2px 5px;
         &::-webkit-scrollbar {
             display: none;
         }
+
         .content-list{
             position: relative;
             background: #F6F8FC;
