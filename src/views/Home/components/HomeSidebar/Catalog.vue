@@ -22,7 +22,7 @@
                 ></collectionItem>
             </div>
         </FCollapse>
-        <div v-if="projectListTeam.length" class="unselectable container-catalog-title" @click="handleShowCatalog('team')">
+        <div class="unselectable container-catalog-title" @click="handleShowCatalog('team')">
             <div class="flex align-center">
                 <div class="arrowRight mr6">
                     <el-icon :size="16" :class="!showTeamCollection ? 'is_rotate_arrow_back' : 'is_rotate_arrow_go'" color="#6F7A93"><CaretRight/></el-icon>
@@ -47,7 +47,7 @@
 
     <!-- 添加/编辑项目 -->
     <el-dialog :title="projectTitle" v-model="showAddProject" width="350px" destroy-on-close @close="showEmoji = false">
-        <el-form ref="projectFormRef" :model="project.form" :rules="project.rules" v-loading="projectLoad">
+        <el-form ref="projectFormRef" :model="project.form" :rules="project.rules" label-width="100" v-loading="projectLoad">
             <el-form-item label="" prop="collection">
                 <div style="padding: 10px 10px 0 10px;">
                     <div class="input-box">
@@ -210,10 +210,9 @@
                 center
                 @close="closeEcharts"
         >
-            <div id="knowledgeGraphChart"></div>
+            <div id="myChart"></div>
         </el-dialog>
     </div>
-
 
     <maskCom v-if="showEmoji" :opacity="0" :zIndex="2000" @click="showEmoji = false"></maskCom>
 </template>
@@ -243,7 +242,6 @@
 
     // 获取个人笔记本项目
     let projectListSelf = computed(() => store.state.collection.projectListSelf)
-    let projectListTeam = computed(() => store.state.collection.projectListTeam)
 
     // 控制笔记本分类的是否展开的状态
     const showSelfCollection = computed(() => store.state.notes.catalogState.showSelfCollection)
@@ -450,11 +448,16 @@
 
     // 展示知识图谱
     let showKnowledgeGraph = ref(false)
-    function knowledgeGraph({ item, index }){
-        getGraph(showKnowledgeGraph, item)
+    async function knowledgeGraph({item}){
+        const user_id = store.state.user.userInfo.id
+        getGraph(user_id, item, showKnowledgeGraph)
     }
     bus.on('showKnowledgeGraph',() => {
-        getGraph(showKnowledgeGraph)
+        let item = {
+            collection: store.state.notes.catalogActiveState.collectionTitle,
+            id: store.state.notes.catalogActiveState.collectionActive
+        }
+        knowledgeGraph({item})
     })
 
     // 判断刚进入时笔记本有没有选中,没有的话默认选中第一个
@@ -487,7 +490,7 @@
         border: 0px !important;
     }
     .knowledge{
-        #knowledgeGraphChart{
+        #myChart{
             width: 96vw;
             height: calc( 96vh - 40px);
             margin: 40px auto 10px;
@@ -702,6 +705,4 @@
             color: $purple;
         }
     }
-
-
 </style>

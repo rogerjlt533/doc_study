@@ -7,24 +7,24 @@
 <script setup>
     import { ref } from 'vue'
     import { useStore } from "vuex"
+    import { checkVersionApi } from '@/apiDesktop/system'
     import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
-    // import { getToken } from "@/utils/auth"
-    // import { initConnect, closeConnect } from "@/backService/ws/sync"
-    // import { ipcRenderer } from "electron"
 
     const store = useStore()
+    const eStore = require('electron-store')
+    const electronStore = new eStore()
 
     const locale = ref(null)
     locale.value = zhCn
 
-    // if(getToken()){
-    //     initConnect('ws://81.70.219.124:4379', getToken())
-    // }
-    // ipcRenderer.on("willQuitProgram", (event, data) => {
-    //     console.log("123123123123123123")
-    //     closeConnect()
-    // })
+    setInterval(() => {
+        handleReloadVuex()
+    }, 10 * 1000)
 
+    function handleReloadVuex(){
+        const vuex = JSON.parse(electronStore.get('vuex'))
+        store.commit('RESET_BASE_DATA', vuex)
+    }
 </script>
 
 <style lang="scss" scoped>
@@ -60,10 +60,6 @@
 
     .el-divider__text{
         background: #ffffff !important;
-    }
-
-    .el-loading-spinner .path{
-        stroke: $purple !important;
     }
 </style>
 

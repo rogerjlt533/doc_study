@@ -1,5 +1,5 @@
 <template>
-    <div ref="shortNoteItemRef" @contextmenu="handleRightClick($event)" >
+    <div @contextmenu="handleRightClick" >
         <div class="line-one" :id="'note-id-' + item.id" draggable="true">
             <div class="flex align-center">
                 <font-awesome-icon icon="grip-vertical" color="#6D7785" class="font-12 mr6" />
@@ -34,7 +34,7 @@
                                         @click="resetCollection(collect,index)">
                                     {{collect.collection}}
                                 </el-dropdown-item>
-                                <el-divider v-if="collectionListSelf.length && collectionListTeam.length" class="mt4 mb4"></el-divider>
+                                <el-divider v-if="collectionListSelf.length && collectionListTeam.length" style="margin: 4px 0"></el-divider>
                                 <el-dropdown-item
                                         :class="[collect.id === item.collection_id ? 'collect-dropdown-active' : '']"
                                         v-for="(collect,index) in collectionListTeam" :key="index"
@@ -113,27 +113,27 @@
 </template>
 
 <script setup>
-    import {ref, defineProps, onMounted, defineEmits, computed} from "vue";
+    import {ref, defineProps, onMounted, defineEmits, computed, watch, defineAsyncComponent} from "vue";
     import { useStore } from "vuex"
     import bus from '@/utils/bus'
     // hooks ----
     import { simpleEditor } from "../js/cardEditor"
+    import openUrlByBrowser from "@/assets/js/openUrlByBrowser"
     import { getNoteNodeClick } from '../js/editorMethods'
-    import { deepClone, openUrlByBrowser } from "@/utils/tools"
-    import request from "@/utils/mainRequest"
+    import { convertToPageApi, getNotesHistoryApi, rollHistoryApi} from '@/apiDesktop/notes'
+    import {deepClone} from "@/utils/tools";
     // 组件 ----
     import previewImg from "@/components/imagePreview"
     import { ElMessageBox, ElNotification } from "element-plus"
     import { RefreshLeft } from '@element-plus/icons-vue'
     import fcDialog from "@/components/dialog"
-    import fcContextMenu from "@/components/contextMenu"
 
-    // const remote = require('electron').remote;
-    // const Menu = remote.Menu;
-    // const MenuItem = remote.MenuItem;
+    const remote = require('electron').remote;
+    const Menu = remote.Menu;
+    const MenuItem = remote.MenuItem;
 
     const store = useStore()
-    const emit = defineEmits(['deleteNote', 'editNote'])
+    const emit = defineEmits(['deleteNote'])
 
     const props = defineProps({
         item: {
@@ -148,75 +148,31 @@
         }
     });
 
-    const isPro = computed(() => store.state.user.userBase.is_pro)
+    watch(() => props.item, (newval, oldval) => {
+        console.log(newval, oldval)
+    })
+
+    // let noteDetailVal = props.item.curtNote
 
     // 右击笔记本
-    const shortNoteItemRef = ref(null)
-    const handleRightClick = (e) => {
-        e.preventDefault()
-        // let menu = new Menu()
-        // if(props.isTrash){
-        //     menu.append(new MenuItem({ label: '🗂 恢复笔记', click: recoverNote }))
-        //     menu.append(new MenuItem({ type: 'separator' }))
-        //     menu.append(new MenuItem({ label: '🗑 删除笔记', click: deleteNote }))
-        // }else{
-        //     menu.append(new MenuItem({ label: '📝 编辑', click: () => emit('editNote') }))
-        //     menu.append(new MenuItem({ label: '💬 引用', click: annotation }))
-        //     menu.append(new MenuItem({ label: '📔 转为写作', click: cardToWrite }))
-        //     if(isPro.value) menu.append(new MenuItem({ label: '🚀️ 立即同步', click: urgentPushNote }))
-        //     menu.append(new MenuItem({ type: 'separator' }))
-        //     menu.append(new MenuItem({ label: '🗑 扔到废纸篓', click: moveTrashCan }))
-        // }
-        // menu.popup()
-
-        let menuList = []
+    const handleRightClick = () => {
+        let menu = new Menu()
         if(props.isTrash){
-            menuList = [{
-                type: 'item',
-                title: '🗂 恢复笔记',
-                command: recoverNote,
-            },{
-                type: 'separator',
-                title: '',
-            },{
-                type: 'item',
-                title: '🗑 删除笔记',
-                command: deleteNote,
-            }]
+            menu.append(new MenuItem({ label: '🗂 恢复笔记', click: recoverNote }))
+            menu.append(new MenuItem({ label: '📄 复制', role: 'copy' }))
+            menu.append(new MenuItem({ type: 'separator' }))
+            menu.append(new MenuItem({ label: '🗑 删除笔记', click: deleteNote }))
         }else{
-            menuList = [{
-                type: 'item',
-                title: '📝 编辑',
-                command: () => emit('editNote'),
-            },{
-                type: 'item',
-                title: '💬 引用',
-                command: annotation,
-            },{
-                type: 'item',
-                title: '📔 转为写作',
-                command: cardToWrite,
-            },{
-                type: 'item',
-                title: '🚀️ 立即同步',
-                command: urgentPushNote,
-            },{
-                type: 'separator',
-                title: '',
-            },{
-                type: 'item',
-                title: '🗑 扔到废纸篓',
-                command: moveTrashCan,
-            }]
-        }
 
-        fcContextMenu({
-            el: shortNoteItemRef.value,
-            show: true,
-            x: e.clientX,
-            y: e.clientY,
-            list: menuList
-        })
+            menu.append(new MenuItem({ label: '📝 编辑', click: editNote }))
+            menu.append(new MenuItem({ label: '💬 引用', click: annotation }))
+            menu.append(new MenuItem({ label: '📄 复制', role: 'copy' }))
+            menu.append(new MenuItem({ label: '📝 转为写作', click: cardToWrite }))
+            // menu.append(new MenuItem({ label: '📅 笔记历史', click: getNoteHistory }))
+            menu.append(new MenuItem({ type: 'separator' }))
+            menu.append(new MenuItem({ label: '🗑 扔到废纸篓', click: moveTrashCan }))
+        }
+        menu.popup()
     }
 
     // 重置collection列表
@@ -239,11 +195,6 @@
             props.item.collection.color = res.data.collection.color
             props.item.collection.collection = res.data.collection.collection
             props.item.collection_id = res.data.collection_id
-
-            store.commit('notes/REMOVE_NOTE', {
-                index: props.index,
-                note_type: 1
-            })
         }
     }
 
@@ -273,14 +224,10 @@
 
     // 卡片笔记转写作模式
     function cardToWrite(){
-        request({
-            api: 'convertToPageApi',
-            key: 'convertToPageApi',
-            data: {
-                user_id: store.state.user.userInfo.id,
-                note_id: props.item.id
-            }
-        }, (res) => {
+        convertToPageApi({
+            user_id: store.state.user.userInfo.id,
+            note_id: props.item.id
+        }).then((res) => {
             if(res.status_code === 200){
                 store.commit('notes/REMOVE_NOTE', {
                     index: props.index,
@@ -296,28 +243,17 @@
         })
     }
 
-    // 强制推送笔记
-    function urgentPushNote(){
-        request({
-            api: 'urgentPushNoteApi',
-            key: 'urgentPushNoteApi',
-            data: {
-                user_id: store.state.user.userInfo.id,
-                note_id: props.item.id
-            }
-        })
-    }
-
     // 编辑笔记
-    // function editNote(){
-    //     setTimeout(() => {
-    //         props.item.ifEditCon = true
-    //     }, 150)
-    // }
+    function editNote(){
+        setTimeout(() => {
+            props.item.ifEditCon = true
+            store.commit('notes/SET_EDIT_NOTE_COUNT', 1)
+        }, 150)
+    }
     // 双击编辑笔记
     function dblclickNote(){
         if(props.isTrash || props.item.is_self !== 1) return false
-        emit('editNote')
+        editNote()
     }
 
     // 回收站恢复笔记
@@ -331,7 +267,6 @@
     }
     // 回收站删除笔记
     function deleteNote(){
-        console.log("!@3123123")
         emit("deleteNote")
         store.dispatch("notes/deleteNote",{
             note_id: props.item.id,
@@ -354,7 +289,7 @@
     let showNoteHistory = ref(false);
     let notesHistoryList = ref([]);
     let noteHistory = {};
-    function getNoteHistory(){
+    async function getNoteHistory(){
         noteHistory.id = props.item.id;
         const data = {
             user_id: store.state.user.userInfo.id,
@@ -362,44 +297,36 @@
             page: 1,
             size: 50
         }
-        request({
-            api: 'getNotesHistoryApi',
-            key: 'getNotesHistoryApi',
-            data
-        }, (res) => {
-            if(res.status_code === 200){
-                showNoteHistory.value = true;
-                notesHistoryList.value = res.data.histories
-            }
-        })
+        const res = await getNotesHistoryApi(data)
+        console.log('noteAction.history', res)
+        if(res.status_code === 200){
+            showNoteHistory.value = true;
+            notesHistoryList.value = res.data.histories
+        }
     }
     // 恢复历史笔记
     async function recoveryHistoryNote(item){
-        noteHistory.note = item.former_note
-        request({
-            api: 'rollHistoryApi',
-            key: 'rollHistoryApi',
-            data: {
-                user_id: store.state.user.userInfo.id,
-                history_id: item.id
-            }
-        }, (res) => {
-            if(res.status_code === 200){
-                ElNotification({
-                    message: '笔记已恢复！',
-                    type: 'success'
-                });
-                store.commit("notes/RECOVERY_HISTORY", noteHistory)
-            }
+        noteHistory.note = item.former_note;
+        const res = await rollHistoryApi({
+            user_id: store.state.user.userInfo.id,
+            history_id: item.id
         })
+        if(res.status_code === 200){
+            ElNotification({
+                message: '笔记已恢复！',
+                type: 'success'
+            });
+            store.commit("notes/RECOVERY_HISTORY", noteHistory)
+        }
     }
 
     //判断内容高度
     let isOverHeight = ref(0);
+    let isFlod = ref(false);
     let htmlRef = ref(null);
     let ifSetFlod = computed(() => { return store.state.user.userSetting.fold_note });
     onMounted(() => {
-        if(ifSetFlod.value === 1){
+        if(ifSetFlod.value == 1){
             setTimeout(() => {
                 if(htmlRef.value){
                     isOverHeight.value = htmlRef.value.offsetHeight;

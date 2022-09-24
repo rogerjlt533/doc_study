@@ -52,7 +52,7 @@ export default createStore({
 				cachedNote: "",
 				notesListHeight: "calc(100vh - 208px)",
 				catalogState: {
-					showSelfCollection: true,
+					showSelfCollection: false,
 					showTeamCollection: false,
 					showTags: false
 				},

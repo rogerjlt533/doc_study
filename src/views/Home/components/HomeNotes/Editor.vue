@@ -1,78 +1,76 @@
 <template>
-    <div>
-        <div
-                class="annotation-box"
-                v-if="annotationNote.id"
-        >
-            <font-awesome-icon icon="quote-left" class="font-16 pt4" color="#9EA0AD" />
-            <div class="note-cont" :class="[ !annotationNote.isFold ? 'annotation-max-height' : '' ]">
-                <div class="content-html" v-html="annotationNote.note"></div>
-            </div>
-            <div class="anno-options">
-                <div @click="controlIsFold">
-                    <font-awesome-icon v-if="!annotationNote.isFold" icon="angle-down" color="#9EA0AD" class="margin-center font-16"/>
-                    <font-awesome-icon v-else icon="angle-up" color="#9EA0AD" class="margin-center font-16" />
-                </div>
-                <div @click="closeAnnotation">
-                    <font-awesome-icon icon="times-circle" class="font-14" color="#9EA0AD" />
-                </div>
+    <div
+            ref="annotationRef"
+            class="annotation-box"
+            v-if="annotationNote.id"
+    >
+        <font-awesome-icon icon="quote-left" class="font-16 pt4" color="#9EA0AD" />
+        <div class="note-cont" :class="[ !annotationNote.isFlod ? 'annotation-max-hieght' : '' ]">
+            <div class="content-html" v-html="annotationNote.note"></div>
+        </div>
+        <div class="anno-options">
+            <div class="fold-text"
+                 @click="controlIsFlod"
+            >{{!annotationNote.isFlod ? "展开" : "收起"}}</div>
+            <div @click="closeAnnotation">
+                <font-awesome-icon icon="times-circle" class="font-14" color="#9EA0AD" />
             </div>
         </div>
-        <div class="container-editor" :class="className" ref="editorBox">
-            <editor-content
-                    class="editor-content-style"
-                    :editor="editor"
-                    @click="clickEditorNode"
-                    @contextmenu="handleRightClick()"
-                    @imageToWord="haveImageToWord"
-            />
-            <div class="tooler" v-if="editor">
-                <div class="options">
-                    <div class="trigger-style" @click="editor.chain().focus().insertContent('#').run()">
-                        <font-awesome-icon icon="hashtag" class="font-14" color="#9EA0AD" />
-                    </div>
-                    <div class="trigger-style" @click="editor.chain().focus().toggleBold().run()">
-                        <font-awesome-icon icon="bold" class="font-16" :color="editor.isActive('bold') ? '#333333' : '#9EA0AD'" />
-                    </div>
-                    <div class="trigger-style" @click="editor.chain().focus().toggleUnderline().run()">
-                        <font-awesome-icon icon="underline" class="font-16" :color="editor.isActive('underline') ? '#333333' : '#9EA0AD'" />
-                    </div>
-                    <div class="trigger-style" @click="editor.chain().focus().toggleBulletList().run()">
-                        <font-awesome-icon icon="list-ul" class="font-16" :color="editor.isActive('bulletList') ? '#333333' : '#9EA0AD'" />
-                    </div>
-                    <div class="trigger-style" @click="editor.chain().focus().toggleOrderedList().run()">
-                        <font-awesome-icon icon="list-ol" class="font-16" :color="editor.isActive('orderedList') ? '#333333' : '#9EA0AD'" />
-                    </div>
-                    <div class="trigger-style">
-                        <el-popover placement="bottom" :width="370" v-model:visible="showEmoji" trigger="click">
-                            <VuemojiPicker @emojiClick="handleEmojiClick" :isDark="false" />
-                            <template #reference>
-                                <font-awesome-icon icon="face-laugh" class="font-16" color="#9EA0AD" />
-                            </template>
-                        </el-popover>
-                    </div>
-                    <div class="trigger-style" style="overflow: hidden;">
-                        <el-upload
-                                ref="elUploadRef"
-                                class="upload-demo"
-                                :action="api + '/api/user/upload'"
-                                :show-file-list="false"
-                                :on-progress="uploadLoading"
-                                :on-success="uploadSuccess"
-                                :headers="uploadHeader"
-                        >
-                            <font-awesome-icon icon="image" class="font-16 mt4" color="#9EA0AD" />
-                        </el-upload>
-                    </div>
-                    <div style="width: 100px;" v-show="showProgress">
-                        <el-progress color="#6C56F6" :stroke-width="10" :percentage="progressNum"></el-progress>
-                    </div>
+    </div>
+    <div class="container-editor" :class="className" ref="editorBox">
+        <editor-content
+                class="editor-content-style"
+                :editor="editor"
+                @click="clickEditorNode"
+                @contextmenu="handleRightClick()"
+                @imageToWord="haveImageToWord"
+        />
+        <div class="tooler" v-if="editor">
+            <div class="options">
+                <div class="trigger-style" @click="editor.chain().focus().insertContent('#').run()">
+                    <font-awesome-icon icon="hashtag" class="font-14" color="#9EA0AD" />
                 </div>
-                <el-button v-if="!edit" class="color-white btn-style" color="#734eff" type="primary" size="small" :loading="isDisabled" @click="onSubmit">记 录</el-button>
-                <div v-else>
-                    <el-button class="btn-style" plain color="#aaaaaa" size="small" @click="cancelEdit">取 消</el-button>
-                    <el-button class="btn-style" color="#734eff" type="primary" size="small" :loading="isDisabled" @click="editContent">修 改</el-button>
+                <div class="trigger-style" @click="editor.chain().focus().toggleBold().run()">
+                    <font-awesome-icon icon="bold" class="font-16" :color="editor.isActive('bold') ? '#333333' : '#9EA0AD'" />
                 </div>
+                <div class="trigger-style" @click="editor.chain().focus().toggleUnderline().run()">
+                    <font-awesome-icon icon="underline" class="font-16" :color="editor.isActive('underline') ? '#333333' : '#9EA0AD'" />
+                </div>
+                <div class="trigger-style" @click="editor.chain().focus().toggleBulletList().run()">
+                    <font-awesome-icon icon="list-ul" class="font-16" :color="editor.isActive('bulletList') ? '#333333' : '#9EA0AD'" />
+                </div>
+                <div class="trigger-style" @click="editor.chain().focus().toggleOrderedList().run()">
+                    <font-awesome-icon icon="list-ol" class="font-16" :color="editor.isActive('orderedList') ? '#333333' : '#9EA0AD'" />
+                </div>
+                <div class="trigger-style">
+                    <el-popover placement="bottom" :width="370" v-model:visible="showEmoji">
+                        <VuemojiPicker @emojiClick="handleEmojiClick" :isDark="false" />
+                        <template #reference>
+                            <font-awesome-icon icon="face-laugh" class="font-16" color="#9EA0AD" />
+                        </template>
+                    </el-popover>
+                </div>
+                <div class="trigger-style" style="overflow: hidden;">
+                    <el-upload
+                            ref="elUploadRef"
+                            class="upload-demo"
+                            :action="api + '/api/user/upload'"
+                            :show-file-list="false"
+                            :on-progress="uploadLoading"
+                            :on-success="uploadSuccess"
+                            :headers="uploadHeader"
+                    >
+                        <font-awesome-icon icon="image" class="font-16 mt4" color="#9EA0AD" />
+                    </el-upload>
+                </div>
+                <div style="width: 100px;" v-show="showProgress">
+                    <el-progress color="#6C56F6" :stroke-width="10" :percentage="progressNum"></el-progress>
+                </div>
+            </div>
+            <el-button v-if="!edit" class="color-white btn-style" color="#734eff" type="primary" size="small" :loading="isDisabled" @click="onSubmit">记 录</el-button>
+            <div v-else>
+                <el-button class="btn-style" plain color="#aaaaaa" size="small" @click="cancelEdit">取 消</el-button>
+                <el-button class="btn-style" color="#734eff" type="primary" size="small" :loading="isDisabled" @click="editContent">修 改</el-button>
             </div>
         </div>
     </div>
@@ -85,13 +83,12 @@
     import { getToken } from "@/utils/auth"
     // 组件 ------
     import { ElMessage, ElNotification } from "element-plus"
-    import { EditorContent } from '@tiptap/vue-3'
+    import { EditorContent, BubbleMenu } from '@tiptap/vue-3'
     import { VuemojiPicker } from 'vuemoji-picker'
     // hooks ----
     import { editorInstance } from "./js/cardEditor"
     import { imageToWordApi } from "@/api/notes"
-    import { openUrlByBrowser } from "@/utils/tools"
-    import { ipcRenderer } from "electron"
+    import openUrlByBrowser from "@/assets/js/openUrlByBrowser"
 
     const remote = require('electron').remote;
     const Menu = remote.Menu;
@@ -125,8 +122,7 @@
             default: ""
         }
     })
-    const emit = defineEmits(["editNotesContent"])
-
+    const emit = defineEmits(["editNotesContent"]);
     // 获取当前editor的class名
     const className = computed(() => {
         let classname = ""
@@ -158,7 +154,14 @@
 
     let editorBox = ref(null)
     let editor = ref(null)
-    editor.value = editorInstance(props.content, editorBox, props.edit, className, props, onSubmit, editContent)
+    editor.value = editorInstance(props.content, editorBox, props.edit, className, onSubmit, editContent)
+    // 监听修改列表高度
+    bus.on('changeNotesListHeight', async () => {
+        await nextTick()
+        let annotationHeight = annotationRef.value ? annotationRef.value.offsetHeight : 0
+        let editorBoxHeight = editorBox.value ? editorBox.value.offsetHeight : 0
+        store.commit('notes/SET_NOTES_LIST_HEIGHT', editorBoxHeight + annotationHeight)
+    })
 
     // 图片上传方法
     let uploadHeader = {
@@ -184,7 +187,6 @@
         const imageHtml = `<img src="${src}"><p></p>`
         editor.value.chain().insertContent( imageHtml ).focus().run()
     }
-    bus.off('handlePasteImage')
     bus.on('handlePasteImage', ({type, src}) => {
         if(type !== 'card') return
         handlePasteImage(src)
@@ -196,21 +198,22 @@
         collection_id: "",
         note: "",
         quote: {},
-        isFold: false,
+        isFlod: false,
         isOverHeight: 0
     });
     // 控制是否展开引用
-    async function controlIsFold(){
-        annotationNote.isFold = !annotationNote.isFold
+    let annotationRef = ref(null)
+    async function controlIsFlod(){
+        annotationNote.isFlod = !annotationNote.isFlod
         await nextTick()
-        bus.emit("changeNotesListHeight")
+        store.commit('notes/SET_NOTES_LIST_HEIGHT', editorBox.value.offsetHeight + annotationRef.value.offsetHeight)
     };
     // 关闭引用
     function closeAnnotation(){
         Object.keys(annotationNote).forEach((key) => {
             annotationNote[key] = ""
         })
-        bus.emit("changeNotesListHeight")
+        store.commit("notes/SET_NOTES_LIST_HEIGHT", editorBox.value.offsetHeight)
     }
     // 监听展示引用模块
     bus.on("setAnnotationId", async ({item, isOverHeight}) => {
@@ -219,7 +222,9 @@
         })
         annotationNote.isOverHeight = isOverHeight;
         await nextTick();
-        bus.emit("changeNotesListHeight")
+        let annotationHeight = annotationRef.value ? annotationRef.value.offsetHeight : 0
+        let editorBoxHeight = editorBox.value ? editorBox.value.offsetHeight : 0
+        store.commit('notes/SET_NOTES_LIST_HEIGHT', editorBoxHeight + annotationHeight)
         editor.value.chain().focus();
     })
 
@@ -254,7 +259,7 @@
                 store.commit("notes/CLEAR_CACHED_NOTE")
                 editor.value.commands.clearContent()
                 // 记录完后重新计算高度
-                bus.emit("changeNotesListHeight", 100)
+                store.commit("notes/SET_NOTES_LIST_HEIGHT", 100)
             }
         })
     }
@@ -282,14 +287,15 @@
         isDisabled.value = true
         store.dispatch("notes/editNote", params).then((res) => {
             isDisabled.value = false
+            store.commit('notes/SET_EDIT_NOTE_COUNT', 0)
         })
     }
     function cancelEdit(){
         emit('editNotesContent', false)
+        store.commit('notes/SET_EDIT_NOTE_COUNT', 0)
     }
 
     // 监听选择标签
-    bus.off('setTagToEditor')
     bus.on("setTagToEditor", (data) => {
         if(data.tag){
             let content = editor.value?.getHTML();  // 获取编辑器中的内容
@@ -371,15 +377,10 @@
         })
     }
 
-    // 监听快速保存的方法
-    ipcRenderer.on('handleFastSaveNote', (event, params) => {
-        params.isFast = true
-        store.dispatch("notes/addNotes", params)
-    })
-
     // 组件销毁前，取消bus监听
     onBeforeUnmount(() => {
         editor.value.destroy()
+        bus.off('changeNotesListHeight')
     })
 
     /**
@@ -407,6 +408,7 @@
     //         editor.value = editorInstance(props.content, editorBox, props.edit, className, onSubmit)
     //     }
     // })
+
 </script>
 
 <style lang="scss" scoped>
@@ -439,16 +441,12 @@
             margin: 0 10px;
             width: calc(100% - 96px);
         }
-        .annotation-max-height{
-            max-height: 30px;
+        .annotation-max-hieght{
+            max-height: 36px;
             overflow: hidden;
         }
         .anno-options{
             width: 56px;
-            >div:first-child{
-                padding: 3px 4px;
-                margin-right: 4px;
-            }
             >div{
                 font-size: 12px;
                 display: inline-block;
@@ -457,10 +455,17 @@
                 background: #eee;
                 padding: 2px 4px;
                 border-radius: 4px;
-                vertical-align: text-top;
                 &:hover{
                     background: #e1e1e1;
                 }
+            }
+            .close-text{
+                color: $error;
+                margin-bottom: 4px;
+            }
+            .fold-text{
+                color: $purple;
+                margin-right: 2px;
             }
         }
 

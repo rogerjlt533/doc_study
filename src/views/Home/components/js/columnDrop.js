@@ -8,7 +8,6 @@ export function dragControllerDivL () {
     let resizeL = document.getElementById('resizeL');
     let left = document.getElementById('homeLeft');
 
-
     resizeL.onmousedown = function (e) {
         let startX = e.clientX;  // 距离屏幕左边距离
         resizeL.left = resizeL.offsetLeft - 32;  // 当前点击元素距离左边的距离

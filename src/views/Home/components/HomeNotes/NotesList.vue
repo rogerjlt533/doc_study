@@ -1,31 +1,14 @@
 <template>
-    <div class="top-bar">
+    <div class="topbar">
         <div class="info flex align-center">
             <span class="mr10 line-1">{{trashActive ? '废纸篓' : nowNotes}}</span>
-            <div class="hover-icon">
-                <font-awesome-icon class="font-14 cursor-p" :class="[!ifRefresh ? 'is_loading' : '']" @click="debounceFun(refreshList)" icon="sync-alt" color="#9EA0AD" />
+            <font-awesome-icon class="font-14 cursor-p" :class="[!ifRefresh ? 'is_loading' : '']" @click="debounceFun(refreshList)" icon="sync-alt" color="#9EA0AD" />
+            <div class="knowledge-graph ml10" v-if="!trashActive && nowNotes" @click="showKnowledgeGraph">
+                <svgFont icon="knowledgeGraph" class=" color-9"></svgFont>
             </div>
-            <template v-if="!trashActive && nowNotes">
-                <div class="knowledge-graph ml6" @click="showKnowledgeGraph">
-                    <svgFont icon="knowledgeGraph" class="color-9"></svgFont>
-                </div>
-                <div class="hover-icon ml6">
-                    <el-popover placement="bottom" trigger="click" :width="270" v-model:visible="showCalendarDay">
-                        <div class="calendarDay" v-loading="loadCalendarDay">
-                            <div class="calendar-box">
-                                <font-awesome-icon icon="angle-left" color="#9EA0AD" class='angle cursor-p' @click="previousMonth()" />
-                                <div id="calendarChart"></div>
-                                <font-awesome-icon icon="angle-right" color="#9EA0AD" class='angle cursor-p' @click="nextMonth()" />
-                            </div>
-                        </div>
-                        <template #reference>
-                            <svg-font icon="calendar" class="font-14 color-9 cursor-p" @click="showCalendarDays"></svg-font>
-                        </template>
-                    </el-popover>
-                </div>
-            </template>
-            <div class="clear-trash ml10" v-if="trashActive" @click="cleanTrash">
-                <span>全部清除</span>
+            <div class="clear-trash ml20" v-if="trashActive" @click="cleanTrash">
+                <span>清空</span>
+                <font-awesome-icon class="font-icon font-12" icon="trash-alt" color="#FF6347" />
             </div>
         </div>
         <div class="filter">
@@ -41,12 +24,11 @@
                     <span class="block ml10" :class="statusClass"></span>
                 </template>
             </div>
-            <div class="el-dropdown-link sort-weight" v-show="orderByWeight">
-                <span class="mr4">推荐排序</span>
-                <font-awesome-icon icon="xmark" class="font-12 cursor-p" color="#9EA0AD" @click="closeOrderByWeight" />
-            </div>
-            <el-dropdown trigger="click" v-show="!orderByWeight">
-                <span class="el-dropdown-link"> {{sortDefault.label}} </span>
+            <el-dropdown trigger="click">
+                <span class="el-dropdown-link mr10">
+                    {{sortDefault.label}}
+                    <el-icon class="el-icon--right"><arrow-down /></el-icon>
+                </span>
                 <template #dropdown>
                     <el-dropdown-menu>
                         <el-dropdown-item
@@ -54,15 +36,17 @@
                                 :key="item.value"
                                 @click="changeFilter(item)"
                                 :class="[item.label === sortDefault.label ? 'activeFilter' : '']"
-                        > {{item.label}} </el-dropdown-item>
+                        >
+                            {{item.label}}
+                        </el-dropdown-item>
                     </el-dropdown-menu>
                 </template>
             </el-dropdown>
         </div>
     </div>
 
-    <div v-loading="loadingList" class="note-list-dom">
-        <el-scrollbar wrap-class="scroll-style pr2" v-if="notesList.length" ref="notesListRef" :height="finallyHeight" :native="true">
+    <template v-if="notesList.length > 0">
+        <el-scrollbar ref="notesListRef" :height="finallyHeight" :always="false">
             <div class="container"
                  v-infinite-scroll="loadPage"
                  :infinite-scroll-immediate="false"
@@ -76,7 +60,7 @@
                             @dragenter="dropNoteFun.handleDragenter($event, item)"
                             @dragleave="dropNoteFun.handleDragleave($event, item)"
                     >
-                        <div v-show="item.is_self === 1 && item.showMarks" class="marks flex">
+                        <div v-show="item.is_self === 1 && item.showMarks && item.note_type === 1" class="marks flex">
                             <div class="marks-left" v-if="!item.showMarksLeft" @drop="dropNoteFun.handleDrop(item, 'merge')">
                                 <div>
                                     <font-awesome-icon icon="code-merge" color="#ffffff" style="font-size: 26px;margin-bottom: 6px" />
@@ -91,25 +75,27 @@
                             </div>
                         </div>
                         <!--短笔记-->
-                        <shortNotesItem
-                                :item="item"
-                                :index="index"
-                                :isTrash="isTrash"
-                                @deleteNote="deleteNote"
-                                @editNote="editNote(item)"
-                                @dragstart="dropNoteFun.handlerDragstart(item, index)"
-                        />
-                        <NoteAnnotation
-                                v-for="(quote,qi) in item.quote"
-                                :key="quote.id"
-                                :data="quote"
-                                :edit="true"
-                                class="ml10 mr10"
-                                @close="closeQuote(item, qi)"
-                        ></NoteAnnotation>
+                        <template v-if="item.note_type === 1">
+                            <shortNotesItem
+                                    :item="item"
+                                    :index="index"
+                                    :isTrash="isTrash"
+                                    @deleteNote="deleteNote"
+                                    @dragstart="dropNoteFun.handlerDragstart(item, index)"
+                            />
+                            <NoteAnnotation
+                                    v-for="(quote,qi) in item.quote"
+                                    :key="quote.id"
+                                    :data="quote"
+                                    :edit="true"
+                                    class="ml10 mr10"
+                                    @close="closeQuote(item, qi)"
+                            ></NoteAnnotation>
+                        </template>
                     </div>
                     <div v-if="item.ifEditCon" class="mb20">
                         <home-notes-editor
+                                ref="notesEditorChild"
                                 :item="item"
                                 :content="item.note"
                                 :index="index"
@@ -121,32 +107,31 @@
                     </div>
                 </template>
                 <el-divider>
-                    <div class="flex align-center" v-if="isFinish">
-                        <el-icon class="is-loading"><Loading/></el-icon>
-                        <span class="color-9 ml10">正在读取中 ~ </span>
-                    </div>
-                    <span v-else class="color-9" style="font-style: italic;">Organized your digital life</span>
+                    <span v-if="isFinish" style="color:#999">加载更多 ~ </span>
+                    <span v-else style="color: #999999; font-style: italic;">Organized your digital life</span>
                 </el-divider>
             </div>
         </el-scrollbar>
-        <el-empty v-else description="方寸笔迹 · Organized your digital life"></el-empty>
-    </div>
+    </template>
+    <el-empty v-else description="方寸笔迹 · Organized your digital life"></el-empty>
 </template>
 
 <script setup>
-    import { ref, nextTick, computed, reactive, defineAsyncComponent, onBeforeUnmount } from "vue";
+    import {ref, nextTick, computed, reactive, defineAsyncComponent, onBeforeUnmount} from "vue";
     import { useStore } from "vuex"
     // hooks -----
+    import { clearTrashNoteApi } from "@/apiDesktop/trash";
+    import { removePostilApi } from "@/apiDesktop/notes";
+    import { setMaxNumApi } from "@/apiDesktop/collection";
     import dropNoteFun from "./js/dropNote"
-    import { debounceFun, deepClone } from "@/utils/tools"
     import bus from '@/utils/bus'
-    import request from "@/utils/mainRequest"
-    import { loadCalendarDay, getCalendar, previousMonth, nextMonth } from "@/views/Home/components/HomeSidebar/js/echart"
+    import { debounceFun } from "@/utils/tools"
     // 组件 -----
-    import { Search, ArrowDown, Loading, CloseBold } from '@element-plus/icons-vue'
+    import { Search, ArrowDown, Loading } from '@element-plus/icons-vue'
     import { ElMessageBox, ElNotification } from "element-plus"
+
     // 异步组件 -----
-    const HomeNotesEditor = defineAsyncComponent(() => import('./cardEditor.vue'))
+    const HomeNotesEditor = defineAsyncComponent(() => import('./Editor.vue'))
     const shortNotesItem = defineAsyncComponent(() => import('./components/shortNotesItem.vue'))
     const NoteAnnotation = defineAsyncComponent(() => import('./components/NoteAnnotation.vue'))
 
@@ -168,6 +153,7 @@
     let isTrash = computed(() => store.state.notes.notes.trash )
     let notesList = computed(() => store.state.notes.noteslist )
     let notesCount = computed(() => store.state.notes.catalogActiveState.short_note_count )
+    let setMaxTimer = null
     let notesMaxNum = computed({
         get(){
             let collectionActive = store.state.notes.catalogActiveState.collectionActive
@@ -200,17 +186,15 @@
     function refreshList(){
         ifRefresh.value = false;
         notesListRef.value?.setScrollTop(0)
-
-        page = 1
-        getNotesList({})
+        bus.emit('clearSearchKeyword')
     }
     // 搜索笔记列表方法
-    let loadingList = ref(false);
     bus.on('handleSearchNote', (e) => {
         getNotesList({
-            keyword: e.keyword
+            keyword: e.keyword,
+            start_time: e.start_time,
+            end_time: e.end_time
         })
-        showCalendarDay.value = false
     })
     bus.on("clearSearchKeyword", () => {
         page = 1
@@ -228,49 +212,42 @@
             label: "创建时间 ↓",
             value: "desc",
             orderby_create: 1,
+            icon: 'arrow-down-1-9'
         },{
             label: "创建时间 ↑",
             value: "asc",
             orderby_create: 1,
+            icon: 'arrow-down-9-1'
         },{
             label: "更新时间 ↓",
             value: "desc",
             orderby_create: 0,
+            icon: 'arrow-down-1-9'
         },{
             label: "更新时间 ↑",
             value: "asc",
             orderby_create: 0,
+            icon: 'arrow-down-9-1'
         }
     ]
-    const orderByWeight = computed(() => !!store.state.notes.notes.orderby_weight)
-    const sortDefault = computed(() => {
-        const sort = store.state.notes.notes.sort
-        const orderby_create = store.state.notes.notes.orderby_create
-        let label = ''
-        filterList.forEach(item => {
-            if(item.value === sort && item.orderby_create === orderby_create){
-                label = item.label
-            }
-        })
+    let sortDefault = reactive({
+        label: "更新时间 ↓",
+        value: "desc",
+        orderby_create: 0,
+        icon: 'arrow-down-1-9'
+    })
 
-        return {
-            label,
-            value: sort,
-            orderby_create
+    filterList.forEach(item => {
+        if(store.state.notes.notes.sort === item.value){
+            sortDefault.label = item.label
         }
     })
     function changeFilter(e){
         store.commit("notes/CHANGE_FILTER_NOTE_PARAMS",{
             orderby_create: e.orderby_create,
-            orderby_weight: 0,
             sort: e.value
         })
-        getNotesList({})
-    }
-    function closeOrderByWeight(){
-        store.commit("notes/CHANGE_FILTER_NOTE_PARAMS",{
-            orderby_weight: 0
-        })
+        sortDefault.label = e.label
         getNotesList({})
     }
 
@@ -284,23 +261,17 @@
     function setMaxNum(){
         let collectionActive = store.state.notes.catalogActiveState.collectionActive
         ifChangeMaxNum.value = true
-        request({
-            api: 'setMaxNumApi',
-            key: 'setMaxNumApi',
-            data: {
-                user_id: store.state.user.userInfo.id,
-                collection_id: collectionActive,
-                max_num: notesMaxNum.value
-            }
+        setMaxNumApi({
+            user_id: store.state.user.userInfo.id,
+            collection_id: collectionActive,
+            max_num: notesMaxNum.value
         })
     }
 
     // 编辑该笔记
+    const notesEditorChild = ref(null)
     function closeEdit(item){
         item.ifEditCon = false
-        store.commit('notes/REMOVE_EDIT_NOTE_OBJ', {
-            note_id: item.note_id
-        })
     }
 
     // 关闭笔记引用
@@ -309,7 +280,7 @@
             type: 'warning',
             confirmButtonText: '确定',
             cancelButtonText: '取消'
-        }).then(() => {
+        }).then(async () => {
             let ids = []
             item.quote.forEach(q => {
                 if(item.quote[i].id !== q.id){
@@ -320,34 +291,34 @@
                 note_id: item.id,
                 postil_id: ids
             }
-            request({
-                api: 'removePostilApi',
-                key: 'removePostilApi',
-                data
-            }, (res) => {
-                if(res.status_code === 200){
-                    store.commit('notes/RECOVERY_NOTE',res.data.note)
-                }
-            })
+            const res = await removePostilApi(data)
+            if(res.status_code === 200){
+                store.commit('notes/RECOVERY_NOTE',res.data.note)
+            }
         }).catch()
     }
 
     // 查询笔记列表
-    async function getNotesList({ page = 1, keyword = undefined }){
-        const noteType = store.state.notes.catalogActiveState.noteTypeActive
-        if(noteType === 1) loadingList.value = true
-
-        await store.dispatch("notes/getShortNotesList",{
-            page, keyword
+    function getNotesList({ page = 1, keyword = undefined, start_time = undefined, end_time = undefined }){
+        if(page === 1) store.commit("notes/RESET_NOTES_LIST")
+        store.dispatch("notes/getShortNotesList",{
+            page, keyword, start_time, end_time
+        }).then((res) => {
+            ifRefresh.value = true
+            store.commit('notes/CHANGE_CATALOG_ACTIVE_STATE', {
+                short_note_count: res.data.count || 0
+            })
         })
-        ifRefresh.value = true
-        loadingList.value = false
-
-        if(!(page === 1)) return
-        await store.dispatch('notes/getWriteNotesList',{
-            page, keyword
-        })
-        bus.emit('readWriteNoteData')
+        if(page === 1){
+            store.dispatch('notes/getWriteNotesList',{
+                page, keyword, start_time, end_time
+            }).then((res) => {
+                bus.emit('readWriteNoteData')
+                store.commit('notes/CHANGE_CATALOG_ACTIVE_STATE', {
+                    long_note_count: res.data.count || 0
+                })
+            })
+        }
     }
 
     // 监听列表滚动
@@ -366,19 +337,9 @@
         }
     }
 
-    // 监听修改笔记
-    function editNote(item){
-        item.ifEditCon = true
-    }
-
     // 展示知识图谱
     function showKnowledgeGraph(){
         bus.emit('showKnowledgeGraph')
-    }
-    // 展示日历关系图
-    let showCalendarDay = ref(false)
-    function showCalendarDays(){
-        getCalendar(showCalendarDay)
     }
 
     // 清倒废纸篓
@@ -387,21 +348,15 @@
             type: 'warning',
             confirmButtonText: "确定删除",
             cancelButtonText: "取消"
-        }).then(() => {
-            request({
-                api: 'clearTrashNoteApi',
-                key: 'clearTrashNoteApi',
-                data: {
-                    user_id: store.state.user.userInfo.id
-                }
-            }, (res) => {
-                if(res.status_code === 200){
-                    ElNotification.success("删除成功")
-                    store.commit("notes/RESET_NOTES_LIST")
-                    store.dispatch("user/getUserBase")
-                }
+        }).then(async () => {
+            const res = await clearTrashNoteApi({
+                user_id: store.state.user.userInfo.id
             })
-
+            if(res.status_code === 200){
+                ElNotification.success("删除成功")
+                store.commit("notes/RESET_NOTES_LIST")
+                store.dispatch("user/getUserBase")
+            }
         }).catch(()=>{})
     }
 
@@ -421,32 +376,17 @@
     .el-scrollbar__bar{
         display: none !important;;
     }
-    .calendarDay{
-        .calendar-box{
-            @include flexAlignJustify(center, center);
-            .angle{
-                font-size: 36px;
-                &:hover{
-                    color: #666666;
-                }
-            }
-        }
-        #calendarChart{
-            width: 260px;
-            height: 230px;
-        }
-    }
 </style>
 
 <style lang="scss" scoped>
-    .top-bar{
+    .topbar{
         display: flex;
         align-items: center;
         justify-content: space-between;
         height: 40px;
         .info{
             padding: 0 10px;
-            > span{
+            span{
                 font-weight: 700;
                 font-size: 16px;
                 color: #333;
@@ -459,19 +399,8 @@
                 color: #999;
                 cursor: pointer;
             }
-            .hover-icon{
-                @include flexAlignJustify(center, center);
-                width: 22px;
-                height: 22px;
-                border-radius: 4px;
-                &:hover{
-                    background: #f5f5f5;
-                }
-            }
             .knowledge-graph{
-                @include flexAlignJustify(center, center);
-                width: 22px;
-                height: 22px;
+                padding: 0 4px;
                 border-radius: 4px;
                 cursor: pointer;
                 transition: all .3s;
@@ -485,16 +414,17 @@
             .clear-trash{
                 display: flex;
                 align-items: center;
-                padding: 2px 6px;
-                color: #999999;
+                padding: 2px 2px 2px 6px;
+                background: #eeeeee;
                 border-radius: 4px;
                 cursor: pointer;
                 &:hover{
-                    color: #d03050;
-                    background: #d0305026;
+                    background: #cccccc;
                 }
                 span{
                     font-size: 12px;
+                    font-weight: 400;
+                    color: #FF6347;
                 }
             }
         }
@@ -507,14 +437,7 @@
                 font-size: 12px;
                 display: flex;
                 align-items: center;
-                padding: 5px 4px 5px 6px;
-                border-radius: 2px;
-                &:hover{
-                    background: #f5f5f5;
-                }
-            }
-            .sort-weight{
-                padding: 2px 6px 2px 6px;
+                margin-left: 10px;
             }
             .input-num{
                 width: 22px;
@@ -551,6 +474,9 @@
         }
     }
     .container{
+        &::-webkit-scrollbar {
+            display: none;
+        }
         .content-list{
             position: relative;
             background: #F6F8FC;
