@@ -1,16 +1,9 @@
 <template>
-    <!--<div class="container-catalog default-catalog">-->
-    <!--    <div class="catalog-title unselectable" @click="showNotes(index)" v-for="(item,index) in catalogList" :key="index" :class="{ 'actived-style' : classifyActived === index }">-->
-    <!--        <font-awesome-icon :icon="item.path" style="font-size: 14px;" :color="classifyActived === index ? '#7885d1' : '#9EA0AD'" />-->
-    <!--        <span style="display:inline-block;width: 100%;">{{item.title}}</span>-->
-    <!--        <span class="number">{{item.number}}</span>-->
-    <!--    </div>-->
-    <!--</div>-->
     <div class="container-catalog">
-        <div class="unselectable container-catalog-title" @click="showCollection = !showCollection">
+        <div class="unselectable container-catalog-title" @click="handleShowCatalog('self')">
             <div class="flex align-center">
                 <div class="arrowRight mr6">
-                    <el-icon :size="16" :class="!showCollection ? 'is_rotate_arrow_back' : 'is_rotate_arrow_go'" color="#6F7A93"><CaretRight/></el-icon>
+                    <el-icon :size="16" :class="!showSelfCollection ? 'is_rotate_arrow_back' : 'is_rotate_arrow_go'" color="#6F7A93"><CaretRight/></el-icon>
                 </div>
                 <svgFont class="font-16" color="#6F7A93" icon="books"></svgFont>
                 <span class="ml10 pt2">笔记本</span>
@@ -18,7 +11,7 @@
             <svgFont class="add-btn" color="#6F7A93" icon="plus" @click.stop="showAddProject = true"></svgFont>
         </div>
         <FCollapse>
-            <div class="project-list" v-show="showCollection">
+            <div class="project-list" v-show="showSelfCollection">
                 <collectionItem
                         type="self"
                         ref="collectionItemRef"
@@ -29,7 +22,7 @@
                 ></collectionItem>
             </div>
         </FCollapse>
-        <div class="unselectable container-catalog-title" @click="showTeamCollection = !showTeamCollection">
+        <div class="unselectable container-catalog-title" @click="handleShowCatalog('team')">
             <div class="flex align-center">
                 <div class="arrowRight mr6">
                     <el-icon :size="16" :class="!showTeamCollection ? 'is_rotate_arrow_back' : 'is_rotate_arrow_go'" color="#6F7A93"><CaretRight/></el-icon>
@@ -50,52 +43,6 @@
                 ></collectionItem>
             </div>
         </FCollapse>
-
-
-        <!--<div class="collection-box">-->
-        <!--    <el-collapse v-model="defaultCollectionType" v-if="projectListTeam.length">-->
-        <!--        <el-collapse-item name="self">-->
-        <!--            <template #title>-->
-        <!--                <p class="unselectable color-9 pl10 font-12">我的笔记本</p>-->
-        <!--            </template>-->
-        <!--            <div class="project-list">-->
-        <!--                <collectionItem-->
-        <!--                    type="self"-->
-        <!--                    ref="collectionItemRef"-->
-        <!--                    @editCollection="editCollection"-->
-        <!--                    @knowledgeGraph="knowledgeGraph"-->
-        <!--                    @basics="basics"-->
-        <!--                    @removeCollection="removeCollection"-->
-        <!--                ></collectionItem>-->
-        <!--            </div>-->
-        <!--        </el-collapse-item>-->
-        <!--        <el-collapse-item name="team">-->
-        <!--            <template #title>-->
-        <!--                <p class="unselectable color-9 pl10 font-12">共享笔记本</p>-->
-        <!--            </template>-->
-        <!--            <div class="project-list">-->
-        <!--                <collectionItem-->
-        <!--                    type="team"-->
-        <!--                    ref="collectionItemRef"-->
-        <!--                    @editCollection="editCollection"-->
-        <!--                    @knowledgeGraph="knowledgeGraph"-->
-        <!--                    @basics="basics"-->
-        <!--                    @removeCollection="removeCollection"-->
-        <!--                ></collectionItem>-->
-        <!--            </div>-->
-        <!--        </el-collapse-item>-->
-        <!--    </el-collapse>-->
-        <!--    <div class="project-list" v-else>-->
-        <!--        <collectionItem-->
-        <!--            type="self"-->
-        <!--            ref="collectionItemRef"-->
-        <!--            @editCollection="editCollection"-->
-        <!--            @knowledgeGraph="knowledgeGraph"-->
-        <!--            @basics="basics"-->
-        <!--            @removeCollection="removeCollection"-->
-        <!--        ></collectionItem>-->
-        <!--    </div>-->
-        <!--</div>-->
     </div>
 
     <!-- 添加/编辑项目 -->
@@ -296,58 +243,24 @@
 
     // ref
     const collectionItemRef = ref(null)
-    const showCollection = ref(false)
-    const showTeamCollection = ref(false)
+
 
     // 获取个人笔记本项目
     let projectListSelf = computed(() => store.state.collection.projectListSelf)
     // 获取团队笔记本项目
     // let projectListTeam = computed(() => store.state.collection.projectListTeam)
     // 笔记的本的选中的索引值
-    let classifyActived = computed(() => store.state.notes.classifyObj.actived)
-    let collectionType = computed(() => store.state.notes.classifyObj.collectionType)
-    let collectionActived = computed(() => store.state.notes.classifyObj.collectionActived)
+    // let collectionActived = computed(() => store.state.notes.classifyObj.collectionActived)
 
-    // 初始化一个默认打开的collection，并保证他没有响应式
-    const defaultCollectionType = collectionType.value
-    console.log('defaultCollectionType', defaultCollectionType);
-
-    // let catalogList = ref([
-    //     {
-    //         title: "我的笔记",
-    //         id: "Notes",
-    //         path: "poll-h",
-    //         number: computed(() => store.state.user.userBase.notes)
-    //     }, {
-    //         title: "最近三日",
-    //         id: "Today",
-    //         path: "calendar-day",
-    //         number: computed(() => store.state.user.userBase.today)
-    //     },
-    //     {
-    //         title: "废纸篓",
-    //         id: "Trash",
-    //         path: "trash-alt",
-    //         number: computed(() => store.state.user.userBase.trash)
-    //     }
-    // ])
-    // 笔记筛选
-    // function showNotes(index){
-    //     store.commit("notes/CHANGE_CLASSIFY_ACTIVED",{
-    //         title: catalogList.value[index].title,
-    //         index,
-    //         id: catalogList.value[index].id
-    //     })
-    //     bus.emit('CHANGE_NOTE_MODE', false)
-    //     setTimeout(()=>{
-    //         store.dispatch("notes/getTagsList")
-    //         store.dispatch('notes/getTagsGroup')
-
-    //         store.commit("user/SHOW_NOTICE",{data: false})
-    //         bus.emit("CLEAR_KAYWORD");
-    //         bus.emit("MAKE_LIST_TOP");
-    //     })
-    // }
+    // 控制笔记本分类的是否展开的状态
+    const showSelfCollection = computed(() => store.state.notes.catalogState.showSelfCollection)
+    const showTeamCollection = computed(() => store.state.notes.catalogState.showTeamCollection)
+    function handleShowCatalog(type){
+        store.commit('notes/CHANGE_CATALOG_STATE', {
+            showSelfCollection: type === 'self' ? !showSelfCollection.value : showSelfCollection.value,
+            showTeamCollection: type === 'team' ? !showTeamCollection.value : showTeamCollection.value
+        })
+    }
 
     // 获取默认collection的笔记
     function handleWriteNote(item){
@@ -487,11 +400,26 @@
     }
     // 删除笔记本的回调
     function removeCollectionCallback(checkedCollectionId){
-        store.commit("notes/CHANGE_CLASSIFY_ACTIVED",{
-            collectionTitle: catalogList.value[0].title,
-            index: 0,
-            id: catalogList.value[0].id
+        // store.commit("notes/CHANGE_CLASSIFY_ACTIVED",{
+        //     collectionTitle: catalogList.value[0].title,
+        //     index: 0,
+        //     id: catalogList.value[0].id
+        // })
+
+        store.commit('notes/CHANGE_FILTER_NOTE_PARAMS', {
+            collection_id: catalogList.value[0].id,
+            tag_id: '',
+            group_id: ''
         })
+        store.commit('notes/CHANGE_CATALOG_ACTIVE_STATE', {
+            collectionTitle: catalogList.value[0].title,
+            collectionActive: catalogList.value[0].id,
+            trashActive: '',
+            tagActive: '',
+            tagTitle: '',
+            tagGroupTitle: ''
+        })
+
         store.dispatch("notes/getTagsList");
         store.commit("notes/RECORD_COLLECTION",{
             checked_collection: projectListSelf.value[0].collection,
@@ -686,10 +614,10 @@
                 border-radius: 4px;
                 cursor: pointer;
                 &:hover{
-                    background: #f5f5f5;
+                    background: #e6e6e6;
                 }
                 &:active{
-                    background: #ffffff;
+                    background: #e1e1e1;
                 }
             }
         }

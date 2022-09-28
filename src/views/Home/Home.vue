@@ -122,9 +122,11 @@
     // }
 
     function showNotes(){
-        store.commit("notes/CHANGE_CLASSIFY_ACTIVED", {
-            title: '废纸篓',
-            id: 'trash'
+        store.commit("notes/CHANGE_FILTER_NOTE_PARAMS", {
+            id: 'Trash'
+        })
+        store.commit("notes/CHANGE_SHOW_NOTE_PARAMS", {
+            id: 'Trash'
         })
         bus.emit('CHANGE_NOTE_MODE', false)
         setTimeout(()=>{

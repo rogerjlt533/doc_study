@@ -110,14 +110,14 @@
 
 <style lang="scss" scoped>
     .tag{
-        border: 1px solid #ccc;
         color: #999;
+        background: #f5f5f5;
         font-size: 12px;
         border-radius: 22px;
         cursor: pointer;
-        margin: 2px;
+        margin: 6px;
+        padding: 2px 14px;
         &:hover{
-            border: 1px solid $purple;
             color: #ffffff !important;
             background: $purple;
         }
@@ -126,23 +126,21 @@
             display: inline-block;
             max-width: 150px;
             vertical-align: bottom;
-            padding: 2px 2px 2px 6px;
         }
         .num{
             display: inline-block;
-            width: 22px;
             text-align: center;
+            padding-left: 6px;
         }
     }
     .active{
-        border: 1px solid $purple;
         color: #ffffff !important;
         background-image: linear-gradient($purple, $purple);
     }
 
     .tag-top{
-        border: 1px solid $purple;
         color: $purple;
+        background: #edeaff;
     }
 </style>
 <style lang="scss">

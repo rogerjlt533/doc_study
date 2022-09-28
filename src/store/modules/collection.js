@@ -1,5 +1,4 @@
-// import { getCollectionApi, newCollectionApi, editCollectionApi, removeCollectionApi, clearCollectionNotesApi, moveCollectionNotesApi, sortCollectionApi } from "@/apiDesktop/collection"
-import request from "@/utils/mainRequest"
+import { getCollectionApi, newCollectionApi, editCollectionApi, removeCollectionApi, clearCollectionNotesApi, moveCollectionNotesApi, sortCollectionApi } from "@/apiDesktop/collection"
 
 export default {
     namespaced: true,
@@ -18,17 +17,7 @@ export default {
                 return item;
             })
         },
-        SET_COLLECTION_MAX_NUM(state, {collectionActive, val}){
-            state.projectListSelf.forEach(item => {
-                if(item.id === collectionActive){
-                    item.max_num = val
-                }
-            })
-        },
-        SET_COLLECTION_STATUS(state, data){
-            state.collectionStatus.max_num = data.max_num
-        },
-        handleAddCollection(state, data){
+        ADD_COLLECTION(state, data){
             data.id = data.collection_id;
             state.projectListSelf.push(data);
         },
@@ -48,7 +37,6 @@ export default {
             if(index > -1) state.projectListSelf.splice(index, 1)
         },
         SORT_COLLECTION(state, data){
-            console.log('value', data.result)
             if(data.type === "self"){
                 state.projectListSelf = data.result
             }
@@ -60,131 +48,87 @@ export default {
     actions: {
         // 获取项目
         async getCollection({commit, rootState}, params){
-            return new Promise((resolve, reject) => {
-                request({
-                    api: "getCollectionApi",
-                    key: 'getCollectionApi',
-                    data: {
-                        user_id: rootState.user.userInfo.id,
-                        pages: 1,
-                        size: 100
-                    }
-                }, (res) => {
-                    if(res.status_code === 200){
-                        commit("SET_PROJECT_LIST", res.data)
-                        resolve()
-                    }
-                })
+            const res = await getCollectionApi({
+                user_id: rootState.user.userInfo.id,
+                pages: params.page,
+                size: params.size
             })
+            if(res.status_code === 200){
+                commit("SET_PROJECT_LIST", res.data)
+            }
         },
 
         // 添加项目
-        addCollection({commit, rootState}, {collection, color }){
-            return new Promise((resolve, reject) => {
-                request({
-                    api: "newCollectionApi",
-                    key: 'newCollectionApi',
-                    data: {
-                        user_id: rootState.user.userInfo.id,
-                        collection,
-                        color
-                    }
-                }, (res) => {
-                    if(res.status_code === 200){
-                        commit("handleAddCollection",res.data)
-                    }
-                    resolve(res)
-                })
+        async addCollection({commit, rootState}, {collection, color }){
+            let res = await newCollectionApi({
+                user_id: rootState.user.userInfo.id,
+                collection,
+                color
             })
-
+            if(res.status_code === 200){
+                commit("ADD_COLLECTION",res.data);
+            }
+            return res
         },
 
         // 修改项目
-        editCollection({commit, rootState}, data){
-            return new Promise((resolve, reject) => {
-                request({
-                    api: "editCollectionApi",
-                    key: 'editCollectionApi',
-                    data: {
-                        user_id: rootState.user.userInfo.id,
-                        collection_id: data.collection_id,
-                        collection: data.collection,
-                        color: data.color
-                    }
-                }, (res) => {
-                    if(res.status_code === 200){
-                        commit("EDIT_PROJECT", res.data);
-                    }
-                    resolve(true)
-                })
+        async editCollection({commit, rootState}, data){
+            const res = await editCollectionApi({
+                user_id: rootState.user.userInfo.id,
+                collection_id: data.collection_id,
+                collection: data.collection,
+                color: data.color
             })
+            if(res.status_code === 200){
+                commit("EDIT_PROJECT", res.data);
+                return true
+            }
         },
 
         // 删除collection
-        removeCollection({commit, rootState}, params){
-            return new Promise((resolve, reject) => {
-                request({
-                    api: "removeCollectionApi",
-                    key: "removeCollectionApi",
-                    data: {
-                        user_id: rootState.user.userInfo.id,
-                        collection_id: params.collection_id
-                    }
-                }, (res) => {
-                    if(res.status_code === 200){
-                        commit("REMOVE_COLLECTION", params.collection_id)
-                    }
-                    resolve(res)
-                })
+        async removeCollection({commit, rootState}, params){
+            const res = await removeCollectionApi({
+                user_id: rootState.user.userInfo.id,
+                collection_id: params.collection_id
             })
+            if(res.status_code === 200){
+                commit("REMOVE_COLLECTION", params.collection_id)
+            }
+            return res
         },
         // 清除collection中的笔记
-        clearCollectionNotes({commit, rootState}, params){
-            return new Promise((resolve, reject) => {
-                request({
-                    api: "clearCollectionNotesApi",
-                    key: "clearCollectionNotesApi",
-                    data: {
-                        user_id: rootState.user.userInfo.id,
-                        collection_id: params.collection_id
-                    }
-                }, (res) => {
-                    if(res.status_code === 200){
-                        commit("REMOVE_COLLECTION", params.collection_id)
-                    }
-                    resolve(res)
-                })
+        async clearCollectionNotes({commit, rootState}, params){
+            const res = await clearCollectionNotesApi({
+                user_id: rootState.user.userInfo.id,
+                collection_id: params.collection_id
             })
+            if(res.status_code === 200){
+                commit("REMOVE_COLLECTION", params.collection_id)
+            }
+            return res
         },
         // 迁移collection中的笔记
-        moveCollectionNotes({commit, rootState}, params){
-            return new Promise((resolve, reject) => {
-                request({
-                    api: "moveCollectionNotesApi",
-                    key: "moveCollectionNotesApi",
-                    data: {
-                        user_id: rootState.user.userInfo.id,
-                        target_id,
-                        source_id
-                    }
-                }, (res) => {
-                    if(res.status_code === 200){
-                        commit("REMOVE_COLLECTION", source_id)
-                    }
-                    resolve(res)
-                })
+        async moveCollectionNotes({commit, rootState}, params){
+            const { target_id, source_id } = params
+            const res = await moveCollectionNotesApi({
+                user_id: rootState.user.userInfo.id,
+                target_id,
+                source_id
             })
+            if(res.status_code === 200){
+                commit("REMOVE_COLLECTION", source_id)
+            }
+            return res
         },
 
-        async sortCollection({commit, rootState}, {collection_ids}){
-            request({
-                api: 'sortCollectionApi',
-                key: 'sortCollectionApi',
-                data: {
-                    user_id: rootState.user.userInfo.id,
-                    collection_ids
-                }
+        async sortCollection({commit, rootState}, {collection_ids, type, result}){
+            const res = await sortCollectionApi({
+                user_id: rootState.user.userInfo.id,
+                collection_ids
             })
+            if(res.status_code === 200){
+                commit("SORT_COLLECTION", {type, result})
+            }
         },
     }
 }

@@ -4,6 +4,7 @@ import store from "@/store/index.js"
 import { computed, watch } from "vue"
 import { pullRemoteNoteQueueApi, processDownNoteApi, processDownImageApi, initCollectionNotePushQueueApi, processNotePushQueueApi, clearCompleteCollectionQueueApi, autoClearCollectionQueueApi } from '@/apiDesktop/sync'
 import { refreshProInfoApi } from '@/apiDesktop/user'
+import { fillTagInitialApi } from "@/apiDesktop/tag";
 
 const migration = require('service/tool/migration.js')
 
@@ -12,6 +13,7 @@ export const initMigration = async () => {
     console.log('执行migration')
     await migration.run()
     console.log('初始化数据库完成')
+    await fillTagInitialApi()
     await handleClearCompleteCollectionQueue()
     console.log('清理上传数据完成')
 
@@ -80,6 +82,7 @@ function initBasicsData(){
         time: 5
     })
 }
+
 
 function handlePullRemoteNoteQueue(){
     const data = {

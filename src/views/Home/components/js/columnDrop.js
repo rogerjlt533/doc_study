@@ -1,26 +1,26 @@
 // 三栏拖拽
 import { ref } from "vue"
 
-let leftWidth = 252
-
-export let homeWidth = ref(`calc(100% - 252px)`)
+export let homeWidth = ref(`calc(100% - 250px)`)
+export let homeRightWidth = ref(`calc(100% - 230px)`)
+let leftWidth = 250
 export function dragControllerDivL () {
     let resizeL = document.getElementById('resizeL');
     let left = document.getElementById('homeLeft');
 
     resizeL.onmousedown = function (e) {
         let startX = e.clientX;  // 距离屏幕左边距离
-        resizeL.left = resizeL.offsetLeft - 32;  // 当前点击元素距离左边的距离
+        resizeL.left = resizeL.offsetLeft - 20;  // 当前点击元素距离左边的距离
         // 鼠标拖动事件
         document.onmousemove = function (e) {
             let endX = e.clientX;  // 到左侧的距离
             let moveLen = resizeL.left + (endX - startX);  //（endx - startx）= 移动的距离。resize[i].left + 移动的距离 = 左边区域最后的宽度
-            if(moveLen < 160) moveLen = 160
+            if(moveLen < 150) moveLen = 150
             if(moveLen > 300) moveLen = 300
 
             left.style.width = moveLen + 'px'
             leftWidth = moveLen
-            homeWidth.value = `calc(100% - ${leftWidth + 32}px)`
+            homeWidth.value = `calc(100% - ${leftWidth + 30}px)`
         }
 
         // 鼠标松开事件
@@ -33,8 +33,6 @@ export function dragControllerDivL () {
         return false;
     }
 }
-
-export let homeRightWidth = ref(`calc(100% - 230px)`)
 export function dragControllerDivR () {
     let resizeR = document.getElementById('resizeR');
     let left = document.getElementById('homeRightLeft');

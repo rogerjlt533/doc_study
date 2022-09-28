@@ -11,8 +11,8 @@
     >
         <template #item="{element, index}">
             <div class="project"
-                 :class="{ 'active-project' : collectionType === type && collectionActived === index }"
-                 @click="clickProject(element, index)"
+                 :class="{ 'active-project' : collectionActive === element.id }"
+                 @click="clickProject(element)"
                  @mouseenter="element.showOpt = true"
                  @mouseleave="element.showOpt = false"
             >
@@ -64,7 +64,6 @@
     import { useStore } from "vuex"
     import bus from '@/utils/bus'
     import draggable from 'vuedraggable'
-    // import proIcon from "@/components/element/pro.vue"
 
     const remote = require('electron').remote;
     const Menu = remote.Menu;
@@ -91,8 +90,7 @@
     const emits = defineEmits(['editCollection', 'knowledgeGraph', 'basics', 'removeCollection'])
 
     // computed
-    const collectionType = computed(() =>  store.state.notes.classifyObj.collectionType)
-    const collectionActived = computed(() => store.state.notes.classifyObj.collectionActived)
+    const collectionActive = computed(() => store.state.notes.catalogActiveState.collectionActive)
     let projectListSelf = computed(() => store.state.collection.projectListSelf)
     let projectListTeam = computed(() => store.state.collection.projectListTeam)
     const collectionList = computed({
@@ -135,13 +133,30 @@
     }
 
     // 项目筛选
-    function clickProject(item, index){
-        store.commit("notes/CHANGE_CLASSIFY_ACTIVED",{
-            collectionTitle: item.collection,
-            collectionActived: index,
-            collectionType: props.type,
-            collection_id: item.id
+    function clickProject(item){
+        // store.commit("notes/CHANGE_CLASSIFY_ACTIVED",{
+        //     collectionTitle: item.collection,
+        //     collectionActived: item.id,
+        //     collection_id: item.id
+        // })
+
+        // collectionActive, tagActive, trashActive, collectionTitle, tagTitle, tagGroupTitle
+        // trash, collection_id, tag_id, group_id, note_type, sort
+        store.commit('notes/CHANGE_FILTER_NOTE_PARAMS', {
+            collection_id: item.id,
+            group_id: '',
+            tag_id: '',
+            trash: '',
         })
+        store.commit('notes/CHANGE_CATALOG_ACTIVE_STATE', {
+            collectionActive: item.id,
+            collectionTitle: item.collection,
+            tagGroupTitle: '',
+            tagTitle: '',
+            tagActive: '',
+            trashActive: ''
+        })
+
         bus.emit('CHANGE_NOTE_MODE', false)
         setTimeout(() => {
             store.dispatch("notes/getTagsList")
@@ -185,12 +200,11 @@
         nowCollectionType = props.type
     }
     function endDrag(e){
-        if(nowCollectionType !== collectionType.value) return
         drag.value = false
         const oldVal = e.oldIndex
         const newVal = e.newIndex
 
-        const colVal = collectionActived.value
+        const colVal = collectionActive.value
 
         if(colVal === oldVal){  // 移动的是选中的哪个
             sortCollection(newVal)
@@ -204,7 +218,7 @@
     }
     function sortCollection(value){
         store.commit("notes/SORT_CHANGE_COLLECTION_ACTIVED",{
-            collectionActived: value
+            collectionActive: value
         })
     }
 

@@ -2,7 +2,7 @@ import { shareNoteApi } from "@/api/notes"
 import { removeHtmlTag, deepClone } from '@/utils/tools'
 // import { getHtmlToJson } from "@/views/Home/components/HomeNotes/js/writeEditor"
 import { getNotesApi, newNoteApi, removeNoteApi, editNoteApi } from '@/apiDesktop/notes'
-import { getTagListApi, getGroupListApi, setTagTopApi, setTagNormalApi } from '@/apiDesktop/tag'
+import { getTagListApi, getGroupListApi, setTagTopApi, setTagNormalApi, getGroupInitialApi } from '@/apiDesktop/tag'
 import { delTrashNoteApi, restoreTrashNoteApi } from '@/apiDesktop/trash'
 import { handleRestructureConfig } from '@/assets/js/restructureConfig'
 import { debounceFun } from '@/utils/tools'
@@ -16,22 +16,36 @@ export default {
     state: {
         cachedNote: "",
         notesListHeight: "calc(100vh - 208px)",
-        classifyObj: {
-            title: '我的笔记',
-            actived: 0,
-            collectionActived: null,
-            collectionType: null,
-            activedTag: null
+        catalogState: {
+            showSelfCollection: false,
+            showTeamCollection: false,
+            showTags: false
         },
-        notes:{
-            tag_id: undefined,
-            group_id: undefined,
-            collection_id: undefined,
-            trash: undefined,
-            today: undefined,
+        catalogActiveState: {
+            collectionActive: '',
+            tagActive: '',
+            tagGroupActive: '',
+            trashActive: false,
+            collectionTitle: '',
+            tagTitle: '',
+            tagGroupTitle: ''
+        },
+        notes: {
+            tag_id: '',
+            group_id: '',
+            collection_id: '',
+            trash: '',
             note_type: 1,
             sort: "desc"
         },
+
+        // classifyObj: {
+        //     title: '',
+        //     collectionActived: null,
+        //     showSelfCollection: false,
+        //     showTeamCollection: false,
+        //     activedTag: null
+        // },
         writeNoteActive:{
             active: 0
         },
@@ -63,31 +77,64 @@ export default {
         SET_NOTES_LIST_HEIGHT(state, data){
             state.notesListHeight = `calc(100vh - ${data + 96}px)`
         },
-        // 修改分类的索引值
-        CHANGE_CLASSIFY_ACTIVED(state, {index = null, title = '', collectionTitle = "", groupTitle = "", tagTitle = "", id = "", collectionActived = null, collectionType= null, collection_id = undefined, tag_id = undefined, activedTag = null, activedGroup = undefined }){
-            state.classifyObj.actived = index;
-            state.classifyObj.title = title;
-            state.classifyObj.collectionTitle = collectionTitle;
-            state.classifyObj.tagTitle = tagTitle;
-            state.classifyObj.groupTitle = groupTitle;
-            state.classifyObj.collectionActived = collectionActived;
-            state.classifyObj.collectionType = collectionType;
-            state.classifyObj.activedTag = activedTag;
-            state.classifyObj.activedGroup = activedGroup;
-            state.notes.trash = id === "Trash" ? 1 : undefined;
-            state.notes.today = id === "Today" ? 1 : undefined;
-            state.notes.collection_id = collection_id;
-            state.tagToCollectionId = collection_id;
-            state.notes.tag_id = tag_id;
-            state.notes.group_id = activedGroup;
+        // 设置目录的展开收起状态
+        CHANGE_CATALOG_STATE(state, { showSelfCollection, showTeamCollection, showTags }){
+            state.catalogState.showSelfCollection =
+                showSelfCollection === undefined ? state.catalogState.showSelfCollection : showSelfCollection
+            state.catalogState.showTeamCollection =
+                showSelfCollection === undefined ? state.catalogState.showTeamCollection : showTeamCollection
+            state.catalogState.showTags =
+                showTags === undefined ? state.catalogState.showTags : showTags
         },
+        // 设置笔记本、标签、分组标签、废纸篓的选中状态
+        CHANGE_CATALOG_ACTIVE_STATE(state, { collectionActive, tagActive, tagGroupActive, trashActive, collectionTitle, tagTitle, tagGroupTitle }){
+            state.catalogActiveState.collectionActive =
+                collectionActive === undefined ? state.catalogActiveState.collectionActive : collectionActive
+            state.catalogActiveState.tagActive =
+                tagActive === undefined ? state.catalogActiveState.tagActive : tagActive
+            state.catalogActiveState.tagGroupActive =
+                tagGroupActive === undefined ? state.catalogActiveState.tagGroupActive : tagGroupActive
+            state.catalogActiveState.trashActive =
+                trashActive === undefined ? state.catalogActiveState.trashActive : trashActive
+            state.catalogActiveState.collectionTitle =
+                collectionTitle === undefined ? state.catalogActiveState.collectionTitle : collectionTitle
+            state.catalogActiveState.tagTitle =
+                tagTitle === undefined ? state.catalogActiveState.tagTitle : tagTitle
+            state.catalogActiveState.tagGroupTitle =
+                tagGroupTitle === undefined ? state.catalogActiveState.tagGroupTitle : tagGroupTitle
+        },
+        // 设置笔记本筛选条件的参数
+        CHANGE_FILTER_NOTE_PARAMS(state, { trash, collection_id, tag_id, group_id, note_type, sort }){
+            state.notes.trash = trash === undefined ? state.notes.trash : trash
+            state.notes.collection_id = collection_id === undefined ? state.notes.collection_id : collection_id
+            state.notes.tag_id =  tag_id === undefined ? state.notes.tag_id : tag_id
+            state.notes.group_id =  group_id === undefined ? state.notes.group_id : group_id
+            state.notes.note_type =  note_type === undefined ? state.notes.note_type : note_type
+            state.notes.sort =  sort === undefined ? state.notes.sort : sort
+        },
+
+        // 设置笔记本、标签、标题等的状态
+        // CHANGE_CLASSIFY_ACTIVED(state, { collectionTitle = "", groupTitle = "", tagTitle = "", id = "", collectionActived = null, collection_id = undefined, tag_id = undefined, activedTag = null, activedGroup = undefined }){
+        //     state.classifyObj.collectionTitle = collectionTitle;
+        //     state.classifyObj.tagTitle = tagTitle;
+        //     state.classifyObj.groupTitle = groupTitle;
+        //     state.classifyObj.collectionActived = collectionActived;
+        //     state.classifyObj.activedTag = activedTag;
+        //     state.classifyObj.activedGroup = activedGroup;
+
+        //     state.notes.trash = id === "Trash" ? 1 : undefined;
+        //     state.notes.collection_id = collection_id;
+        //     state.tagToCollectionId = collection_id;
+        //     state.notes.tag_id = tag_id;
+        //     state.notes.group_id = activedGroup;
+        // },
         // 修改写作模式的笔记的选中状态
         CHANGE_WRITE_NOTE_ACTIVE(state, { active }){
             state.writeNoteActive.active = active
         },
         // collection切换顺序时，修改选中collection的index
-        SORT_CHANGE_COLLECTION_ACTIVED(state, { collectionActived }){
-            state.classifyObj.collectionActived = collectionActived
+        SORT_CHANGE_COLLECTION_ACTIVED(state, { collectionActive }){
+            state.catalogActiveState.collectionActive = collectionActive
         },
         /**
          * 记录笔记的collection
@@ -230,7 +277,7 @@ export default {
                 group_id: state.notes.group_id,
                 keyword: data.keyword,
                 collection_id: state.notes.collection_id,
-                today: state.notes.today,
+                today: undefined,
                 sort: state.notes.sort,
                 note_type: state.notes.note_type
             }
@@ -304,18 +351,20 @@ export default {
             const { list } = tagService.tagTool.json2Tree(contentJson)
             const struct_list = tagService.tagTool.filterTreeKey(list)
 
-            const res = await newNoteApi({user_id, collection_id, noteType, source, content, url, postil_list, tag_list, struct_list})
-            if(res.status_code === 200){
-                commit("ADD_NOTE", {note_type: noteType, data: res.data})
-                // 判断是否有新的tag添加了进来
-                if(res.data.tags.length > 0){
-                    // commit("ADD_NEW_TAGS", res.data.tags)
-                    dispatch("getTagsList")
-                    dispatch("getTagsAllList")
-                    dispatch('getTagsGroup')
+            newNoteApi({user_id, collection_id, noteType, source, content, url, postil_list, tag_list, struct_list}).then((res) => {
+                if(res.status_code === 200){
+                    commit("ADD_NOTE", {note_type: noteType, data: res.data})
+                    // 判断是否有新的tag添加了进来
+                    if(res.data.tags.length > 0){
+                        // commit("ADD_NEW_TAGS", res.data.tags)
+                        dispatch("getTagsList")
+                        dispatch("getTagsAllList")
+                        dispatch('getTagsGroup')
+                    }
+                    return res
                 }
-                return res
-            }
+            })
+
         },
 
         // 删除笔记列表
@@ -396,7 +445,8 @@ export default {
         async getTagsList({state, commit, rootState}, params){
             const res = await getTagListApi({
                 user_id: rootState.user.userInfo.id,
-                collection_id: state.tagToCollectionId
+                collection_id: state.notes.collection_id
+                // collection_id: state.tagToCollectionId
             })
             console.log("获取tag接口", res)
             if(res.status_code === 200){
@@ -417,13 +467,29 @@ export default {
         async getTagsGroup({state, commit, rootState}, params){
             const res = await getGroupListApi({
                 user_id: rootState.user.userInfo.id,
-                collection_id: state.tagToCollectionId
+                collection_id: state.notes.collection_id
+                // collection_id: state.tagToCollectionId
             })
             console.log("获取tag group 接口", res)
             if(res.status_code === 200){
                 commit("SET_TAGS_GROUP", res.data)
             }
         },
+
+        // 根据分母获取标签
+        getGroupInitial({state, commit, rootState}, params){
+            return new Promise((resolve, reject) => {
+                let data = {
+                    user_id:  rootState.user.userInfo.id,
+                    collection_id: state.notes.collection_id,
+                    keyword: params.keyword
+                }
+                getGroupInitialApi(data).then((res) => {
+                    resolve(res)
+                })
+            })
+        },
+
 
         // 置顶标签
         async setTopTags({commit}, params){
