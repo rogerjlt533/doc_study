@@ -1,28 +1,11 @@
 import { getToken } from "@/utils/auth"
+import { handleLoopCall } from "@/utils/tools"
 import store from "@/store/index.js"
-import { computed } from "vue"
-import { pullRemoteCollectionQueueApi, pullRemoteNoteQueueApi, processDownNoteApi, processDownImageApi, initLocalCollectionPushQueueApi, initCollectionNotePushQueueApi, processNotePushQueueApi, clearCompleteCollectionQueueApi, autoClearCollectionQueueApi } from '@/apiDesktop/sync'
-import { set } from "core-js/fn/dict"
-
-const workpool = require('workerpool')
-const path = require('path')
-
-
-console.log('__dirname',path.join(__dirname, '/backWork.js'))
-const pool = workpool.pool(path.join(__dirname, '/backWork.js'), {workerType: "process"})
-pool.exec((a, b) => a + b, [ 1, 2 ]).then((res) => {
-    console.log('Result: ' + res)
-})
-
-function test(a){
-    console.log(a)
-}
+import { computed, watch } from "vue"
+import { pullRemoteNoteQueueApi, processDownNoteApi, processDownImageApi, initCollectionNotePushQueueApi, processNotePushQueueApi, clearCompleteCollectionQueueApi, autoClearCollectionQueueApi } from '@/apiDesktop/sync'
+import { refreshProInfoApi } from '@/apiDesktop/user'
 
 const migration = require('service/tool/migration.js')
-
-const pub_key = computed(() => store.state.user.userInfo.pk)
-const user_hash = computed(() => store.state.user.userInfo.user_hash)
-const token = getToken()
 
 // 初始化数据库
 export const initMigration = async () => {
@@ -31,43 +14,76 @@ export const initMigration = async () => {
     console.log('初始化数据库完成')
     await handleClearCompleteCollectionQueue()
     console.log('清理上传数据完成')
+
+    initSync()
 }
 // 执行清理已完成的同步记录
 
 // 执行上行下行
-
+const pub_key = computed(() => store.state.user.userInfo.pk)
+const user_hash = computed(() => store.state.user.userInfo.user_hash)
+watch(() => user_hash.value, () => {
+    initSync()
+})
 export const initSync = () => {
+    if(!getToken() || !user_hash.value) return false
+
+    setTimeout(() => {
+        handlePullRemoteNoteQueue()
+        handleProcessDownNote()
+
+        initBasicsData()
+    }, 2 * 1000)
+
+    setInterval(() => {
+        handleInitCollectionNotePushQueue()
+    }, 15 * 60 * 1000)
+
+    setInterval(() => {
+        handleProcessNotePushQueue()
+    }, 20 * 1000)
+
+    setInterval(() => {
+        handlePullRemoteNoteQueue()
+        handleProcessDownNote()
+
+        store.dispatch('collection/getCollection', { page: 1, size: 100 })
+        store.dispatch('user/getUserBase')
+        store.dispatch("notes/getTagsList")
+        store.dispatch('notes/getTagsGroup')
+    }, 30 * 1000)
+
     setInterval(() => {
         if(!getToken() || !user_hash.value) return false
-        setTimeout(() => {
-            handleAutoClearCollectionQueue()
-    
+        handleAutoClearCollectionQueue()
+    }, 5 * 60 * 1000)
+
+    setInterval(() => {
+        if(!getToken() || !user_hash.value) return false
+        handleRefreshProInfo()
+        handleProcessDownImage()
+    }, 3 * 60 * 1000)
+}
+
+function initBasicsData(){
+    handleLoopCall({
+        func: () => {
             handlePullRemoteNoteQueue()
             handleProcessDownNote()
-            handleInitCollectionNotePushQueue()
-            handleProcessNotePushQueue()
-    
             store.dispatch('collection/getCollection', { page: 1, size: 100 })
             store.dispatch('user/getUserBase')
-        })
-    }, 60 * 1000)
-
-    setInterval(() => {
-        if(!getToken() || !user_hash.value) return false
-        handleProcessDownImage()
-
-    }, 10 * 60 * 1000)
+            store.dispatch("notes/getTagsList")
+            store.dispatch('notes/getTagsGroup')
+        },
+        startCount: 0,
+        endCount: 8,
+        time: 5
+    })
 }
 
-function handlePullRemoteCollectionQueue(){
+function handlePullRemoteNoteQueue(){
     const data = {
         token: getToken()
-    }
-    pullRemoteCollectionQueueApi(data)
-}
-function handlePullRemoteNoteQueue(token){
-    const data = {
-        token
     }
     pullRemoteNoteQueueApi(data)
 }
@@ -84,12 +100,6 @@ function handleProcessDownImage(){
         pub_key: pub_key.value
     }
     processDownImageApi(data)
-}
-function handleInitLocalCollectionPushQueue(){
-    const data = {
-        token: getToken()
-    }
-    initLocalCollectionPushQueueApi(data)
 }
 function handleInitCollectionNotePushQueue(){
     const data = {
@@ -119,3 +129,11 @@ function handleAutoClearCollectionQueue(){
     }
     autoClearCollectionQueueApi(data)
 }
+
+function handleRefreshProInfo(){
+    const data = {
+        token: getToken()
+    }
+    refreshProInfoApi(data)
+}
+

@@ -2,19 +2,19 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
+import { initMigration } from "./assets/js/initBackService"
 import {
-    ElConfigProvider, ElButton, ElForm, ElFormItem, ElInput, ElDropdown, ElDropdownItem, ElDropdownMenu, ElSelect, ElOption, ElIcon, ElDialog, ElMenu, ElMenuItem, ElCollapse, ElCollapseItem, ElCollapseTransition, ElPopover, ElRow, ElCol, ElTimeline, ElTimelineItem, ElCard, ElEmpty, ElDivider, ElInputNumber, ElCheckbox, ElScrollbar, ElUpload, ElProgress, ElCascader, ElTooltip, ElImage, ElDrawer, ElPopconfirm, ElTable, ElTableColumn, ElRadio, ElOptionGroup, ElInfiniteScroll, ElLoading, ElSwitch, ElAvatar, ElTabs, ElTabPane, ElDatePicker
+    ElButton, ElForm, ElFormItem, ElInput, ElDropdown, ElDropdownItem, ElDropdownMenu, ElSelect, ElOption, ElIcon, ElDialog, ElMenu, ElMenuItem, ElCollapse, ElCollapseItem, ElCollapseTransition, ElPopover, ElRow, ElCol, ElTimeline, ElTimelineItem, ElCard, ElEmpty, ElDivider, ElInputNumber, ElCheckbox, ElScrollbar, ElUpload, ElProgress, ElCascader, ElTooltip, ElImage, ElDrawer, ElPopconfirm, ElTable, ElTableColumn, ElRadio, ElOptionGroup, ElInfiniteScroll, ElLoading, ElSwitch, ElAvatar
 } from 'element-plus'
 import svgFont from './components/svgFont/index.vue'
 import FButton from './components/element/FButton.vue'
-import VueDragResize from 'vue-drag-resize'
 import 'element-plus/dist/index.css'
 import "./styles/publicStyle.scss" // 设置公共样式
 
 const app = createApp(App)
 
 // 按需引入element plus
-const elementPlusArray = [ ElConfigProvider, ElButton, ElForm, ElFormItem, ElInput, ElDropdown, ElDropdownItem, ElDropdownMenu, ElSelect, ElOption, ElIcon, ElDialog, ElMenu, ElMenuItem, ElCollapse, ElCollapseItem, ElCollapseTransition, ElPopover, ElRow, ElCol, ElTimeline, ElTimelineItem, ElCard, ElEmpty, ElDivider, ElInputNumber, ElCheckbox, ElScrollbar, ElUpload, ElProgress, ElCascader, ElTooltip, ElImage, ElDrawer, ElPopconfirm, ElTable, ElTableColumn, ElRadio, ElOptionGroup, ElInfiniteScroll, ElLoading, ElSwitch, ElAvatar, ElTabs, ElTabPane, ElDatePicker ]
+const elementPlusArray = [ ElButton, ElForm, ElFormItem, ElInput, ElDropdown, ElDropdownItem, ElDropdownMenu, ElSelect, ElOption, ElIcon, ElDialog, ElMenu, ElMenuItem, ElCollapse, ElCollapseItem, ElCollapseTransition, ElPopover, ElRow, ElCol, ElTimeline, ElTimelineItem, ElCard, ElEmpty, ElDivider, ElInputNumber, ElCheckbox, ElScrollbar, ElUpload, ElProgress, ElCascader, ElTooltip, ElImage, ElDrawer, ElPopconfirm, ElTable, ElTableColumn, ElRadio, ElOptionGroup, ElInfiniteScroll, ElLoading, ElSwitch, ElAvatar ]
 elementPlusArray.forEach(item => {
     app.use(item)
 })
@@ -30,8 +30,10 @@ app.component("font-awesome-icon", FontAwesomeIcon)
 
 app.component('svgFont', svgFont)
 app.component('FButton', FButton)
-app.component('vue-drag-resize', VueDragResize)
 
+async function migrationRun(){
+    await initMigration()
+}migrationRun().then(()=>{})
 
 
 app.use(store).use(router).mount('#app')

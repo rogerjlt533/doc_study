@@ -1,7 +1,7 @@
 <template>
     <div class="topbar">
         <div class="info flex align-center">
-            <span class="mr10">{{nowNotes}}</span>
+            <span class="mr10 line-1">{{nowNotes || '废纸篓'}}</span>
             <font-awesome-icon class="font-14 cursor-p" :class="[!ifRefresh ? 'is_loading' : '']" @click="refreshList" icon="sync-alt" color="#9EA0AD" />
             <div class="clear-trash ml20" v-if="nowNotes === '废纸篓'" @click="cleanTrash">
                 <span>清空</span>
@@ -9,26 +9,6 @@
             </div>
         </div>
         <div class="filter">
-            <!--<el-dropdown trigger="click">-->
-            <!--    <span class="el-dropdown-link">-->
-            <!--        <font-awesome-icon :icon="typeDefault.icon" class="mr4"></font-awesome-icon>-->
-            <!--        {{typeDefault.label}}-->
-            <!--        <el-icon class="el-icon&#45;&#45;right"><arrow-down /></el-icon>-->
-            <!--    </span>-->
-            <!--    <template #dropdown>-->
-            <!--        <el-dropdown-menu>-->
-            <!--            <el-dropdown-item-->
-            <!--                v-for="item in filterTypeList"-->
-            <!--                :key="item.value"-->
-            <!--                @click="changeTypeFilter(item)"-->
-            <!--                :class="[item.label === typeDefault.label ? 'activeFilter' : '']"-->
-            <!--            >-->
-            <!--                <font-awesome-icon :icon="item.icon" class="mr4"></font-awesome-icon>-->
-            <!--                {{item.label}}-->
-            <!--            </el-dropdown-item>-->
-            <!--        </el-dropdown-menu>-->
-            <!--    </template>-->
-            <!--</el-dropdown>-->
             <el-dropdown trigger="click">
                 <span class="el-dropdown-link mr10">
                     <font-awesome-icon :icon="sortDefault.icon" class="mr4"></font-awesome-icon>
@@ -141,35 +121,30 @@
     import {ref, nextTick, computed, reactive, defineAsyncComponent} from "vue";
     import { useStore } from "vuex"
     import bus from '@/utils/bus'
-    // 组件 -----
-    import { Search, ArrowDown, Loading } from '@element-plus/icons-vue'
-    import { ElMessageBox, ElNotification } from "element-plus"
-    // import HomeNotesEditor from './Editor.vue';
-    // import NoteAnnotation from "./components/NoteAnnotation.vue"
-    // import shortNotesItem from "./components/shortNotesItem.vue"
-    // import writeNotesItem from "./components/writeNotesItem.vue"
-    const HomeNotesEditor = defineAsyncComponent(() => import('./Editor.vue'))
-    const NoteAnnotation = defineAsyncComponent(() => import('./components/NoteAnnotation.vue'))
-    const shortNotesItem = defineAsyncComponent(() => import('./components/shortNotesItem.vue'))
-    const writeNotesItem = defineAsyncComponent(() => import('./components/writeNotesItem.vue'))
     // hooks -----
     import { clearTrashNoteApi } from "@/apiDesktop/trash";
     import { removePostilApi } from "@/apiDesktop/notes";
     import dropNoteFun from "./js/dropNote"
+    // 组件 -----
+    import { Search, ArrowDown, Loading } from '@element-plus/icons-vue'
+    import { ElMessageBox, ElNotification } from "element-plus"
+    // 异步组件 -----
+    const HomeNotesEditor = defineAsyncComponent(() => import('./Editor.vue'))
+    const NoteAnnotation = defineAsyncComponent(() => import('./components/NoteAnnotation.vue'))
+    const shortNotesItem = defineAsyncComponent(() => import('./components/shortNotesItem.vue'))
+    const writeNotesItem = defineAsyncComponent(() => import('./components/writeNotesItem.vue'))
 
 
     const store = useStore();
 
     // 监听用户筛选Notes下的笔记
     let noteslistRef = ref(null);
-    let titles = ['我的笔记', '最近三日', '废纸篓']
     let nowNotes = computed(() => {
-        let title = store.state.notes.classifyObj.title || ''
-        let collectionTitle = store.state.notes.classifyObj.collectionTitle || ''
-        let groupTitle = store.state.notes.classifyObj.groupTitle || ''
-        let tagTitle = store.state.notes.classifyObj.tagTitle || ''
+        let collectionTitle = store.state.notes.catalogActiveState.collectionTitle || ''
+        let groupTitle = store.state.notes.catalogActiveState.tagGroupTitle || ''
+        let tagTitle = store.state.notes.catalogActiveState.tagTitle || ''
 
-        return `${title}${collectionTitle}${groupTitle ? collectionTitle ? '/' + groupTitle : groupTitle : ''}${tagTitle ? groupTitle || collectionTitle ? '/' + tagTitle : tagTitle : ''}`
+        return `${collectionTitle}${groupTitle ? collectionTitle ? '/' + groupTitle : groupTitle : ''}${tagTitle ? groupTitle || collectionTitle ? '/' + tagTitle : tagTitle : ''}`
     })
 
     // 当前笔记分类参数
@@ -415,11 +390,8 @@
                 font-size: 16px;
                 color: #333;
                 display: inline-block;
-                max-width: 210px;
-                overflow: hidden;
+                max-width: 300px;
                 vertical-align: bottom;
-                text-overflow: ellipsis;
-                white-space: nowrap;
             }
             i{
                 font-size: 18px;

@@ -1,30 +1,23 @@
 <template>
-    <el-config-provider :locale="locale">
-        <router-view></router-view>
-    </el-config-provider>
+    <!--    <router-view v-slot="{ Component }" v-if="hasDatabase">-->
+    <!--		<keep-alive>-->
+    <!--			<component :is="Component" v-if="$route.meta.keepAlive"/>-->
+    <!--		</keep-alive>-->
+    <!--		<component :is="Component" v-if="!$route.meta.keepAlive"/>-->
+    <!--	</router-view>-->
+    <router-view></router-view>
 </template>
 
 <script setup>
-    import { ref } from 'vue'
-    import { useStore } from "vuex"
+    import { computed, ref } from 'vue'
+    import { useStore } from 'vuex'
     import { checkVersionApi } from '@/apiDesktop/system'
-    import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+    import { getToken } from "@/utils/auth"
+    import { ElDialog } from "element-plus"
+    import { shell } from "electron";
 
     const store = useStore()
-    const eStore = require('electron-store')
-    const electronStore = new eStore()
 
-    const locale = ref(null)
-    locale.value = zhCn
-
-    setInterval(() => {
-        handleReloadVuex()
-    }, 10 * 1000)
-
-    function handleReloadVuex(){
-        const vuex = JSON.parse(electronStore.get('vuex'))
-        store.commit('RESET_BASE_DATA', vuex)
-    }
 </script>
 
 <style lang="scss" scoped>
@@ -54,12 +47,15 @@
         }
     }
 
+    .el-dialog__header{
+        border-bottom: 1px solid #eee;
+        margin-right: 0;
+    }
+    .el-dialog__footer{
+        border-top: 1px solid #eee;
+    }
     .el-form--label-top .el-form-item__label{
         padding: 0;
-    }
-
-    .el-divider__text{
-        background: #ffffff !important;
     }
 </style>
 
