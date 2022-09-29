@@ -1,6 +1,6 @@
 {
-  "name": "thought-note-beta2",
-  "version": "0.6.9",
+  "name": "idea-trip",
+  "version": "0.7.0",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -113,7 +113,7 @@
     "sass-resources-loader": "^2.2.4",
     "unplugin-auto-import": "^0.7.1",
     "unplugin-vue-components": "^0.19.9",
-    "vue-cli-plugin-electron-builder": "~2.1.1",
+    "vue-cli-plugin-electron-builder": "git://github.com/spuky/vue-cli-plugin-electron-builder#b6826fc",
     "webpack-dev-server": "^4.6.0",
     "worker-loader": "^3.0.8"
   },
