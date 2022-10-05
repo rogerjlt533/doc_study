@@ -57,5 +57,9 @@
     .el-form--label-top .el-form-item__label{
         padding: 0;
     }
+
+    .el-divider__text{
+        background: #ffffff !important;
+    }
 </style>
 

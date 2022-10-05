@@ -363,9 +363,6 @@
             padding-left: 20px;
         }
     }
-    .el-divider__text{
-        background: #fafafc !important;
-    }
 
 
     .activeFilter{

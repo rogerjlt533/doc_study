@@ -1,6 +1,6 @@
 <template>
     <div @contextmenu="handleRightClick" >
-        <div class="line-one" :id="'note-id-' + item.id" draggable="true">
+        <div class="line-one" draggable="true">
             <div class="flex align-center">
                 <font-awesome-icon icon="grip-vertical" color="#6D7785" class="font-12 mr6" />
                 <el-tooltip
@@ -24,19 +24,19 @@
                         <div>
                             <span class="color" :style="{ background: item.collection.color }"></span>
                             <span class="name">{{item.collection.collection}}</span>
-                            <font-awesome-icon v-show="item.collection.is_team === 1" icon="user-friends" class="mr6 font-12" color="#9EA0AD" />
+                            <font-awesome-icon v-show="item.collection.is_team === 1" icon="user-friends" class="mr6" style="font-size: 12px;" color="#9EA0AD" />
                         </div>
                         <template #dropdown>
                             <el-dropdown-menu>
                                 <el-dropdown-item
-                                        :class="[collect.id === item.collection_id ? 'collect-dropdown-active' : '']"
+                                        :class="[collect.id === item.collection_id ? 'actived' : '']"
                                         v-for="(collect,index) in collectionListSelf" :key="index"
                                         @click="resetCollection(collect,index)">
                                     {{collect.collection}}
                                 </el-dropdown-item>
                                 <el-divider v-if="collectionListSelf.length && collectionListTeam.length" style="margin: 4px 0"></el-divider>
                                 <el-dropdown-item
-                                        :class="[collect.id === item.collection_id ? 'collect-dropdown-active' : '']"
+                                        :class="[collect.id === item.collection_id ? 'actived' : '']"
                                         v-for="(collect,index) in collectionListTeam" :key="index"
                                         @click="resetCollection(collect,index)">
                                     {{collect.collection}}
@@ -47,13 +47,16 @@
                     <div v-else>
                         <span class="color" :style="{ background: item.collection.color }"></span>
                         <span class="name">{{item.collection.collection}}</span>
-                        <font-awesome-icon v-show="item.collection.is_team == 1" icon="user-friends" class="mr6 font-12" color="#9EA0AD" />
+                        <font-awesome-icon v-show="item.collection.is_team == 1" icon="user-friends" class="mr6" style="font-size: 12px;" color="#9EA0AD" />
                     </div>
                 </div>
             </div>
         </div>
-        <div ref="htmlRef" class="line-two">
-            <div class="content-html" v-html="showThumbnail ? item.curtNote : item.note" @click="getNoteNodeClick" @dblclick="dblclickNote"></div>
+        <div
+                ref="htmlRef" class="line-two"
+                :class="[ isOverHeight > 200 && !isFlod ? 'max-height' : '']"
+        >
+            <div class="content-html" v-html="item.note" @click="getNoteNodeClick" @dblclick="dblclickNote"></div>
             <div class="resource-url" v-if="item.url" @click="openUrlByBrowser(item.url)">
                 <div>
                     <span>来源网站</span>
@@ -61,25 +64,9 @@
                 </div>
             </div>
         </div>
-        <div class="picture-box" v-if="item.imgSrc?.length">
-            <el-divider content-position="right">
-                <span class="card-detail unselectable" @click="openCardDetails">
-                    {{showThumbnail ? '卡片原文' : '折叠'}}
-                </span>
-            </el-divider>
-            <div class="picture" v-show="showThumbnail">
-                <el-image
-                        v-for="(img,index) in item.imgSrc"
-                        :key="index"
-                        class="picture-img"
-                        fit="cover"
-                        :src="img"
-                        :preview-src-list="item.imgSrc"
-                        :initial-index="index"
-                        :hide-on-click-modal="true"
-                ></el-image>
-            </div>
-        </div>
+        <span class="flod ml10" v-if="isOverHeight > 200" @click="isFlod = !isFlod">
+            {{!isFlod ? "展开" : "收起"}}
+        </span>
 
         <!-- 历史笔记 -->
         <el-drawer
@@ -113,27 +100,30 @@
 </template>
 
 <script setup>
-    import {ref, defineProps, onMounted, defineEmits, computed, watch, defineAsyncComponent} from "vue";
+    import {ref, defineProps, onMounted, defineEmits, watch, computed, nextTick} from "vue";
     import { useStore } from "vuex"
     import bus from '@/utils/bus'
-    // hooks ----
-    import { simpleEditor } from "../js/cardEditor"
-    import openUrlByBrowser from "@/assets/js/openUrlByBrowser"
-    import { getNoteNodeClick } from '../js/editorMethods'
-    import { convertToPageApi, getNotesHistoryApi, rollHistoryApi} from '@/apiDesktop/notes'
-    import {deepClone} from "@/utils/tools";
+    import { getNotesHistoryApi, rollHistoryApi } from '@/apiDesktop/notes'
     // 组件 ----
-    import previewImg from "@/components/imagePreview"
+    import previewImg from "@/lib/imagePreview"
+    import NoteAnnotation from "./NoteAnnotation.vue";
     import { ElMessageBox, ElNotification } from "element-plus"
-    import { RefreshLeft } from '@element-plus/icons-vue'
-    import fcDialog from "@/components/dialog"
+    import { RefreshLeft, Loading } from '@element-plus/icons-vue'
+    // hooks ----
+    import { simpleEditor } from "../js/editor"
+    import { handleContentHtml, handleHtmlTagSpace } from '@/assets/js/processHtml'
+    import openUrlByBrowser from "@/assets/js/openUrlByBrowser";
+    import { getNoteNodeClick } from '../js/editorMethods'
+    import { removeHtmlTag } from '@/utils/tools'
 
     const remote = require('electron').remote;
     const Menu = remote.Menu;
     const MenuItem = remote.MenuItem;
 
-    const store = useStore()
-    const emit = defineEmits(['deleteNote'])
+
+    const store = useStore();
+    const emit = defineEmits(["changeAudio", 'deleteNote']);
+    const matchReg = /\#(\S+?)?\s{1}/g
 
     const props = defineProps({
         item: {
@@ -148,12 +138,6 @@
         }
     });
 
-    watch(() => props.item, (newval, oldval) => {
-        console.log(newval, oldval)
-    })
-
-    // let noteDetailVal = props.item.curtNote
-
     // 右击笔记本
     const handleRightClick = () => {
         let menu = new Menu()
@@ -163,12 +147,10 @@
             menu.append(new MenuItem({ type: 'separator' }))
             menu.append(new MenuItem({ label: '🗑 删除笔记', click: deleteNote }))
         }else{
-
             menu.append(new MenuItem({ label: '📝 编辑', click: editNote }))
             menu.append(new MenuItem({ label: '💬 引用', click: annotation }))
             menu.append(new MenuItem({ label: '📄 复制', role: 'copy' }))
-            menu.append(new MenuItem({ label: '📝 转为写作', click: cardToWrite }))
-            // menu.append(new MenuItem({ label: '📅 笔记历史', click: getNoteHistory }))
+            menu.append(new MenuItem({ label: '📅 笔记历史', click: getNoteHistory }))
             menu.append(new MenuItem({ type: 'separator' }))
             menu.append(new MenuItem({ label: '🗑 扔到废纸篓', click: moveTrashCan }))
         }
@@ -182,11 +164,17 @@
         if(collection.id === props.item.collection_id) return false
 
         const editor = simpleEditor(props.item.note)
-        const res = await store.dispatch("notes/editNote", {
-            html: editor.getHTML(),
-            json: editor.getJSON(),
+        const contentJson = editor.getJSON()
+        const editorHtml = handleHtmlTagSpace(editor.getHTML())
+        const tag_list = editorHtml.match(matchReg) ? editorHtml.match(matchReg).map(item => item.substr(1).trim()) : []
+        const contentHtml = handleContentHtml(editor.getHTML())
+
+        const res = await store.dispatch("notes/editNote",{
+            contentHtml,
+            contentJson,
             collection_id: collection.id,
             noteId: props.item.id,
+            tag_list,
             postil_list: props.item.quote.map(item => item.id),
             index: props.index
         })
@@ -200,68 +188,47 @@
 
     // 删除该笔记
     function moveTrashCan(){
-        fcDialog({
+        ElMessageBox({
             title: '提示',
             message: "确定将这条笔记扔到废纸篓吗?",
+            showCancelButton: true,
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
         }).then(() => {
             emit("deleteNote")
             store.dispatch("notes/removeNote",{
                 id: props.item.id,
-                index: props.index,
-                note_type: 1
+                index: props.index
             })
-            store.dispatch("user/getUserBase")
+            store.dispatch("user/getUserBase");
         }).catch(()=>{})
     }
 
     // 引用笔记
     function annotation(){
-        bus.emit("setAnnotationId", {
+        bus.emit("SET_ANNOTATION_ID", {
             item: props.item,
             isOverHeight: isOverHeight.value
-        })
-    }
-
-    // 卡片笔记转写作模式
-    function cardToWrite(){
-        convertToPageApi({
-            user_id: store.state.user.userInfo.id,
-            note_id: props.item.id
-        }).then((res) => {
-            if(res.status_code === 200){
-                store.commit('notes/REMOVE_NOTE', {
-                    index: props.index,
-                    note_type: 1
-                })
-                let noteData = deepClone(props.item)
-                noteData.note_type = 2
-                store.commit('notes/ADD_NOTE', {
-                    note_type: 2,
-                    data: noteData
-                })
-            }
         })
     }
 
     // 编辑笔记
     function editNote(){
         setTimeout(() => {
-            props.item.ifEditCon = true
-            store.commit('notes/SET_EDIT_NOTE_COUNT', 1)
+            props.item.ifEditCon = true;
         }, 150)
     }
     // 双击编辑笔记
     function dblclickNote(){
-        if(props.isTrash || props.item.is_self !== 1) return false
-        editNote()
+        if(props.isTrash || props.item.is_self !== 1) return false;
+        editNote(props.item);
     }
 
     // 回收站恢复笔记
     function recoverNote(){
         store.dispatch("notes/recoverNote",{
             note_id: props.item.id,
-            index: props.index,
-            note_type: 1
+            index: props.index
         })
         store.dispatch("user/getUserBase");
     }
@@ -270,19 +237,9 @@
         emit("deleteNote")
         store.dispatch("notes/deleteNote",{
             note_id: props.item.id,
-            index: props.index,
-            note_type: 1
+            index: props.index
         })
         store.dispatch("user/getUserBase");
-    }
-
-    // 展开全文逻辑
-    const showThumbnail = ref(true)
-    function openCardDetails(){
-        showThumbnail.value = !showThumbnail.value
-        if(showThumbnail.value){
-            document.getElementById(`note-id-${props.item.id}`).scrollIntoView()
-        }
     }
 
     // 获取笔记历史
@@ -336,6 +293,11 @@
     })
 </script>
 
+<style lang="scss">
+    .note-drawer{
+        background: #f5f5f5;
+    }
+</style>
 <style lang="scss" scoped>
     .line-one{
         display: flex;
@@ -406,43 +368,12 @@
         max-height: 220px;
         overflow: hidden;
     }
-    //.trigger-style{
-    //    &:hover{
-    //        box-shadow: 0px 1px 4px -2px rgba($color: #000000, $alpha: 0.5);
-    //    }
-    //    &:active{
-    //        box-shadow: 0px 0px 4px -3px rgba($color: #000000, $alpha: 0.5);
-    //    }
-    //}
-
-    .picture-box{
-        margin: 10px 10px 0 10px;
-        padding: 10px 0px;
-        .card-detail{
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 4px;
-            color: #666666;
-            background: #FFFFFF;
-            &:hover{
-                background: rgba($color: $purple, $alpha: 0.5);
-                color: #FFFFFF;
-            }
-            &:active{
-                background: rgba($color: $purple, $alpha: 0.3);
-                color: #FFFFFF;
-            }
+    .trigger-style{
+        &:hover{
+            box-shadow: 0px 1px 4px -2px rgba($color: #000000, $alpha: 0.5);
         }
-        .picture{
-            @include flexAlignJustify(center, flex-start);
-            flex-wrap: wrap;
-            .picture-img{
-                width: 80px;
-                height: 80px;
-                margin: 2px 6px;
-                border: 2px solid #dcdfe6;
-                border-radius: 4px;
-            }
+        &:active{
+            box-shadow: 0px 0px 4px -3px rgba($color: #000000, $alpha: 0.5);
         }
     }
 
@@ -486,25 +417,6 @@
                 margin-top: 4px;
                 padding: 10px;
             }
-        }
-    }
-</style>
-<style lang="scss">
-    .note-drawer{
-        background: #f5f5f5;
-    }
-
-    .collect-dropdown-active{
-        background-color: rgba($color: $purple, $alpha: 0.1) !important;
-        color: $purple !important;
-    }
-
-    .picture-box{
-        .el-divider__text{
-            background: #F6F8FC !important;
-        }
-        .el-divider--horizontal{
-            margin: 10px 0;
         }
     }
 </style>

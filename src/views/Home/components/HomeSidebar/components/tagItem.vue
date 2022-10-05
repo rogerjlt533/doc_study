@@ -135,7 +135,7 @@
     }
     .active{
         color: #ffffff !important;
-        background-image: linear-gradient($purple, $purple);
+        background: $purple !important;
     }
 
     .tag-top{

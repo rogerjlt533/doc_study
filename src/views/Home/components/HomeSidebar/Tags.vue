@@ -11,49 +11,18 @@
             <svgFont class="add-btn" color="#6F7A93" icon="manage" @click.stop="getGroupInitial"></svgFont>
         </div>
         <f-collapse>
-            <div class="tag-scroll" v-show="showTags">
-                <!-- 置顶标签 -->
-                <div class="tag-content" v-if="tagsTopList.length > 0">
-                    <div class="tags-box unselectable">
-                        <template v-for="(item,index) in tagsTopList" :key="index">
-                            <tag-item :item="item" :index="index" type="top"></tag-item>
-                        </template>
-                    </div>
+            <div class="tag-content" v-show="showTags">
+                <div class="tags-box unselectable" v-if="tagsTopList.length > 0">
+                    <tag-item
+                            v-for="(item,index) in tagsTopList"
+                            :key="item.id"
+                            :item="item"
+                            :index="index"
+                            type="top">
+                    </tag-item>
                 </div>
-
-                <!-- 分组标签-->
-                <div class="" v-if="tagsGroupList?.length">
-                    <div class='group-box'>
-                        <template v-for="group in tagsGroupList" :key="group.id">
-                            <div class="tags-group flex justify-between align-center unselectable" @click="group.isShow = !group.isShow">
-                                <p class="tag-title">{{group.name}}</p>
-                                <el-icon
-                                        size='14px'
-                                        class="angle-right"
-                                        :class="!group.isShow ? 'is_rotate_arrow_back' : 'is_rotate_arrow_go'"
-                                ><ArrowRight /></el-icon>
-                            </div>
-                            <f-collapse>
-                                <div class="tags-box unselectable" v-show="group.isShow">
-                                    <template v-for="(tag,index) in group.list" :key="tag.id">
-                                        <tag-item :group="group" :item="tag" :index="index" from="group"></tag-item>
-                                    </template>
-                                </div>
-                            </f-collapse>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- 非置顶标签 -->
-                <div class="tag-content" v-if="tagsList.length > 0">
-                    <div class="tags-box unselectable">
-                        <tag-item
-                                v-for="(item,index) in tagsList"
-                                :key="index"
-                                :item="item"
-                                :index="index"
-                        ></tag-item>
-                    </div>
+                <div class="none-tag" v-else>
+                    <span>没有置顶标签~</span>
                 </div>
             </div>
         </f-collapse>
@@ -131,60 +100,22 @@
             </div>
         </div>
     </VueDragResize>
-
-    <!--<el-dialog-->
-    <!--    v-model="showTagsManage"-->
-    <!--    title="标签管理器"-->
-    <!--    width="380px"-->
-    <!--    :modal="false"-->
-    <!--    destroy-on-close-->
-    <!--    draggable-->
-    <!--    :lock-scroll="false"-->
-    <!--    :close-on-click-modal="false"-->
-    <!--    :close-on-press-escape="false"-->
-    <!--&gt;-->
-    <!--    <div class="tags-manage">-->
-    <!--        <el-input-->
-    <!--            placeholder="搜索标签..."-->
-    <!--            :prefix-icon="Search"-->
-    <!--            clearable-->
-    <!--            v-model="tagKeyword"-->
-    <!--            @change="getGroupInitial">-->
-    <!--        </el-input>-->
-    <!--        <div class="tags-group-list">-->
-    <!--            <div v-for='(item,index) in groupInitial' :key="index">-->
-    <!--                <el-divider content-position="center">-->
-    <!--                    <span class="color-9 font-12">{{item.name}}</span>-->
-    <!--                </el-divider>-->
-    <!--                <div class="tags-box">-->
-    <!--                    <tag-item-->
-    <!--                        v-for="(tag,i) in item.list"-->
-    <!--                        :key="tag.id"-->
-    <!--                        :item="tag"-->
-    <!--                        :index="i"-->
-    <!--                    ></tag-item>-->
-    <!--                </div>-->
-    <!--            </div>-->
-    <!--        </div>-->
-    <!--    </div>-->
-    <!--</el-dialog>-->
 </template>
 <script setup>
     import {ref, computed, defineEmits, onMounted, reactive} from "vue";
     import { useStore } from "vuex";
-    import bus from '@/utils/bus';
     import { ArrowRight, CaretRight, Search, Close } from '@element-plus/icons-vue'
     import FCollapse from '@/components/FCollapse'
     import tagItem from "./components/tagItem.vue"
-    import VueDragResize from 'vue-drag-resize';
+    import VueDragResize from 'vue-drag-resize'
 
     const store = useStore();
     const emits = defineEmits(['openTagsGroup'])
 
-    let userId = computed(() => store.state.user.userInfo.id)
-    let tagsList = computed(() => store.state.notes.tagsList);
-    let tagsTopList = computed(() => store.state.notes.tagsTopList);
-    let tagsGroupList = computed(() => store.state.notes.tagsGroupList?.filter((item) => item.group_id && item.group_id !== '0' && item.list.length))
+    // let userId = computed(() => store.state.user.userInfo.id)
+    // let tagsList = computed(() => store.state.notes.tagsList)
+    let tagsTopList = computed(() => store.state.notes.tagsTopList)
+    // let tagsGroupList = computed(() => store.state.notes.tagsGroupList?.filter((item) => item.group_id && item.group_id !== '0' && item.list.length))
 
     function getTagsGroupList(){
         store.dispatch('notes/getTagsGroup')
@@ -265,39 +196,20 @@
                 background: #e1e1e1;
             }
         }
+        .tag-content{
+            padding: 0 10px;
+        }
+        .none-tag{
+            font-size: 12px;
+            color: #999999;
+            line-height: 40px;
+            text-align: center;
+        }
     }
 
     .tags-box{
         display: flex;
         flex-wrap: wrap;
-    }
-
-    .tag-scroll{
-        padding: 0 10px;
-        .tag-content{
-            padding: 10px;
-        }
-    }
-
-    .group-box{
-        .tags-box{
-            padding: 10px 0;
-        }
-        .tags-group{
-            padding: 2px 4px;
-            border-radius: 4px;
-            margin: 2px 0;
-            &:hover{
-                background: #eeeeee;
-            }
-            .tag-title{
-                font-size: 12px;
-                color: #666666;
-            }
-            .angle-right{
-                transition: all 0.3s;
-            }
-        }
     }
 
     .tags-manage-container{

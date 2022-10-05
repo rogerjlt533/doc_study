@@ -133,7 +133,7 @@ export default {
             state.writeNoteActive.active = active
         },
         // collection切换顺序时，修改选中collection的index
-        SORT_CHANGE_COLLECTION_ACTIVED(state, { collectionActive }){
+        SORT_CHANGE_COLLECTION_ACTIVE(state, { collectionActive }){
             state.catalogActiveState.collectionActive = collectionActive
         },
         /**

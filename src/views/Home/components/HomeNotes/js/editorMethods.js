@@ -42,14 +42,22 @@ function filterTagsNotes(id, tag){
     bus.emit("SET_TEXT_EDITOR_TAG", {
         tag: tag
     })
-    store.commit("notes/CHANGE_CLASSIFY_ACTIVED",{
-        collectionTitle: store.state.notes.classifyObj.collectionTitle,
+
+    // store.commit("notes/CHANGE_CLASSIFY_ACTIVED",{
+    //     collectionTitle: store.state.notes.classifyObj.collectionTitle,
+    //     tagTitle: `#${tag}`,
+    //     tag_id: id,
+    //     activedTag: id,
+    //     collectionActived: store.state.notes.classifyObj.collectionActived,
+    //     collection_id: store.state.notes.tagToCollectionId
+    // })
+
+    store.commit('notes/CHANGE_FILTER_NOTE_PARAMS', {
+        tag_id: id
+    })
+    store.commit('notes/CHANGE_CATALOG_ACTIVE_STATE', {
+        tagActive: id,
         tagTitle: `#${tag}`,
-        tag_id: id,
-        activedTag: id,
-        collectionType: store.state.notes.classifyObj.collectionType,
-        collectionActived: store.state.notes.classifyObj.collectionActived,
-        collection_id: store.state.notes.tagToCollectionId
     })
     store.commit("user/SHOW_NOTICE",{data: false});
     bus.emit("CLEAR_KAYWORD");

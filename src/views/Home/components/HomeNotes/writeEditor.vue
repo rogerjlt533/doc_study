@@ -736,7 +736,8 @@
             padding-left: 30px;
         }
         p{
-            margin: 10px 0;
+            margin: 20px 0;
+            font-size: 14px;
             line-height: 26px;
         }
         ul[data-type="taskList"] {

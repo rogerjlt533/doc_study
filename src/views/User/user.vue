@@ -1,8 +1,7 @@
 <template>
-	<div class="container-user">
-		<div class="center">
+    <div class="container-user">
+        <div class="center">
             <div class="back">
-
                 <router-link to="/home" replace>
                     <h3>
                         <font-awesome-icon icon="chevron-circle-left" style="font-size: 18px;" color="#666666" />
@@ -13,16 +12,16 @@
             <el-row>
                 <el-col :span="6">
                     <el-menu
-                        :default-active="defaultActive"
-                        class="el-menu-vertical-demo"
-                        active-text-color="#7885d1"
-                        style="height: calc(100vh - 120px)"
+                            :default-active="defaultActive"
+                            class="el-menu-vertical-demo"
+                            active-text-color="#7885d1"
+                            style="height: calc(100vh - 120px)"
                     >
                         <el-menu-item
-                            v-for="(nav,index) in navList"
-                            :key="index"
-                            :index="index"
-                            @click="selectItem(nav,index)"
+                                v-for="(nav,index) in navList"
+                                :key="index"
+                                :index="index"
+                                @click="selectItem(nav,index)"
                         >
                             <font-awesome-icon :icon="nav.icon" class="mr4 font-14" />
                             <span>{{nav.label}}</span>
@@ -35,27 +34,27 @@
                         <transition name="transition">
                             <keep-alive>
                                 <component
-                                    :is="routeView"
-                                    :userInfo="userInfo"
-                                    :userRight="userRight"
-                                    :setting="setting"
+                                        :is="routeView"
+                                        :userInfo="userInfo"
+                                        :userRight="userRight"
+                                        :setting="setting"
                                 ></component>
                             </keep-alive>
                         </transition>
                     </div>
                 </el-col>
             </el-row>
-		</div>
-	</div>
+        </div>
+    </div>
 </template>
 
 <script setup>
-import {ref, onMounted, computed, nextTick} from "vue"
-	import { useStore } from "vuex"
+    import {ref, onMounted, computed, nextTick} from "vue"
+    import { useStore } from "vuex"
     import { useRoute } from "vue-router";
-	import { domainApi } from "@/api/user"
+    import { domainApi } from "@/api/user"
     // 组件
-	import { ElMessage, ElMessageBox } from "element-plus"
+    import { ElMessage, ElMessageBox } from "element-plus"
     import accountSetting from "./components/accountSetting";
     import storage from "./components/storage"
     import share from "./components/share"
@@ -69,21 +68,21 @@ import {ref, onMounted, computed, nextTick} from "vue"
     const store = useStore();
     const route = useRoute();
 
-	onMounted(() => {
-		// store.dispatch("user/getUserInfo")
-		store.dispatch("user/getUserSetting")
-		store.dispatch("user/getUserRight")
-	})
+    onMounted(() => {
+        // store.dispatch("user/getUserInfo")
+        store.dispatch("user/getUserSetting")
+        store.dispatch("user/getUserRight")
+    })
 
-	// 获取用户信息
-	let userInfo = computed(() => { return store.state.user.userInfo });
-	let setting = computed(() => { return store.state.user.userSetting });
-	let userRight = computed(() => {
+    // 获取用户信息
+    let userInfo = computed(() => { return store.state.user.userInfo });
+    let setting = computed(() => { return store.state.user.userSetting });
+    let userRight = computed(() => {
         if(store.state.user.userRight){
             store.state.user.userRight.percent = Number(store.state.user.userRight.percent)
         }
-		return store.state.user.userRight
-	});
+        return store.state.user.userRight
+    });
     const navList = [
         { icon: 'cog', label: "账户设置", route: accountSetting },
         { icon: 'hdd', label: "储存空间", route: storage },
@@ -110,8 +109,8 @@ import {ref, onMounted, computed, nextTick} from "vue"
     }
 
 
-	//  分享设置部分
-	let shareRadio = ref(setting.value.note_public);
+    //  分享设置部分
+    let shareRadio = ref(setting.value.note_public);
 
 
 </script>
@@ -126,57 +125,62 @@ import {ref, onMounted, computed, nextTick} from "vue"
             color: $purple;
         }
     }
+    .el-dialog__header{
+        border-bottom: 1px solid #eee;
+    }
+    .el-dialog__footer{
+        border-top: 1px solid #eee;
+    }
+    .el-form--label-top .el-form-item__label{
+        padding: 0;
+    }
 
-	.el-form--label-top .el-form-item__label{
-		padding: 0;
-	}
-
-	.personal-text-add{
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 4px 0 10px;
-		.icon{
-			margin: 0 20px;
-		}
-	}
-	.personal-text{
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		margin: 10px;
-		.text{
-			width: 78px;
+    .personal-text-add{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px 0 10px;
+        .icon{
+            margin: 0 20px;
+        }
+    }
+    .personal-text{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 10px;
+        .text{
+            width: 78px;
             height: 20px;
-			text-align: center;
-			font-size: 14px;
-			color: #333;
-			padding: 4px 10px;
-			border: 1px solid #eee;
-			border-radius: 4px;
-		}
-		.icon{
-			margin: 0 20px;
-		}
-		.close{
-			font-size: 24px;
-			margin-left: 10px; 
-			cursor: pointer;
-			&:active{
-				opacity: 0.8;
-			}
-		}
-	}
+            text-align: center;
+            font-size: 14px;
+            color: #333;
+            padding: 4px 10px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+        }
+        .icon{
+            margin: 0 20px;
+        }
+        .close{
+            font-size: 24px;
+            margin-left: 10px;
+            cursor: pointer;
+            &:active{
+                opacity: 0.8;
+            }
+        }
+    }
     .personal-text-none{
         color: #999999;
         font-size: 12px;
         text-align: center;
         line-height: 60px;
     }
-	.personal-btn{
-		display: flex;
-		justify-content: flex-end;
-	}
+    .personal-btn{
+        display: flex;
+        justify-content: flex-end;
+    }
 
     .note-set, .share-set{
         ul{
@@ -220,36 +224,36 @@ import {ref, onMounted, computed, nextTick} from "vue"
     }
 </style>
 <style lang="scss" scoped>
-	.container-user{
-		.center{
-			width: 900px;
-			margin: 20px auto;
-			background: #fff;
-			border-radius: 4px;
-			padding: 20px;
-			.back{
-				padding-bottom: 10px;
-				border-bottom: 1px solid #eee;
-				a{
-					> h3{
-						display: inline-block;
-						margin: 0;
-						color: #333;
-						cursor: pointer;
-						&:hover{
-							color: $purple;
-							.svg-inline--fa{
-								color: $purple;
-							}
-						}
-					}
-				}
-			}
-		}
+    .container-user{
+        .center{
+            width: 900px;
+            margin: 20px auto;
+            background: #fff;
+            border-radius: 4px;
+            padding: 20px;
+            .back{
+                padding-bottom: 10px;
+                border-bottom: 1px solid #eee;
+                a{
+                    > h3{
+                        display: inline-block;
+                        margin: 0;
+                        color: #333;
+                        cursor: pointer;
+                        &:hover{
+                            color: $purple;
+                            .svg-inline--fa{
+                                color: $purple;
+                            }
+                        }
+                    }
+                }
+            }
+        }
         .right-content{
             padding: 20px 0;
         }
-	}
+    }
 
     .transition-enter-active {
         opacity: 0;

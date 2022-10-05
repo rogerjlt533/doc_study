@@ -12,8 +12,7 @@ const debug = process.env.NODE_ENV !== 'production'
 export default createStore({
 	state: {
 		showTagsGroup: false,
-		editorHeight: 0,
-		showDialog: false
+		editorHeight: 0
 	},
 	mutations: {
 		SET_TAGS_GROUP(state){
@@ -23,20 +22,6 @@ export default createStore({
 			state.editorHeight = data;
 			// console.log(state, data);
 		},
-		SET_NEXT_NOT_SHOW_DIALOG(state, data){
-			state.showDialog = data
-		},
-
-		RESET_VUEX_STATE(state, data){
-			state.user = data.user
-			state.notes = data.notes
-			state.collection = data.collection
-		},
-		RESET_BASE_DATA(state, data){
-			state.user = data.user
-			state.collection = data.collection
-		},
-
 		CLEAR_VUEX(state) {
 			state.user = {
 				isShowNotice: false,
@@ -50,50 +35,37 @@ export default createStore({
 			};
 			state.notes = {
 				cachedNote: "",
-				notesListHeight: "calc(100vh - 208px)",
-				catalogState: {
-					showSelfCollection: false,
-					showTeamCollection: false,
-					showTags: false
+				notesListHeight: "calc(100vh - 196px)",
+				classifyObj: {
+					title: '我的笔记',
+					actived: 0,
+					collectionActived: null,
+					collectionType: null,
+					activedTag: null
 				},
-				catalogActiveState: {
-					noteTypeActive: 1,
-					collectionActive: '',
-					tagActive: '',
-					tagGroupActive: '',
-					trashActive: false,
-					collectionTitle: '',
-					tagTitle: '',
-					tagGroupTitle: '',
-					short_note_count: 0,
-					long_note_count: 0
-				},
-				notes: {
-					tag_id: '',
-					group_id: '',
-					collection_id: '',
-					trash: '',
+				notes:{
+					tag_id: undefined,
+					group_id: undefined,
+					collection_id: undefined,
+					trash: undefined,
+					today: undefined,
 					note_type: 1,
-					orderby_create: 1,
 					sort: "desc"
 				},
-				writeNoteState: {
-					active: '',
-					note: '',
-					collection_id: ''
+				writeNoteActive:{
+					active: 0
 				},
-				editNoteCount: 0,
+				editorCollection:{
+					checked_collection: "",
+					collection_id: "",
+				},
+				tagToCollectionId: "",
+				writeNote: [],
 				noteslist: [],
-				notesCount: 0,
-				writeNotesList: [],
 				tagsGroupList: [],
 				tagsAllList: [],
 				tagsTopList: [],
 				tagsList: [],
-				tagInitialList: {
-					pt: [],
-					fz: []
-				},
 				isFinish: true
 			};
 			state.collection = {

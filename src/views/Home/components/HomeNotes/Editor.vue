@@ -42,7 +42,7 @@
                     <font-awesome-icon icon="list-ol" class="font-16" :color="editor.isActive('orderedList') ? '#333333' : '#9EA0AD'" />
                 </div>
                 <div class="trigger-style">
-                    <el-popover placement="right-start" :width="344" v-model:visible="showEmoji">
+                    <el-popover placement="right-start" :width="370" v-model:visible="showEmoji">
                         <VuemojiPicker @emojiClick="handleEmojiClick" :isDark="false" />
                         <template #reference>
                             <font-awesome-icon icon="face-laugh" class="font-16" color="#9EA0AD" />
@@ -108,7 +108,7 @@
             </div>
         </div>
 
-        <mask-com v-if="showEmoji" :opacity="0" :zIndex="999" @click="showEmoji = false"></mask-com>
+        <!--<maskCom v-if="showEmoji" :opacity="0" :zIndex="99999" @click="showEmoji = false"></maskCom>-->
     </div>
 </template>
 
@@ -121,7 +121,7 @@
     import { ElNotification } from "element-plus"
     import { EditorContent } from '@tiptap/vue-3'
     import { VuemojiPicker } from 'vuemoji-picker'
-    import maskCom from '@/components/mask.vue'
+    // import maskCom from '@/components/maskCom.vue'
     import { tipsBtn, closeTips } from "@/lib/tipsButton"
     // hooks ----
     import { editorInstance, simpleEditor, showOptions} from "./js/editor.js";

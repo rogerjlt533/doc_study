@@ -140,8 +140,6 @@
         //     collection_id: item.id
         // })
 
-        // collectionActive, tagActive, trashActive, collectionTitle, tagTitle, tagGroupTitle
-        // trash, collection_id, tag_id, group_id, note_type, sort
         store.commit('notes/CHANGE_FILTER_NOTE_PARAMS', {
             collection_id: item.id,
             group_id: '',
@@ -190,8 +188,8 @@
     /**
      * 逻辑：
      * 1.选中样式拖拽，样式跟着走
-     * 2.actived上面的移动到下面，actived向上移
-     * 3.actived下面的移动到上面，actived向下移
+     * 2.active上面的移动到下面，active向上移
+     * 3.active下面的移动到上面，active向下移
      */
     let drag = ref(false)
     let nowCollectionType = ""
@@ -217,17 +215,18 @@
         }
     }
     function sortCollection(value){
-        store.commit("notes/SORT_CHANGE_COLLECTION_ACTIVED",{
+        console.log('value', value)
+
+        store.commit("notes/SORT_CHANGE_COLLECTION_ACTIVE",{
             collectionActive: value
         })
     }
 
     function handleSortCollection(finishValues, value){
         if(!finishValues.length > 0) return
+        store.commit("collection/SORT_COLLECTION", { type: props.type, result: value })
         store.dispatch("collection/sortCollection", {
-            collection_ids: finishValues.join(","),
-            type: props.type,
-            result: value
+            collection_ids: finishValues.join(",")
         })
     }
 
