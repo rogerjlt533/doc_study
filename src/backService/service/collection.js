@@ -57,20 +57,20 @@ exports.memberList = async function (user_id, collection_id) {
  */
 exports.mine = async function (user_id, page, size, columns = ['id', 'collection', 'color']) {
     let self_list = [], team_list = []
-    // let joinedList = await collectionTool.joinedList(user_id, 'collection_id')
-    // if (common.empty(joinedList)) {
-    //     return {self_list, team_list}
-    // }
-    // if (joinedList.length === 0) {
-    //     return {self_list, team_list}
-    // }
-    // joinedList = joinedList.map((item) => {
-    //     return item.collection_id
-    // }).join(',')
+    let joinedList = await collectionTool.joinedList(user_id, 'collection_id')
+    if (common.empty(joinedList)) {
+        return {self_list, team_list}
+    }
+    if (joinedList.length === 0) {
+        return {self_list, team_list}
+    }
+    joinedList = joinedList.map((item) => {
+        return item.collection_id
+    }).join(',')
     columns = columns.map((item) => {
         return 'collections.' + item
     }).join(',')
-    const collections = await collectionTool.collections(user_id, null, page, size, columns)
+    const collections = await collectionTool.collections(user_id, joinedList, page, size, columns)
     if (common.empty(collections)) {
         return {self_list, team_list}
     }
@@ -80,8 +80,6 @@ exports.mine = async function (user_id, page, size, columns = ['id', 'collection
     for (const index in collections) {
         const data = await this.memberList(user_id, collections[index].id)
         collections[index] = Object.assign(collections[index], data)
-        collections[index].short_note_count = await noteTool.count(user_id, {collection_id: collections[index].id, status: 1, note_type: 1})
-        collections[index].long_note_count = await noteTool.count(user_id, {collection_id: collections[index].id, status: 1, note_type: 2})
         collections[index] = collectionTool.encode(collections[index])
         if (data.members.length > 1) {
             team_list.push(collections[index])
