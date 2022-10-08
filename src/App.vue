@@ -47,13 +47,6 @@
         }
     }
 
-    .el-dialog__header{
-        border-bottom: 1px solid #eee;
-        margin-right: 0;
-    }
-    .el-dialog__footer{
-        border-top: 1px solid #eee;
-    }
     .el-form--label-top .el-form-item__label{
         padding: 0;
     }

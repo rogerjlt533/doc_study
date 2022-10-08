@@ -122,7 +122,7 @@
     import { EditorContent } from '@tiptap/vue-3'
     import { VuemojiPicker } from 'vuemoji-picker'
     // import maskCom from '@/components/maskCom.vue'
-    import { tipsBtn, closeTips } from "@/lib/tipsButton"
+    import { tipsBtn, closeTips } from "@/components/tipsButton"
     // hooks ----
     import { editorInstance, simpleEditor, showOptions} from "./js/editor.js";
     import { defaultCollection, defaultCollectionIndex } from "./js/repectFun.js";

@@ -80,6 +80,8 @@ exports.mine = async function (user_id, page, size, columns = ['id', 'collection
     for (const index in collections) {
         const data = await this.memberList(user_id, collections[index].id)
         collections[index] = Object.assign(collections[index], data)
+        collections[index].short_note_count = noteTool.count(user_id, {collection_id: collections[index].id, status: 1, note_type: 1})
+        collections[index].long_note_count = noteTool.count(user_id, {collection_id: collections[index].id, status: 1, note_type: 2})
         collections[index] = collectionTool.encode(collections[index])
         if (data.members.length > 1) {
             team_list.push(collections[index])

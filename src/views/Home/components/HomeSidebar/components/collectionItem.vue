@@ -125,6 +125,8 @@
             tagActive: '',
             trashActive: ''
         })
+
+        // writeInfo
         setTimeout(() => {
             store.dispatch("notes/getTagsList")
             store.dispatch("notes/getGroupInitial")

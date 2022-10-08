@@ -60,7 +60,6 @@
     })
     function filterNoteList({ id, tag, group_id = '' }){
 
-        bus.emit('CHANGE_NOTE_MODE', false)
         setTimeout(() => {
             bus.emit("SET_TEXT_EDITOR_TAG", {
                 tag: tag

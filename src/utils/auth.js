@@ -1,9 +1,10 @@
-// import { handleRestructureConfig } from '@/assets/js/restructureConfig'
+import { handleRestructureConfig } from '@/assets/js/restructureConfig'
 import { JSEncrypt } from "jsencrypt";
 
-// handleRestructureConfig(1)
+handleRestructureConfig(1)
 
 const Store = require('electron-store');
+
 const electronStore = new Store();
 
 const TOKEN_KEY = "token"

@@ -9,9 +9,10 @@
             </div>
         </div>
         <div class="filter">
+            <span class="font-12 color-9 pr20">笔记总数：{{noteCount}}</span>
             <el-dropdown trigger="click">
                 <span class="el-dropdown-link mr10">
-                    <font-awesome-icon :icon="sortDefault.icon" class="mr4"></font-awesome-icon>
+                    <!--<font-awesome-icon :icon="sortDefault.icon" class="mr4"></font-awesome-icon>-->
                     {{sortDefault.label}}
                     <el-icon class="el-icon--right"><arrow-down /></el-icon>
                 </span>
@@ -23,7 +24,7 @@
                                 @click="changeFilter(item)"
                                 :class="[item.label === sortDefault.label ? 'activeFilter' : '']"
                         >
-                            <font-awesome-icon :icon="item.icon" class="mr4"></font-awesome-icon>
+                            <!--<font-awesome-icon :icon="item.icon" class="mr4"></font-awesome-icon>-->
                             {{item.label}}
                         </el-dropdown-item>
                     </el-dropdown-menu>
@@ -67,9 +68,7 @@
                                     v-show="!item.ifEditCon"
                                     :item="item"
                                     :index="index"
-                                    :audioIndex="audioIndex"
                                     :isTrash="isTrash"
-                                    @changeAudio="changeAudio"
                                     @deleteNote="deleteNote"
                                     @dragstart="dropNoteFun.handlerDragstart(item, index)"
                             />
@@ -99,7 +98,6 @@
                                 :item="item"
                                 :index="index"
                                 :isTrash="isTrash"
-                                @deleteNote="deleteNote"
                         />
                     </div>
                     <el-divider>
@@ -134,7 +132,6 @@
     const shortNotesItem = defineAsyncComponent(() => import('./components/shortNotesItem.vue'))
     const writeNotesItem = defineAsyncComponent(() => import('./components/writeNotesItem.vue'))
 
-
     const store = useStore();
 
     // 监听用户筛选Notes下的笔记
@@ -147,10 +144,14 @@
         return `${collectionTitle}${groupTitle ? collectionTitle ? '/' + groupTitle : groupTitle : ''}${tagTitle ? groupTitle || collectionTitle ? '/' + tagTitle : tagTitle : ''}`
     })
 
+    // 根据编辑框高度动态修改列表的高度;
+    let finallyHeight = computed(() => { return store.state.notes.notesListHeight });
+
     // 当前笔记分类参数
-    let isFinish = computed(() => { return store.state.notes.isFinish });
-    let isTrash = computed(() => { return store.state.notes.notes.trash });
-    let noteslist = computed(() => { return store.state.notes.noteslist });
+    let isFinish = computed(() => { return store.state.notes.isFinish })
+    let isTrash = computed(() => { return store.state.notes.notes.trash })
+    let noteslist = computed(() => { return store.state.notes.noteslist })
+    let noteCount = computed(() => { return store.state.notes.notesCount })
 
     // 刷新笔记列表
     let ifRefresh = ref(true);
@@ -170,6 +171,7 @@
     bus.on("CLEAR_KAYWORD", () => {
         keyword = "";
         page = 1;
+        store.commit("notes/RESET_NOTES_LIST")
         getNotesList();
     });
     bus.on("MAKE_LIST_TOP", () => {
@@ -181,11 +183,19 @@
     // 筛选笔记方法
     let filterList = [
         {
-            label: "按更新时间从新到旧",
+            label: "创建时间 ▲",
             value: "desc",
             icon: 'arrow-down-1-9'
         },{
-            label: "按更新时间从旧到新",
+            label: "创建时间 ▼",
+            value: "asc",
+            icon: 'arrow-down-9-1'
+        },{
+            label: "更新时间 ▲",
+            value: "desc",
+            icon: 'arrow-down-1-9'
+        },{
+            label: "更新时间 ▼",
             value: "asc",
             icon: 'arrow-down-9-1'
         }
@@ -273,20 +283,20 @@
     let isLoading = ref(false)
     function getNotesList(page){
         isLoading.value = true
-        store.dispatch("notes/getNotesList",{
+        store.dispatch("notes/getShortNotesList",{
             page: page ? page : 1,
             keyword: keyword || undefined,
-        }).then(() => {
+        }).then((res) => {
             isLoading.value = false
             ifRefresh.value = true
             loadingList.value = false
         })
-    }
-
-    // 监听出发了当前那个列表的音频文件
-    let audioIndex = ref(null)
-    function changeAudio(e){
-        audioIndex.value = e;
+        store.dispatch('notes/getWriteNotesList',{
+            page: page ? page : 1,
+            keyword: keyword || undefined,
+        }).then((res) => {
+            bus.emit('readWriteNoteData')
+        })
     }
 
     // 监听列表滚动
@@ -306,9 +316,6 @@
         }
     }
 
-    // 根据编辑框高度动态修改列表的高度;
-    let finallyHeight = computed(() => { return store.state.notes.notesListHeight });
-
     // 清倒废纸篓
     function cleanTrash(){
         ElMessageBox.confirm("确定清除废纸篓中的所有笔记吗？", {
@@ -319,7 +326,6 @@
             const res = await clearTrashNoteApi({
                 user_id: store.state.user.userInfo.id
             })
-            console.log(res)
             if(res.status_code === 200){
                 ElNotification.success("删除成功")
                 store.commit("notes/RESET_NOTES_LIST")
