@@ -39,7 +39,7 @@ let vuexData = {
                 collection_id: undefined,
                 trash: undefined,
                 today: undefined,
-                note_type: -1,
+                note_type: 1,
                 sort: "desc"
             },
             writeNoteActive:{

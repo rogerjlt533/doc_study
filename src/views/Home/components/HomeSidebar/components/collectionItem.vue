@@ -24,35 +24,6 @@
                     <div class="options handle" :class="[element.showOpt ? '' : 'opacity0']" @click.stop>
                         <svgFont class="font-icon font-14" icon="move"></svgFont>
                     </div>
-                    <!-- <div class="options" :class="[element.showOpt ? '' : 'opacity0']" @click.stop>
-                        <el-dropdown size="small" trigger="click" style="vertical-align: text-bottom;">
-                            <font-awesome-icon icon="ellipsis-h" style="font-size: 16px;padding:0 10px" color="#9EA0AD" />
-                            <template #dropdown>
-                                <el-dropdown-menu>
-                                    <el-dropdown-item @click="editCollection(element,index)">
-                                        <font-awesome-icon icon="edit" style="width:22px!important;" class="font-icon" color="#9EA0AD" />
-                                        编辑
-                                    </el-dropdown-item>
-                                    <el-dropdown-item @click="knowledgeGraph(element,index)">
-                                        <font-awesome-icon icon="layer-group" class="font-icon" color="#9EA0AD" />
-                                        知识图谱
-                                        <proIcon />
-                                    </el-dropdown-item>
-                                    <el-dropdown-item @click="basics(element,index)">
-                                        <font-awesome-icon icon="info-circle" class="font-icon" color="#9EA0AD" />
-                                        同步Notion
-                                        <proIcon />
-                                    </el-dropdown-item>
-                                    <div class="delete">
-                                        <el-dropdown-item divided @click="removeCollection(element,index)">
-                                            <font-awesome-icon class="font-icon" icon="trash-alt" color="#9EA0AD" />
-                                            删除
-                                        </el-dropdown-item>
-                                    </div>
-                                </el-dropdown-menu>
-                            </template>
-                        </el-dropdown>
-                    </div> -->
                 </div>
             </div>
         </template>
@@ -91,6 +62,7 @@
 
     // computed
     const collectionActive = computed(() => store.state.notes.catalogActiveState.collectionActive)
+    let noteTypeActive = computed(() => store.state.notes.catalogActiveState.noteTypeActive)
     let projectListSelf = computed(() => store.state.collection.projectListSelf)
     let projectListTeam = computed(() => store.state.collection.projectListTeam)
     const collectionList = computed({
@@ -139,12 +111,11 @@
         //     collectionActived: item.id,
         //     collection_id: item.id
         // })
-
         store.commit('notes/CHANGE_FILTER_NOTE_PARAMS', {
             collection_id: item.id,
             group_id: '',
             tag_id: '',
-            trash: '',
+            trash: ''
         })
         store.commit('notes/CHANGE_CATALOG_ACTIVE_STATE', {
             collectionActive: item.id,
@@ -154,15 +125,13 @@
             tagActive: '',
             trashActive: ''
         })
-
-        bus.emit('CHANGE_NOTE_MODE', false)
         setTimeout(() => {
             store.dispatch("notes/getTagsList")
-            store.dispatch('notes/getTagsGroup')
+            store.dispatch("notes/getGroupInitial")
             store.commit("notes/RECORD_COLLECTION",{
                 checked_collection: item.collection,
                 collection_id: item.id
-            });
+            })
             store.commit("user/SHOW_NOTICE",{data: false})
             bus.emit("CLEAR_KAYWORD")
             bus.emit("MAKE_LIST_TOP")

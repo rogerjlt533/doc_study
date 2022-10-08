@@ -12,7 +12,8 @@ const debug = process.env.NODE_ENV !== 'production'
 export default createStore({
 	state: {
 		showTagsGroup: false,
-		editorHeight: 0
+		editorHeight: 0,
+		showDialog: false
 	},
 	mutations: {
 		SET_TAGS_GROUP(state){
@@ -22,6 +23,10 @@ export default createStore({
 			state.editorHeight = data;
 			// console.log(state, data);
 		},
+		SET_NEXT_NOT_SHOW_DIALOG(state, data){
+			state.showDialog = data
+		},
+
 		CLEAR_VUEX(state) {
 			state.user = {
 				isShowNotice: false,
