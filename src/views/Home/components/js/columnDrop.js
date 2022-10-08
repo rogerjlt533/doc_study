@@ -10,7 +10,7 @@ export function dragControllerDivL () {
 
     resizeL.onmousedown = function (e) {
         let startX = e.clientX;  // 距离屏幕左边距离
-        resizeL.left = resizeL.offsetLeft - 20;  // 当前点击元素距离左边的距离
+        resizeL.left = resizeL.offsetLeft - 30;  // 当前点击元素距离左边的距离
         // 鼠标拖动事件
         document.onmousemove = function (e) {
             let endX = e.clientX;  // 到左侧的距离

@@ -4,7 +4,7 @@
             class="annotation-box"
             v-if="annotationNote.id"
     >
-        <font-awesome-icon icon="quote-left" style="font-size: 18px;" color="#9EA0AD" />
+        <font-awesome-icon icon="quote-left" class="font-16" color="#9EA0AD" />
         <div class="note-cont" :class="[ !annotationNote.isFlod ? 'annotation-max-hieght' : '' ]">
             <div class="content-html" v-html="annotationNote.note"></div>
         </div>
@@ -103,17 +103,15 @@
             </div>
             <el-button v-if="!edit" class="color-white btn-style" color="#734eff" type="primary" size="small" :loading="isDisabled" @click="onSubmit">记 录</el-button>
             <div v-else>
-                <el-button class="color-white btn-style" type="info" color="#bbbbbb" size="small" @click="cencleEdit">取 消</el-button>
-                <el-button class="color-white btn-style" color="#734eff" type="primary" size="small" :loading="isDisabled" @click="editContent">修 改</el-button>
+                <el-button class="btn-style" plain color="#aaaaaa" size="small" @click="cencleEdit">取 消</el-button>
+                <el-button class="btn-style" color="#734eff" type="primary" size="small" :loading="isDisabled" @click="editContent">修 改</el-button>
             </div>
         </div>
-
-        <!--<maskCom v-if="showEmoji" :opacity="0" :zIndex="99999" @click="showEmoji = false"></maskCom>-->
     </div>
 </template>
 
 <script setup>
-    import {reactive, nextTick, ref, defineProps, defineEmits, onMounted, computed, onActivated} from "vue"
+    import {reactive, nextTick, ref, defineProps, defineEmits, computed} from "vue"
     import bus from '@/utils/bus'
     import { useStore } from "vuex"
     import { getToken } from "@/utils/auth"
@@ -121,7 +119,6 @@
     import { ElNotification } from "element-plus"
     import { EditorContent } from '@tiptap/vue-3'
     import { VuemojiPicker } from 'vuemoji-picker'
-    // import maskCom from '@/components/maskCom.vue'
     import { tipsBtn, closeTips } from "@/components/tipsButton"
     // hooks ----
     import { editorInstance, simpleEditor, showOptions} from "./js/editor.js";
@@ -254,8 +251,6 @@
         editor.value.chain().focus();
     })
 
-
-
     // 提交笔记
     let isDisabled = ref(false);
     function onSubmit(){
@@ -266,7 +261,7 @@
                 duration: 1000
             })
             editor.value.commands.focus()
-            return false
+            return
         }
 
         const contentJson = editor.value.getJSON()
@@ -290,7 +285,7 @@
                     annotationNote[key] = ""
                 })
                 bus.emit("MAKE_LIST_TOP")
-                store.dispatch("user/getUserBase")
+                // store.dispatch("user/getUserBase")
                 store.commit("notes/CLEAR_CACHED_NOTE")
                 editor.value.commands.clearContent()
                 // 记录完后重新计算高度

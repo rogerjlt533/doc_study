@@ -238,7 +238,7 @@
     const maskCom = defineAsyncComponent(() => import('@/components/maskCom'))
 
     // service
-    const collectionService = require('service/action/collection.js')
+    // const collectionService = require('service/action/collection.js')
     const store = useStore();
 
     // ref
@@ -249,8 +249,6 @@
     let projectListSelf = computed(() => store.state.collection.projectListSelf)
     // 获取团队笔记本项目
     // let projectListTeam = computed(() => store.state.collection.projectListTeam)
-    // 笔记的本的选中的索引值
-    // let collectionActived = computed(() => store.state.notes.classifyObj.collectionActived)
 
     // 控制笔记本分类的是否展开的状态
     const showSelfCollection = computed(() => store.state.notes.catalogState.showSelfCollection)
@@ -296,7 +294,7 @@
         project.form.color = e;
     }
 
-    // emoij 选择器
+    // emoji 选择器
     let showEmoji = ref(false);
     let collectionRef = ref(null);
     function handleEmojiClick(detail) {
@@ -347,9 +345,7 @@
             operate: '',
             dest_collection_id: ''
         })
-        canTransferProjectList.value = projectListSelf.value.filter((proj) => {
-            return proj.id !== item.id
-        })
+        canTransferProjectList.value = projectListSelf.value.filter((proj) => proj.id !== item.id )
         if(res.status_code === 501 && res.data.note_count > 0){
             showRemoveCollection.value = true;
             showMoveSelect.value = false
@@ -400,20 +396,14 @@
     }
     // 删除笔记本的回调
     function removeCollectionCallback(checkedCollectionId){
-        // store.commit("notes/CHANGE_CLASSIFY_ACTIVED",{
-        //     collectionTitle: catalogList.value[0].title,
-        //     index: 0,
-        //     id: catalogList.value[0].id
-        // })
-
         store.commit('notes/CHANGE_FILTER_NOTE_PARAMS', {
-            collection_id: catalogList.value[0].id,
+            collection_id: projectListSelf.value[0].id,
             tag_id: '',
             group_id: ''
         })
         store.commit('notes/CHANGE_CATALOG_ACTIVE_STATE', {
-            collectionTitle: catalogList.value[0].title,
-            collectionActive: catalogList.value[0].id,
+            collectionTitle: projectListSelf.value[0].title,
+            collectionActive: projectListSelf.value[0].id,
             trashActive: '',
             tagActive: '',
             tagTitle: '',
@@ -421,10 +411,10 @@
         })
 
         store.dispatch("notes/getTagsList");
-        store.commit("notes/RECORD_COLLECTION",{
-            checked_collection: projectListSelf.value[0].collection,
-            collection_id: projectListSelf.value[0].id
-        });
+        // store.commit("notes/RECORD_COLLECTION",{
+        //     checked_collection: projectListSelf.value[0].collection,
+        //     collection_id: projectListSelf.value[0].id
+        // });
         bus.emit("CLEAR_KAYWORD");
 
         // 判断删除的是不是默认笔记
@@ -463,7 +453,6 @@
                     collection: project.form.collection,
                     color: project.form.color
                 }).then((res) => {
-                    console.log(res)
                     projectLoad.value = false;
                     if(res.data){
                         showAddProject.value = false;
@@ -485,18 +474,8 @@
         getGraph(user_id, item, showKnowledgeGraph);
     }
 
-    onMounted( async () => {
-        // store.dispatch("target/getCollection", { use_group: "team" });
-        await store.dispatch("collection/getCollection", { user_id: store.state.user.userInfo.id, page: 1, size: 100 });
-
-        // store.dispatch("user/getUserSetting");
-        store.dispatch("user/getUserBase");
-        // store.dispatch("user/getUserInfo");
-
-        // if(store.state.notes.classifyObj.collectionTitle) {
-        //     let data = { collection: store.state.notes.classifyObj.collectionTitle }
-        //     handleWriteNote(data)
-        // }
+    onMounted( () => {
+        store.dispatch("collection/getCollection");
     })
 </script>
 

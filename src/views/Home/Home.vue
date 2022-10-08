@@ -14,7 +14,9 @@
         <div class="home-right" id="homeRight" :style="{ width: homeWidth }">
             <NoteToolbar></NoteToolbar>
             <div class="short-note" v-show="noteTypeActive === 1">
-                <home-notes-editor />
+                <template v-show="trashActive === 1">
+                    <home-notes-editor />
+                </template>
                 <home-notes-list />
             </div>
             <write-editor v-show="noteTypeActive === 2"></write-editor>

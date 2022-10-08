@@ -106,11 +106,6 @@
 
     // 项目筛选
     function clickProject(item){
-        // store.commit("notes/CHANGE_CLASSIFY_ACTIVED",{
-        //     collectionTitle: item.collection,
-        //     collectionActived: item.id,
-        //     collection_id: item.id
-        // })
         store.commit('notes/CHANGE_FILTER_NOTE_PARAMS', {
             collection_id: item.id,
             group_id: '',
@@ -132,10 +127,10 @@
         setTimeout(() => {
             store.dispatch("notes/getTagsList")
             store.dispatch("notes/getGroupInitial")
-            store.commit("notes/RECORD_COLLECTION",{
-                checked_collection: item.collection,
-                collection_id: item.id
-            })
+            // store.commit("notes/RECORD_COLLECTION",{
+            //     checked_collection: item.collection,
+            //     collection_id: item.id
+            // })
             store.commit("user/SHOW_NOTICE",{data: false})
             bus.emit("CLEAR_KAYWORD")
             bus.emit("MAKE_LIST_TOP")

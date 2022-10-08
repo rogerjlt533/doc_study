@@ -31,17 +31,17 @@
         </div>
     </div>
 
-    <div v-loading="loadingList">
+    <div v-loading="loadingList" v-if="notesList.length > 0">
         <el-scrollbar ref="noteslistRef" :height="finallyHeight" class="mt10" :always="false">
             <div class="container noteslistDom"
                  v-infinite-scroll="loadPage"
                  :infinite-scroll-immediate="false"
                  :infinite-scroll-distance="30"
             >
-                <template v-if="notesList.length > 0">
+                <template v-for="(item,index) in notesList" :key="item.id">
                     <div
-                            v-for="(item,index) in notesList" :key="item.id"
                             class="content-list"
+                            v-show="!item.ifEditCon"
                             @dragover="dropNoteFun.handleDragover($event, item)"
                             @dragenter="dropNoteFun.handleDragenter($event, item)"
                             @dragleave="dropNoteFun.handleDragleave($event, item)"
@@ -63,23 +63,11 @@
                         <!--短笔记-->
                         <template v-if="item.note_type === 1">
                             <shortNotesItem
-                                    v-show="!item.ifEditCon"
                                     :item="item"
                                     :index="index"
                                     :isTrash="isTrash"
                                     @deleteNote="deleteNote"
                                     @dragstart="dropNoteFun.handlerDragstart(item, index)"
-                            />
-                            <home-notes-editor
-                                    v-if="item.ifEditCon"
-                                    ref="notesEditorChild"
-                                    :item="item"
-                                    :content="item.note"
-                                    :index="index"
-                                    :edit="true"
-                                    :noteId="item.id"
-                                    :collectionId="item.collection_id"
-                                    @editNotesContent="closeEdit(item)"
                             />
                             <NoteAnnotation
                                     v-for="(quote,qi) in item.quote"
@@ -98,18 +86,27 @@
                                 :isTrash="isTrash"
                         />
                     </div>
-                    <el-divider>
-                        <template v-if="isFinish">
-                            <el-icon v-if="isLoading" class="is_loading"><loading/></el-icon>
-                            <span v-else style="color:#999">加载更多 ~ </span>
-                        </template>
-                        <span v-else style="color: #999999; font-style: italic;">Organized your digital life</span>
-                    </el-divider>
+                    <div v-if="item.ifEditCon" class="mb20">
+                        <home-notes-editor
+                                ref="notesEditorChild"
+                                :item="item"
+                                :content="item.note"
+                                :index="index"
+                                :edit="true"
+                                :noteId="item.id"
+                                :collectionId="item.collection_id"
+                                @editNotesContent="closeEdit(item)"
+                        />
+                    </div>
                 </template>
-                <el-empty v-else description="方寸笔迹 · Organized your digital life"></el-empty>
+                <el-divider>
+                    <span v-if="isFinish" style="color:#999">加载更多 ~ </span>
+                    <span v-else style="color: #999999; font-style: italic;">Organized your digital life</span>
+                </el-divider>
             </div>
         </el-scrollbar>
     </div>
+    <el-empty v-else description="方寸笔迹 · Organized your digital life"></el-empty>
 </template>
 
 <script setup>
@@ -166,7 +163,7 @@
         })
     })
     bus.on("CLEAR_KAYWORD", () => {
-        getNotesList()
+        getNotesList({})
     })
     bus.on("MAKE_LIST_TOP", () => {
         nextTick(() => {
@@ -214,7 +211,7 @@
             sort: e.value
         })
         sortDefault.label = e.label
-        getNotesList()
+        getNotesList({})
     }
 
     // 编辑该笔记
@@ -247,22 +244,21 @@
     }
 
     // 查询笔记列表
-    let isLoading = ref(false)
     function getNotesList({ page = 1, keyword = undefined, start_time = undefined, end_time = undefined }){
-        isLoading.value = true
         if(page === 1) store.commit("notes/RESET_NOTES_LIST")
         store.dispatch("notes/getShortNotesList",{
             page, keyword, start_time, end_time
         }).then((res) => {
-            isLoading.value = false
             ifRefresh.value = true
             loadingList.value = false
         })
-        store.dispatch('notes/getWriteNotesList',{
-            page, keyword, start_time, end_time
-        }).then((res) => {
-            bus.emit('readWriteNoteData')
-        })
+        if(page > 1){
+            store.dispatch('notes/getWriteNotesList',{
+                page, keyword, start_time, end_time
+            }).then((res) => {
+                bus.emit('readWriteNoteData')
+            })
+        }
     }
 
     // 监听列表滚动
