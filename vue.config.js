@@ -13,19 +13,9 @@ module.exports = {
             filename: 'index.html',
             template: 'public/index.html'
         },
-        fastWin: {
-            entry: 'src/fastWin/main.js',
-            filename: 'fastWin.html',
-            template: 'public/index.html'
-        },
-        tagManageWin: {
-            entry: 'src/tagManageWin/main.js',
-            filename: 'tagManageWin.html',
-            template: 'public/index.html'
-        },
-        serviceWin: {
-            entry: 'src/serviceWin/main.js',
-            filename: 'serviceWin.html',
+        fastRecord: {
+            entry: 'src/fastRecord/main.js',
+            filename: 'fastRecord.html',
             template: 'public/index.html'
         }
     },
@@ -57,8 +47,8 @@ module.exports = {
             nodeIntegration: true,
             externals: ['better-sqlite3'],
             builderOptions: {
-                productName: '方寸笔迹-IdeaTrip',
-                appId: 'com.fangcun.desktop',
+                productName: '方寸笔迹 Beta',
+                appId: '820723128@qq.com',
                 asar: false,
                 publish: [
                     {
@@ -67,7 +57,7 @@ module.exports = {
                     }
                 ],
                 mac: {
-                    target: ['dmg', 'pkg', 'zip'],
+                    target: 'default',
                     icon: 'public/fangcun.icns',
                     identity: '457V4P8JCX',
                     hardenedRuntime: true,
@@ -77,13 +67,21 @@ module.exports = {
                 },
                 dmg: {
                     sign: false,
-                    title: '方寸笔迹-IdeaTrip',
+                    title: '方寸笔迹 Beta',
                     icon: 'public/fangcun.icns',
                 },
                 win: {
                     icon: 'public/fangcun_256.png',
-                    publisherName: ["方寸笔迹-IdeaTrip", "方寸笔迹"],
-                    verifyUpdateCodeSignature: true
+                    // 加密方式
+                    signingHashAlgorithms: [
+                        "sha256",
+                        "sha1"
+                    ],
+                    // 安装前是否验证可用更新的签名
+                    verifyUpdateCodeSignature: false,
+                    rfc3161TimeStampServer: "http://timestamp.digicert.com",
+                    certificateFile: "public/configure/fangcun.pfx",
+                    certificatePassword: "fangcun888"
                 },
                 extraResources: {
                     from: "./src/backService/db/",
@@ -93,9 +91,9 @@ module.exports = {
                     oneClick: false, // 是否一键安装
                     allowElevation: true, // 允许请求提升，如果为false，则用户必须使用提升的权限重新启动安装程序。
                     installerIcon: "./public/fangcun.ico",// 安装图标
-                    uninstallerIcon: "./public/uninstall.ico",//卸载图标
-                    installerHeaderIcon: "./public/installer_header.ico", // 安装时头部图标
-                    allowToChangeInstallationDirectory: false, // 允许修改安装目录
+                    uninstallerIcon: "./public/fangcun.ico",//卸载图标
+                    installerHeaderIcon: "./public/fangcun.ico", // 安装时头部图标
+                    allowToChangeInstallationDirectory: true, // 允许修改安装目录
                     createDesktopShortcut: true, // 创建桌面图标
                     createStartMenuShortcut: true, // 创建开始菜单图标
                 }
@@ -114,6 +112,4 @@ module.exports = {
         hot: true,
         inline: false,
     }
-
-
 }
