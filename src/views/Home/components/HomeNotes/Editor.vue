@@ -386,13 +386,13 @@
     }
 
     // 获取所有Collection
-    let showCollect = ref(false);
-    let collectionListSelf = computed(() => {
-        return store.state.collection.projectListSelf
-    })
-    let collectionListTeam = computed(() => {
-        return store.state.collection.projectListTeam
-    })
+    // let showCollect = ref(false);
+    // let collectionListSelf = computed(() => {
+    //     return store.state.collection.projectListSelf
+    // })
+    // let collectionListTeam = computed(() => {
+    //     return store.state.collection.projectListTeam
+    // })
 
     // 获取用户信息设置
     let userSetting = computed(() => {
@@ -400,57 +400,57 @@
     })
     let collection_id;
 
-    let collectionName = computed(() => {
-        let title = "";
-        let index = "";
-        if (store.state.notes.editorCollection.checked_collection) {
-            title = store.state.notes.editorCollection.checked_collection;
-        }else{
-            // 初始化默认选中的笔记本
-            title = defaultCollection(userSetting.value.default);
-            index = defaultCollectionIndex(userSetting.value.default);
-            store.commit("notes/RECORD_COLLECTION",{
-                checked_collection: title,
-                collection_id: userSetting.value.default
-            });
-        }
-        return title
-    });
+    // let collectionName = computed(() => {
+    //     let title = "";
+    //     let index = "";
+    //     if (store.state.notes.editorCollection.checked_collection) {
+    //         title = store.state.notes.editorCollection.checked_collection;
+    //     }else{
+    //         // 初始化默认选中的笔记本
+    //         title = defaultCollection(userSetting.value.default);
+    //         index = defaultCollectionIndex(userSetting.value.default);
+    //         store.commit("notes/RECORD_COLLECTION",{
+    //             checked_collection: title,
+    //             collection_id: userSetting.value.default
+    //         });
+    //     }
+    //     return title
+    // });
 
     // 重置collection
-    let showEditCollection = ref(false)
-    function resetCollection(collection){
-        showEditCollection.value = false
-        if(collection.id === props.item.collection_id) return false
-
-        const contentJson = editor.value.getJSON()
-        const editorHtml = handleHtmlTagSpace(editor.value.getHTML())
-        const tag_list = editorHtml.match(matchReg) ? editorHtml.match(matchReg).map(item => item.substr(1).trim()) : []
-        const contentHtml = handleContentHtml(editor.value.getHTML())
-
-        store.dispatch("notes/editNote",{
-            contentHtml,
-            contentJson,
-            collection_id: collection.id,
-            noteId: props.item.id,
-            index: props.index,
-            tag_list,
-            postil_list: props.item.quote.map(item => item.id)
-        }).then((res) => {
-            props.item.collection.color = res.data.collection.color;
-            props.item.collection.collection = res.data.collection.collection;
-            props.item.collection_id = res.data.collection_id;
-        })
-    }
+    // let showEditCollection = ref(false)
+    // function resetCollection(collection){
+    //     showEditCollection.value = false
+    //     if(collection.id === props.item.collection_id) return false
+    //
+    //     const contentJson = editor.value.getJSON()
+    //     const editorHtml = handleHtmlTagSpace(editor.value.getHTML())
+    //     const tag_list = editorHtml.match(matchReg) ? editorHtml.match(matchReg).map(item => item.substr(1).trim()) : []
+    //     const contentHtml = handleContentHtml(editor.value.getHTML())
+    //
+    //     store.dispatch("notes/editNote",{
+    //         contentHtml,
+    //         contentJson,
+    //         collection_id: collection.id,
+    //         noteId: props.item.id,
+    //         index: props.index,
+    //         tag_list,
+    //         postil_list: props.item.quote.map(item => item.id)
+    //     }).then((res) => {
+    //         props.item.collection.color = res.data.collection.color;
+    //         props.item.collection.collection = res.data.collection.collection;
+    //         props.item.collection_id = res.data.collection_id;
+    //     })
+    // }
 
     // 选中项目进行关联
-    function checkedCollection(item){
-        showCollect.value = false;
-        store.commit("notes/RECORD_COLLECTION",{
-            checked_collection: item.collection,
-            collection_id: item.id
-        });
-    }
+    // function checkedCollection(item){
+    //     showCollect.value = false;
+    //     store.commit("notes/RECORD_COLLECTION",{
+    //         checked_collection: item.collection,
+    //         collection_id: item.id
+    //     });
+    // }
 
     // 点击编辑框  ORC功能  图片识别文字   ----start-----
     let imageUrl = "";

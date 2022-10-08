@@ -30,7 +30,9 @@ export default {
             trashActive: false,
             collectionTitle: '',
             tagTitle: '',
-            tagGroupTitle: ''
+            tagGroupTitle: '',
+            short_note_count: 0,
+            long_note_count: 0
         },
         notes: {
             tag_id: '',
@@ -38,6 +40,7 @@ export default {
             collection_id: '',
             trash: '',
             note_type: 1,
+            orderby_create: 1,
             sort: "desc"
         },
         writeNoteState: {
@@ -88,7 +91,7 @@ export default {
                 showTags === undefined ? state.catalogState.showTags : showTags
         },
         // 设置笔记本、标签、分组标签、废纸篓的选中状态
-        CHANGE_CATALOG_ACTIVE_STATE(state, { noteTypeActive, collectionActive, tagActive, tagGroupActive, trashActive, collectionTitle, tagTitle, tagGroupTitle }){
+        CHANGE_CATALOG_ACTIVE_STATE(state, { noteTypeActive, collectionActive, tagActive, tagGroupActive, trashActive, collectionTitle, tagTitle, tagGroupTitle, short_note_count, long_note_count }){
             state.catalogActiveState.noteTypeActive =
                 noteTypeActive === undefined ? state.catalogActiveState.noteTypeActive : noteTypeActive
             state.catalogActiveState.collectionActive =
@@ -105,15 +108,20 @@ export default {
                 tagTitle === undefined ? state.catalogActiveState.tagTitle : tagTitle
             state.catalogActiveState.tagGroupTitle =
                 tagGroupTitle === undefined ? state.catalogActiveState.tagGroupTitle : tagGroupTitle
+            state.catalogActiveState.short_note_count =
+                short_note_count === undefined ? state.catalogActiveState.short_note_count : short_note_count
+            state.catalogActiveState.long_note_count =
+                long_note_count === undefined ? state.catalogActiveState.long_note_count : long_note_count
         },
         // 设置笔记本筛选条件的参数
-        CHANGE_FILTER_NOTE_PARAMS(state, { trash, collection_id, tag_id, group_id, note_type, sort }){
+        CHANGE_FILTER_NOTE_PARAMS(state, { trash, collection_id, tag_id, group_id, note_type, orderby_create, sort }){
             console.log('note_type', note_type)
             state.notes.trash = trash === undefined ? state.notes.trash : trash
             state.notes.collection_id = collection_id === undefined ? state.notes.collection_id : collection_id
             state.notes.tag_id =  tag_id === undefined ? state.notes.tag_id : tag_id
             state.notes.group_id =  group_id === undefined ? state.notes.group_id : group_id
             state.notes.note_type =  note_type === undefined ? state.notes.note_type : note_type
+            state.notes.orderby_create =  orderby_create === undefined ? state.notes.orderby_create : orderby_create
             state.notes.sort =  sort === undefined ? state.notes.sort : sort
         },
         // 设置写作笔记的状态
@@ -134,10 +142,6 @@ export default {
         RECORD_COLLECTION(state, { collection_id = "", checked_collection = ""}){
             state.editorCollection.checked_collection = checked_collection === undefined ? state.editorCollection.checked_collection : checked_collection;
             state.editorCollection.collection_id = collection_id === undefined ? state.editorCollection.collection_id : collection_id;
-        },
-        // 笔记列表筛选条件
-        FILTER_NOTES_LIST(state, { sort = state.notes.sort}){
-            state.notes.sort = sort;
         },
         // 笔记筛选长短笔记
         FILTER_NOTES_TYPE(state, { type = !state.notes.note_type }){
@@ -283,7 +287,10 @@ export default {
                 keyword: data.keyword,
                 collection_id: state.notes.collection_id,
                 today: undefined,
+                orderby_create: state.notes.orderby_create,
                 sort: state.notes.sort,
+                start_time: data.start_time,
+                end_time: data.end_time,
                 note_type: 1
             }
             const noteParams = {
@@ -323,7 +330,10 @@ export default {
                 keyword: data.keyword,
                 collection_id: state.notes.collection_id,
                 today: undefined,
+                orderby_create: state.notes.orderby_create,
                 sort: state.notes.sort,
+                start_time: data.start_time,
+                end_time: data.end_time,
                 note_type: 2
             }
             const noteParams = {

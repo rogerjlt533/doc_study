@@ -52,7 +52,7 @@
                 <div style="padding: 10px 10px 0 10px;">
                     <div class="input-box">
                         <div class="input-emoji">
-                            <el-popover placement="right-start" :width="344" trigger="click" :visible="showEmoji">
+                            <el-popover placement="right-start" :width="370" trigger="click" :visible="showEmoji">
                                 <VuemojiPicker @emojiClick="handleEmojiClick" :isDark="false" />
                                 <template #reference>
                                     <el-button type="text" size="medium" @click="showEmoji = true">
@@ -215,7 +215,7 @@
         </el-dialog>
     </div>
 
-    <mask-com v-if="showEmoji" :opacity="0" :zIndex="2000" @click="showEmoji = false"></mask-com>
+    <maskCom v-if="showEmoji" :opacity="0" :zIndex="2000" @click="showEmoji = false"></maskCom>
 </template>
 
 <script setup>
@@ -235,7 +235,7 @@
     import collectionItem from './components/collectionItem'
     import FCollapse from '@/components/FCollapse'
     // 异步组件
-    const maskCom = defineAsyncComponent(() => import('@/components/mask'))
+    const maskCom = defineAsyncComponent(() => import('@/components/maskCom'))
 
     // service
     const collectionService = require('service/action/collection.js')
@@ -643,7 +643,7 @@
             border-right: 1px solid #ccc;
         }
         .collection-input{
-            width: 240px;
+            width: 220px;
             padding-left: 4px;
             font-size: 14px;
             color: #333;

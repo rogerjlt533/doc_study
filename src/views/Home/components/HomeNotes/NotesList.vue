@@ -9,10 +9,9 @@
             </div>
         </div>
         <div class="filter">
-            <span class="font-12 color-9 pr20">笔记总数：{{noteCount}}</span>
+            <span class="font-12 color-9 pr20">卡片总数：{{ notesCount }}</span>
             <el-dropdown trigger="click">
                 <span class="el-dropdown-link mr10">
-                    <!--<font-awesome-icon :icon="sortDefault.icon" class="mr4"></font-awesome-icon>-->
                     {{sortDefault.label}}
                     <el-icon class="el-icon--right"><arrow-down /></el-icon>
                 </span>
@@ -24,7 +23,6 @@
                                 @click="changeFilter(item)"
                                 :class="[item.label === sortDefault.label ? 'activeFilter' : '']"
                         >
-                            <!--<font-awesome-icon :icon="item.icon" class="mr4"></font-awesome-icon>-->
                             {{item.label}}
                         </el-dropdown-item>
                     </el-dropdown-menu>
@@ -40,9 +38,9 @@
                  :infinite-scroll-immediate="false"
                  :infinite-scroll-distance="30"
             >
-                <template v-if="noteslist.length > 0">
+                <template v-if="notesList.length > 0">
                     <div
-                            v-for="(item,index) in noteslist" :key="item.id"
+                            v-for="(item,index) in notesList" :key="item.id"
                             class="content-list"
                             @dragover="dropNoteFun.handleDragover($event, item)"
                             @dragenter="dropNoteFun.handleDragenter($event, item)"
@@ -62,7 +60,7 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- 短笔记-->
+                        <!--短笔记-->
                         <template v-if="item.note_type === 1">
                             <shortNotesItem
                                     v-show="!item.ifEditCon"
@@ -92,7 +90,7 @@
                                     @close="closeQuote(item, qi)"
                             ></NoteAnnotation>
                         </template>
-                        <!--                        长笔记-->
+                        <!--长笔记-->
                         <writeNotesItem
                                 v-if="item.note_type === 2"
                                 :item="item"
@@ -108,7 +106,6 @@
                         <span v-else style="color: #999999; font-style: italic;">Organized your digital life</span>
                     </el-divider>
                 </template>
-                <!-- <p class="empty" v-else>方寸笔迹 · Organized your digital life</p> -->
                 <el-empty v-else description="方寸笔迹 · Organized your digital life"></el-empty>
             </div>
         </el-scrollbar>
@@ -145,35 +142,32 @@
     })
 
     // 根据编辑框高度动态修改列表的高度;
-    let finallyHeight = computed(() => { return store.state.notes.notesListHeight });
-
+    let finallyHeight = computed(() => store.state.notes.notesListHeight );
     // 当前笔记分类参数
-    let isFinish = computed(() => { return store.state.notes.isFinish })
-    let isTrash = computed(() => { return store.state.notes.notes.trash })
-    let noteslist = computed(() => { return store.state.notes.noteslist })
-    let noteCount = computed(() => { return store.state.notes.notesCount })
+    let isFinish = computed(() => store.state.notes.isFinish )
+    let isTrash = computed(() => store.state.notes.notes.trash )
+    let notesList = computed(() => store.state.notes.noteslist )
+    let notesCount = computed(() => store.state.notes.catalogActiveState.short_note_count )
 
+    let loadingList = ref(false)
     // 刷新笔记列表
     let ifRefresh = ref(true);
     function refreshList(){
         ifRefresh.value = false;
         noteslistRef.value?.setScrollTop(0)
-        getNotesList();
+        bus.emit('CLEAR_KAYWORD')
     }
-
     // 搜索笔记列表方法
-    let keyword = ''
-    let loadingList = ref(false)
     bus.on('INPUT_SEARCH', (e) => {
-        keyword = e.keyword
-        getNotesList();
+        getNotesList({
+            keyword: e.keyword,
+            start_time: e.start_time,
+            end_time: e.end_time
+        })
     })
     bus.on("CLEAR_KAYWORD", () => {
-        keyword = "";
-        page = 1;
-        store.commit("notes/RESET_NOTES_LIST")
-        getNotesList();
-    });
+        getNotesList()
+    })
     bus.on("MAKE_LIST_TOP", () => {
         nextTick(() => {
             noteslistRef.value?.setScrollTop(0)
@@ -185,75 +179,48 @@
         {
             label: "创建时间 ▲",
             value: "desc",
+            orderby_create: 1,
             icon: 'arrow-down-1-9'
         },{
             label: "创建时间 ▼",
             value: "asc",
+            orderby_create: 1,
             icon: 'arrow-down-9-1'
         },{
             label: "更新时间 ▲",
             value: "desc",
+            orderby_create: 0,
             icon: 'arrow-down-1-9'
         },{
             label: "更新时间 ▼",
             value: "asc",
+            orderby_create: 0,
             icon: 'arrow-down-9-1'
         }
     ]
-    let filterTypeList = [
-        {
-            label: '全部笔记',
-            value: -1,
-            icon: 'grip'
-        },{
-            label: '笔记卡片',
-            value: 1,
-            icon: 'lightbulb'
-        },{
-            label: '我的写作',
-            value: 2,
-            icon: 'file-lines'
-        }
-    ]
     let sortDefault = reactive({
-        label: '按更新时间从新到旧',
+        label: '更新时间 ▼',
         icon: 'arrow-down-1-9'
     })
-    let typeDefault = reactive({
-        label: '全部笔记',
-        icon: 'grip'
-    })
-    filterTypeList.forEach(item => {
-        if(store.state.notes.notes.note_type === item.value){
-            typeDefault.label = item.label
-            typeDefault.icon = item.icon
-        }
-    })
+
     filterList.forEach(item => {
         if(store.state.notes.notes.sort === item.value){
             sortDefault.label = item.label
-            sortDefault.icon = item.icon
         }
     })
     function changeFilter(e){
-        store.commit("notes/FILTER_NOTES_LIST",{
+        store.commit("notes/CHANGE_FILTER_NOTE_PARAMS",{
+            orderby_create: e.orderby_create,
             sort: e.value
         })
         sortDefault.label = e.label
-        sortDefault.icon = e.icon
         getNotesList()
     }
-    // function changeTypeFilter(e){
-    //     store.commit('notes/FILTER_NOTES_TYPE', { type: e.value })
-    //     typeDefault.label = e.label
-    //     typeDefault.icon = e.icon
-    //     getNotesList()
-    // }
 
     // 编辑该笔记
-    const notesEditorChild = ref(null);
+    const notesEditorChild = ref(null)
     function closeEdit(item){
-        item.ifEditCon = false;
+        item.ifEditCon = false
     }
     // 关闭笔记引用
     function closeQuote(item, i){
@@ -281,19 +248,18 @@
 
     // 查询笔记列表
     let isLoading = ref(false)
-    function getNotesList(page){
+    function getNotesList({ page = 1, keyword = undefined, start_time = undefined, end_time = undefined }){
         isLoading.value = true
+        if(page === 1) store.commit("notes/RESET_NOTES_LIST")
         store.dispatch("notes/getShortNotesList",{
-            page: page ? page : 1,
-            keyword: keyword || undefined,
+            page, keyword, start_time, end_time
         }).then((res) => {
             isLoading.value = false
             ifRefresh.value = true
             loadingList.value = false
         })
         store.dispatch('notes/getWriteNotesList',{
-            page: page ? page : 1,
-            keyword: keyword || undefined,
+            page, keyword, start_time, end_time
         }).then((res) => {
             bus.emit('readWriteNoteData')
         })
@@ -304,15 +270,15 @@
     function loadPage(){
         if(isFinish.value){
             page ++
-            getNotesList(page)
+            getNotesList({page})
         }
     }
 
     // 监听删除note
     function deleteNote(){
-        if(isFinish.value && noteslist.value.length < 10){
+        if(isFinish.value && notesList.value.length < 10){
             page ++;
-            getNotesList(page)
+            getNotesList({page})
         }
     }
 

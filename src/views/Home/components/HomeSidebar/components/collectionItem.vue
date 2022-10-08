@@ -123,7 +123,9 @@
             tagGroupTitle: '',
             tagTitle: '',
             tagActive: '',
-            trashActive: ''
+            trashActive: '',
+            short_note_count: item.short_note_count,
+            long_note_count: item.long_note_count
         })
 
         // writeInfo

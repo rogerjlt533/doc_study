@@ -37,6 +37,7 @@ export default {
             if(index > -1) state.projectListSelf.splice(index, 1)
         },
         SORT_COLLECTION(state, data){
+            console.log('value', data.result)
             if(data.type === "self"){
                 state.projectListSelf = data.result
             }
@@ -121,14 +122,11 @@ export default {
             return res
         },
 
-        async sortCollection({commit, rootState}, {collection_ids, type, result}){
+        async sortCollection({commit, rootState}, {collection_ids}){
             const res = await sortCollectionApi({
                 user_id: rootState.user.userInfo.id,
                 collection_ids
             })
-            if(res.status_code === 200){
-                commit("SORT_COLLECTION", {type, result})
-            }
         },
     }
 }
