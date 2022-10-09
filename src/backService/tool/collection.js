@@ -14,15 +14,15 @@ exports.get = async function (collection_id, columns = '*') {
 }
 
 /**
- * 获取flomo collection记录
- * @param user_id
+ * 获取collection记录
+ * @param collection_id
  * @param columns
- * @returns {Promise<void>}
+ * @returns {Promise<any>}
  */
-exports.getFlomo = async function (user_id, columns = '*') {
-    let sql = 'select #COLUMN# from collections where user_id=? and deleted_at is null';
+exports.get = async function (collection_id, columns = '*') {
+    let sql = 'select #COLUMN# from collections where id=? and deleted_at is null';
     sql = sql.replace('#COLUMN#', columns)
-    return await sqlite.get(sql, [user_id]);
+    return await sqlite.get(sql, [collection_id]);
 }
 
 /**
@@ -81,12 +81,10 @@ exports.create = async function (user_id, collection, color, save_time, parent_i
  * @param collection
  * @param color
  * @param save_time
- * @param remark
- * @param max_num
  * @param parent_id
  * @returns {Promise<*>}
  */
-exports.createRemote = async function (user_id, remote_id, collection, color, save_time, remark = '', max_num = 300, parent_id = 0) {
+exports.createRemote = async function (user_id, remote_id, collection, color, save_time, parent_id = 0) {
     if (common.empty(collection)) {
         return 0;
     }
@@ -96,15 +94,12 @@ exports.createRemote = async function (user_id, remote_id, collection, color, sa
     if (common.empty(color)) {
         color = '#f58220';
     }
-    if (common.empty(max_num)) {
-        max_num = 300;
-    }
     if (common.empty(parent_id)) {
         parent_id = 0;
     }
     const hash = common.md5(JSON.stringify({collection, create_time: save_time}))
-    let sql = "INSERT INTO collections(user_id, remote_id, collection, color, parent_id, hash_code, max_num, remark, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-    return await sqlite.insert(sql, [user_id, remote_id, collection, color, parent_id, hash, max_num, remark, save_time, save_time]);
+    let sql = "INSERT INTO collections(user_id, remote_id, collection, color, parent_id, hash_code, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    return await sqlite.insert(sql, [user_id, remote_id, collection, color, parent_id, hash, save_time, save_time]);
 }
 
 /**
@@ -113,12 +108,10 @@ exports.createRemote = async function (user_id, remote_id, collection, color, sa
  * @param collection
  * @param color
  * @param save_time
- * @param remark
- * @param max_num
  * @param parent_id
  * @returns {Promise<*>}
  */
-exports.edit = async function (collection_id, collection, color, save_time, remark = '', max_num = 0, parent_id = 0) {
+exports.edit = async function (collection_id, collection, color, save_time, parent_id = 0) {
     if (common.empty(collection_id) || common.empty(collection)) {
         return 0;
     }
@@ -130,14 +123,6 @@ exports.edit = async function (collection_id, collection, color, save_time, rema
     if (!common.empty(color)) {
         columns.push("color=?")
         params.push(color)
-    }
-    if (!common.empty(remark)) {
-        columns.push("remark=?")
-        params.push(remark)
-    }
-    if (!common.empty(max_num)) {
-        columns.push("max_num=?")
-        params.push(max_num)
     }
     const sql = "UPDATE collections SET " + columns.join(',') + " WHERE id=" + collection_id
     return await sqlite.update(sql, params)
@@ -152,30 +137,6 @@ exports.edit = async function (collection_id, collection, color, save_time, rema
 exports.setRemote = async function (collection_id, remote_id) {
     const sql = "UPDATE collections SET remote_id=? WHERE id=?"
     return await sqlite.update(sql, [remote_id, collection_id])
-}
-
-/**
- * 设置最大标准值
- * @param collection_id
- * @param max_num
- * @returns {Promise<any>}
- */
-exports.setMaxNum = async function (collection_id, max_num) {
-    const updated_at = common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
-    const sql = "UPDATE collections SET max_num=?, updated_at=? WHERE id=?"
-    return await sqlite.update(sql, [max_num, updated_at, collection_id])
-}
-
-/**
- * 设置备注
- * @param collection_id
- * @param remark
- * @returns {Promise<any>}
- */
-exports.setRemark = async function (collection_id, remark) {
-    const updated_at = common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
-    const sql = "UPDATE collections SET remark=?, updated_at=? WHERE id=?"
-    return await sqlite.update(sql, [remark, updated_at, collection_id])
 }
 
 /**
@@ -317,7 +278,7 @@ exports.list = async function (join_list, status = 1, columns = '*') {
     if (status === 1) {
         conditions.push('deleted_at is null')
     } else if (status === 0) {
-        conditions.push('deleted_at is not null')
+        conditions.push('deleted_at != null')
     }
     sql = sql.replace('#CONDITION#', conditions.join(' and '))
     const rows = await sqlite.all(sql)
@@ -457,20 +418,6 @@ exports.remove = async function (collection_id) {
     if (!common.empty(collection_id)) {
         const save_time = common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
         let sql = "update collections set deleted_at=? where id=? and deleted_at is null"
-        return await sqlite.update(sql, [save_time, collection_id]);
-    }
-    return 0
-}
-
-/**
- * 修改笔记本修改时间
- * @param collection_id
- * @returns {Promise<*>}
- */
-exports.editUpdateAt = async function (collection_id) {
-    if (!common.empty(collection_id)) {
-        const save_time = common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
-        let sql = "update collections set updated_at=? where id=? and deleted_at is null"
         return await sqlite.update(sql, [save_time, collection_id]);
     }
     return 0
