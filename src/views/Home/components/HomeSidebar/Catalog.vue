@@ -8,7 +8,7 @@
                 <svgFont class="font-16" color="#6F7A93" icon="books"></svgFont>
                 <span class="ml10 pt2">笔记本</span>
             </div>
-            <svgFont class="add-btn" color="#6F7A93" icon="plus" @click.stop="showAddProject = true"></svgFont>
+            <svgFont class="add-btn" color="#6F7A93" icon="plus" @click.stop="addCollection"></svgFont>
         </div>
         <FCollapse>
             <div class="project-list" v-show="showSelfCollection">
@@ -237,18 +237,14 @@
     // 异步组件
     const maskCom = defineAsyncComponent(() => import('@/components/maskCom'))
 
-    // service
-    // const collectionService = require('service/action/collection.js')
+
     const store = useStore();
 
     // ref
     const collectionItemRef = ref(null)
 
-
     // 获取个人笔记本项目
     let projectListSelf = computed(() => store.state.collection.projectListSelf)
-    // 获取团队笔记本项目
-    // let projectListTeam = computed(() => store.state.collection.projectListTeam)
 
     // 控制笔记本分类的是否展开的状态
     const showSelfCollection = computed(() => store.state.notes.catalogState.showSelfCollection)
@@ -332,14 +328,14 @@
     }
 
     // 删除collection
-    let showRemoveCollection = ref(false);
-    let checkedCollectionId = '';
-    let defaultCollection = computed(() => { return store.state.user.userSetting.default });
+    let showRemoveCollection = ref(false)
+    let checkedCollectionId = ''
+    let defaultCollection = computed(() => { return store.state.user.userSetting.default })
     let canTransferProjectList = ref([])
     let showMoveSelect = ref(false)
     let moveCollectionId = ref(null)
     async function removeCollection({item, index}){
-        checkedCollectionId = item.id;
+        checkedCollectionId = item.id
         let res = await store.dispatch("collection/removeCollection", {
             collection_id: item.id,
             operate: '',
@@ -347,7 +343,7 @@
         })
         canTransferProjectList.value = projectListSelf.value.filter((proj) => proj.id !== item.id )
         if(res.status_code === 501 && res.data.note_count > 0){
-            showRemoveCollection.value = true;
+            showRemoveCollection.value = true
             showMoveSelect.value = false
             moveCollectionId.value = null
         }
@@ -385,37 +381,19 @@
                 ElNotification({
                     message: '转移成功',
                     type: 'success'
-                });
+                })
             }else{
                 ElNotification({
                     message: '删除成功',
                     type: 'success'
-                });
+                })
             }
         }
     }
     // 删除笔记本的回调
     function removeCollectionCallback(checkedCollectionId){
-        store.commit('notes/CHANGE_FILTER_NOTE_PARAMS', {
-            collection_id: projectListSelf.value[0].id,
-            tag_id: '',
-            group_id: ''
-        })
-        store.commit('notes/CHANGE_CATALOG_ACTIVE_STATE', {
-            collectionTitle: projectListSelf.value[0].title,
-            collectionActive: projectListSelf.value[0].id,
-            trashActive: '',
-            tagActive: '',
-            tagTitle: '',
-            tagGroupTitle: ''
-        })
-
-        store.dispatch("notes/getTagsList");
-        // store.commit("notes/RECORD_COLLECTION",{
-        //     checked_collection: projectListSelf.value[0].collection,
-        //     collection_id: projectListSelf.value[0].id
-        // });
-        bus.emit("CLEAR_KAYWORD");
+        const collectionItem = projectListSelf.value[0]
+        collectionItemRef.value.clickProject(collectionItem)
 
         // 判断删除的是不是默认笔记
         if(checkedCollectionId === defaultCollection.value){
@@ -447,6 +425,10 @@
                 }).then((res) => {
                     projectLoad.value = false
                     if(res) showAddProject.value = false
+
+                    store.commit('notes/CHANGE_CATALOG_ACTIVE_STATE',{
+                        collectionTitle: project.form.collection,
+                    })
                 })
             }else{
                 store.dispatch("collection/addCollection",{
@@ -471,11 +453,11 @@
     let showKnowledgeGraph = ref(false)
     async function knowledgeGraph({item, index}){
         const user_id = store.state.user.userInfo.id
-        getGraph(user_id, item, showKnowledgeGraph);
+        getGraph(user_id, item, showKnowledgeGraph)
     }
 
     onMounted( () => {
-        store.dispatch("collection/getCollection");
+        store.dispatch("collection/getCollection")
     })
 </script>
 

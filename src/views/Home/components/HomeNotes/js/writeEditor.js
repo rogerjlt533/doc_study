@@ -143,11 +143,8 @@ export function writeEditor(){
                 // const json = editor.getJSON()
                 // const html = editor.getHTML()
                 // handleFileOperation.saveFile(json, html).then()
-                if(isEdit){
-                    edit(editor)
-                }else{
-                    save(editor)
-                }
+
+                edit(editor)
             }, 1500);
         },
         onFocus(){
@@ -170,34 +167,6 @@ export function getEditorStatus(item, index){
     isEdit = true
 }
 
-// bus.on('SAVE_WRITE_NOTE', () => {
-//     return new Promise(resolve => {
-//         edit(writeEditor()).then((res) => {
-//             if(res) resolve(true)
-//         })
-//     })
-// })
-
-async function save(editor){
-    let contentJson = editor.getJSON()
-    let contentHtml = editor.getHTML()
-    // const matchReg = /\#(\S+?)?\s{1}/g
-    // const tagsArray = contentHtml.match(matchReg)
-    // if(tagsArray && tagsArray.length){
-    //     tagsArray.forEach((item) => {
-    //         contentHtml = contentHtml.replace(item, `<span class='hashtag-suggestion' data-id='${item.replace('#', '').trim()}'>${item}</span>`)
-    //     })
-    // }
-    let params = {
-        contentJson,
-        contentHtml,
-        note_type: 2
-    }
-    const res = await store.dispatch("notes/addNotes", params)
-    if(res.status_code === 200){
-        writeInfo.update_time = res.data.updated_time
-    }
-}
 async function edit(editor){
     let contentJson = editor.getJSON()
     let contentHtml = editor.getHTML()

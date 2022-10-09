@@ -22,6 +22,7 @@
                         暂无内容 ~ ~
                     </div>
                 </div>
+                <p class="text-center font-12 color-9 pt20">笔记总数：{{notesCount}}</p>
             </div>
             <div class="text-center font-12 color-9 pt20" v-else>
                 <p>开始创作吧~</p>
@@ -39,7 +40,7 @@
                 </div>
             </div>
             <div class="write-con note-style">
-                <div class="show-tag" v-show="writeTags.length">
+                <div class="show-tag" v-show="writeTags?.length">
                     <span class="hashtag-suggestion" v-for="tag in writeTags" :key="tag.id" :data-id="tag.tag">#{{tag.tag}}</span>
                 </div>
                 <editor-content
@@ -92,6 +93,7 @@
     let isShowTableOfContents = ref(false)
     let writeNotesList = computed(() => store.state.notes.writeNotesList)
     let writeNoteActive = computed(() => store.state.notes.writeNoteState.active)
+    let notesCount = computed(() => store.state.notes.catalogActiveState.long_note_count )
 
     // bus 监听
     bus.on('readWriteNoteData', () => {
@@ -102,8 +104,7 @@
     function initNoteData(){
         let initItem = writeNotesList.value[0]
         if(initItem) {
-            getEditorStatus(initItem, 0)
-            setNoteState(initItem)
+            readNoteDetail(initItem, 0)
             return
         }
 
@@ -111,8 +112,7 @@
             note: "<p></p>",
             id: ''
         }
-        getEditorStatus(initItem, 0)
-        setNoteState(initItem)
+        readNoteDetail(initItem, 0)
     }
     // 读取笔记
     function readNoteDetail(item, index){
@@ -122,7 +122,7 @@
         writeInfo.size_count = editor.value.storage.characterCount.characters()
         writeInfo.update_time = item.updated_time
         writeInfo.create_time = item.created_at
-        let quoteArr = item.quote.map(item => item.id)
+        let quoteArr = item.quote ? item.quote.map(item => item.id) : []
         for(let i = 0; i < quoteArr.length; i ++){
             quoteArray.push(quoteArr[i])
         }
@@ -231,10 +231,6 @@
         // console.log("handledragenter")
     }
     const handleDrops = (e) => {
-        console.log("2131231231231萨达所大")
-
-
-        return false
         console.log(editor.value)
         // e.preventDefault();
         // console.log(isShortNoteDrog)
@@ -397,7 +393,7 @@
         }
         .write-con{
             height: calc(100vh - 120px);
-            padding: 20px 20px 0;
+            padding: 20px 80px 0;
             font-size: 16px;
             flex-shrink: 0;
             overflow: scroll;

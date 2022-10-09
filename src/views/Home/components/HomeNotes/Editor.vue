@@ -4,7 +4,7 @@
             class="annotation-box"
             v-if="annotationNote.id"
     >
-        <font-awesome-icon icon="quote-left" class="font-16" color="#9EA0AD" />
+        <font-awesome-icon icon="quote-left" class="font-16 pt4" color="#9EA0AD" />
         <div class="note-cont" :class="[ !annotationNote.isFlod ? 'annotation-max-hieght' : '' ]">
             <div class="content-html" v-html="annotationNote.note"></div>
         </div>
@@ -13,7 +13,7 @@
                  @click="controlIsFlod"
             >{{!annotationNote.isFlod ? "展开" : "收起"}}</div>
             <div @click="closeAnnotation">
-                <font-awesome-icon icon="times-circle" style="font-size: 14px;" color="#9EA0AD" />
+                <font-awesome-icon icon="times-circle" class="font-14" color="#9EA0AD" />
             </div>
         </div>
     </div>
@@ -380,6 +380,8 @@
         showEmoji.value = false;
     }
 
+
+
     // 获取所有Collection
     // let showCollect = ref(false);
     // let collectionListSelf = computed(() => {
@@ -513,6 +515,14 @@
     //     }
     // })
 
+    // 监听修改列表高度
+    bus.on('changeNotesListHeight', async () => {
+        await nextTick()
+        let annotationHeight = annotationRef.value ? annotationRef.value.offsetHeight : 0
+        let editorBoxHeight = editorBox.value ? editorBox.value.offsetHeight : 0
+        store.commit('notes/SET_NOTES_LIST_HEIGHT', editorBoxHeight + annotationHeight)
+    })
+
 </script>
 
 <style lang="scss">
@@ -641,6 +651,7 @@
         }
         .note-cont{
             margin: 0 10px;
+            width: calc(100% - 96px);
         }
         .annotation-max-hieght{
             max-height: 36px;
@@ -745,6 +756,7 @@
             }
         }
     }
+
     .is-active{
         background: red;
         color: #fff;

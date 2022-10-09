@@ -9,7 +9,7 @@ const path = require('path')
 
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
-app.name = '方寸笔迹-beta'
+app.name = '方寸笔迹-IdeaTrip'
 
 const ElectronStore = require('electron-store');
 ElectronStore.initRenderer();
