@@ -7,9 +7,10 @@ const userService = require('../service/user');
  * 标签列表
  * @param user_id
  * @param collection_id
+ * @param note_type
  * @returns {Promise<*>}
  */
-exports.list = async function (user_id, collection_id) {
+exports.list = async function (user_id, collection_id, note_type = 0) {
     user_id = common.decode(user_id)
     if (!common.empty(collection_id)) {
         collection_id = common.decode(collection_id)
@@ -20,7 +21,7 @@ exports.list = async function (user_id, collection_id) {
     if (!group_res.status) {
         return {status_code: 400, message: group_res.message, data: []}
     }
-    const tags = await tagService.tagTool.tags(user_id, collection_id, group_res.is_group)
+    const tags = await tagService.tagTool.tags(user_id, collection_id, group_res.is_group, '', note_type)
     if (common.empty(tags)) {
         return {status_code: 200, message: 'success', data: []}
     }
@@ -39,9 +40,10 @@ exports.list = async function (user_id, collection_id) {
  * @param user_id
  * @param collection_id
  * @param keyword
+ * @param note_type
  * @returns {Promise<*>}
  */
-exports.group = async function (user_id, collection_id, keyword = '') {
+exports.group = async function (user_id, collection_id, keyword = '', note_type = 0) {
     user_id = common.decode(user_id)
     if (!common.empty(collection_id)) {
         collection_id = common.decode(collection_id)
@@ -55,7 +57,7 @@ exports.group = async function (user_id, collection_id, keyword = '') {
     if (!group_res.status) {
         return {status_code: 400, message: group_res.message, data: []}
     }
-    const tags = await tagService.tagTool.tags(user_id, collection_id, group_res.is_group, keyword)
+    const tags = await tagService.tagTool.tags(user_id, collection_id, group_res.is_group, keyword, note_type)
     if (common.empty(tags)) {
         return {status_code: 200, message: 'success', data: []}
     }
@@ -75,9 +77,10 @@ exports.group = async function (user_id, collection_id, keyword = '') {
  * @param user_id
  * @param collection_id
  * @param keyword
+ * @param note_type
  * @returns {Promise<*>}
  */
-exports.groupInitial = async function (user_id, collection_id, keyword = '') {
+exports.groupInitial = async function (user_id, collection_id, keyword = '', note_type = 0) {
     user_id = common.decode(user_id)
     if (!common.empty(collection_id)) {
         collection_id = common.decode(collection_id)
@@ -91,7 +94,7 @@ exports.groupInitial = async function (user_id, collection_id, keyword = '') {
     if (!group_res.status) {
         return {status_code: 400, message: group_res.message, data: []}
     }
-    const tags = await tagService.tagTool.tags(user_id, collection_id, group_res.is_group, keyword)
+    const tags = await tagService.tagTool.tags(user_id, collection_id, group_res.is_group, keyword, note_type)
     if (common.empty(tags)) {
         return {status_code: 200, message: 'success', data: []}
     }
