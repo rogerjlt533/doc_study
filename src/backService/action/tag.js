@@ -41,7 +41,7 @@ exports.list = async function (user_id, collection_id) {
  * @param keyword
  * @returns {Promise<*>}
  */
-exports.group = async function (user_id, collection_id, keyword) {
+exports.group = async function (user_id, collection_id, keyword = '') {
     user_id = common.decode(user_id)
     if (!common.empty(collection_id)) {
         collection_id = common.decode(collection_id)
@@ -77,7 +77,7 @@ exports.group = async function (user_id, collection_id, keyword) {
  * @param keyword
  * @returns {Promise<*>}
  */
-exports.groupInitial = async function (user_id, collection_id, keyword) {
+exports.groupInitial = async function (user_id, collection_id, keyword = '') {
     user_id = common.decode(user_id)
     if (!common.empty(collection_id)) {
         collection_id = common.decode(collection_id)
