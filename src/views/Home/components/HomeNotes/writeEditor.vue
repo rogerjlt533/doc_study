@@ -31,7 +31,12 @@
         <div class="write-content">
             <div class="note-toolbar">
                 <div class="write-info">
-                    <span class="update-time">{{writeInfo.update_time}}</span>
+                    <svgFont icon="create" class="color-9 mr6"></svgFont>
+                    <span class="update-time mr20">{{writeInfo.updated_at}}</span>
+
+                    <el-icon v-if="writeInfo.status === 'saved'" class="color-success"><SuccessFilled /></el-icon>
+                    <el-icon v-else-if="writeInfo.status === 'loading'" class="is-loading color-9"><Loading /></el-icon>
+                    <el-icon v-else-if="writeInfo.status === 'failed'" class="color-failed"><WarningFilled /></el-icon>
                 </div>
                 <div class="toolbar-options">
                     <span class="size_count">{{writeInfo.size_count}}字</span>
@@ -53,7 +58,6 @@
             </div>
         </div>
 
-
         <transition name="note-show">
             <notesLibrary v-show="isShowShortNote"></notesLibrary>
         </transition>
@@ -64,18 +68,15 @@
 </template>
 
 <script setup>
-    import {onMounted, ref, computed, reactive, defineEmits, defineAsyncComponent} from 'vue'
+    import {onMounted, ref, computed, defineEmits, defineAsyncComponent} from 'vue'
     import { useStore } from "vuex"
     import bus from '@/utils/bus'
-    import { deepClone } from '@/utils/tools'
     // hooks
-    import { getNotesApi } from '@/apiDesktop/notes'
-    import { getTagListApi, getGroupListApi } from '@/apiDesktop/tag'
     import { writeEditor, getEditorStatus, getTableOfContents, writeInfo, quoteArray, writeTags } from './js/writeEditor'
     import { getNoteNodeClick } from './js/editorMethods'
     // 组件
     import { EditorContent } from '@tiptap/vue-3'
-    import { Plus } from '@element-plus/icons-vue'
+    import { Plus, SuccessFilled, WarningFilled, Loading } from '@element-plus/icons-vue'
     import fcDialog from '@/components/dialog'
     const outlineComponent = defineAsyncComponent(() => import('./components/outlineComponent.vue'))
     const notesLibrary = defineAsyncComponent(() => import('./components/notesLibrary.vue'))
@@ -120,8 +121,8 @@
         setNoteState(item)
         writeTags.value = item.tags
         writeInfo.size_count = editor.value.storage.characterCount.characters()
-        writeInfo.update_time = item.updated_time
-        writeInfo.create_time = item.created_at
+        writeInfo.updated_at = item.updated_at
+        writeInfo.created_at = item.created_at
         let quoteArr = item.quote ? item.quote.map(item => item.id) : []
         for(let i = 0; i < quoteArr.length; i ++){
             quoteArray.push(quoteArr[i])
@@ -331,9 +332,12 @@
             justify-content: space-between;
             align-items: center;
             height: 42px;
+            min-width: 400px;
             padding: 0 10px;
             border-bottom: 1px solid #DEDEDE;
             .write-info{
+                display: flex;
+                align-items: center;
                 .update-time{
                     font-size: 14px;
                     color: #7B849B;
@@ -468,6 +472,7 @@
                 margin: 4px 0px;
                 padding: 8px 10px;
                 border-left: 3px solid rgba($purple2, 0.1);
+                border-radius: 4px;
             }
         }
         .ProseMirror::-webkit-scrollbar {

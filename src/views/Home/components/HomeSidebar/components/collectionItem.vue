@@ -119,18 +119,15 @@
             tagTitle: '',
             tagActive: '',
             trashActive: '',
-            short_note_count: item.short_note_count,
-            long_note_count: item.long_note_count
+            short_note_count: item.short_note_count || 0,
+            long_note_count: item.long_note_count || 0
         })
+        bus.emit("changeNotesListHeight")
 
         // writeInfo
         setTimeout(() => {
             store.dispatch("notes/getTagsList")
             store.dispatch("notes/getGroupInitial")
-            // store.commit("notes/RECORD_COLLECTION",{
-            //     checked_collection: item.collection,
-            //     collection_id: item.id
-            // })
             store.commit("user/SHOW_NOTICE",{data: false})
             bus.emit("CLEAR_KAYWORD")
             bus.emit("MAKE_LIST_TOP")

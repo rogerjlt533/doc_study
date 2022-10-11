@@ -17,7 +17,7 @@ export const initMigration = async () => {
     await handleClearCompleteCollectionQueue()
     console.log('清理上传数据完成')
 
-    initSync()
+    // initSync()
 }
 // 执行清理已完成的同步记录
 

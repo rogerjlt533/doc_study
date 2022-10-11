@@ -17,12 +17,14 @@
 </template>
 
 <script setup>
-    import { ref, nextTick, getCurrentInstance } from 'vue'
+    import { ref, nextTick } from 'vue'
     import { useStore } from "vuex"
     import { ipcRenderer } from "electron"
-    // import {initMigration} from "@/utils/initBackService";
+    import { handleContentHtml, handleHtmlTagSpace } from '../assets/js/processHtml'
+
 
     const store = useStore()
+    const matchReg = /\#(\S+?)?\s{1}/g
 
     let content = ref('')
     const inputRef = ref(null)
@@ -39,28 +41,28 @@
             }],
             type: "doc"
         }
-        const contentHtml = `<p>${content.value}</p>`
+        const editorHtml = handleHtmlTagSpace(`<p>${content.value}</p>`)
+        const contentHtml = handleContentHtml(`<p>${content.value}</p>`)
+        const tag_list = editorHtml.match(matchReg) ? editorHtml.match(matchReg).map(item => item.substr(1).trim()) : []
 
         let params = {
-            json: contentJson,
-            html: contentHtml,
+            contentJson,
+            contentHtml,
             annotation_id: '',
-            note_type: 1
+            note_type: 1,
+            tag_list
         }
 
-        content.value = ''
-        ipcRenderer.send('fastSaveNote', params)
+        store.dispatch("notes/addNotes", params).then(() => {
+            content.value = ''
+            ipcRenderer.send('closeFastInput')
+
+        })
     }
 
     nextTick(() => {
         inputRef.value.focus()
-    })
-
-    // ipcRenderer.on('startSync', async (event, params) => {
-    //     await initMigration()
-    //     // initSync()
-    // })
-
+    }, 200)
 </script>
 
 <style lang="scss" scoped>
@@ -68,8 +70,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        height: 40px;
-        overflow: hidden;
+        height: 100vh;
         padding: 0 20px;
         background: #f5f5f5;
         -webkit-app-region: drag;

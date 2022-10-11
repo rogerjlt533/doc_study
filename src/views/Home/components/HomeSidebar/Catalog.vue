@@ -52,7 +52,7 @@
                 <div style="padding: 10px 10px 0 10px;">
                     <div class="input-box">
                         <div class="input-emoji">
-                            <el-popover placement="right-start" :width="370" trigger="click" :visible="showEmoji">
+                            <el-popover placement="bottom" :width="370" trigger="click" :visible="showEmoji">
                                 <VuemojiPicker @emojiClick="handleEmojiClick" :isDark="false" />
                                 <template #reference>
                                     <el-button type="text" size="medium" @click="showEmoji = true">
@@ -140,11 +140,10 @@
             </el-dialog>
         </template>
 
-
         <template #footer>
             <span class="dialog-footer">
-                <el-button class="color-white" color="#aaaaaa" @click="showAddProject = false">取 消</el-button>
-                <el-button class="color-white" color="#7885d1" type="primary" @click="sureMession">确 定</el-button>
+                <el-button plain color="#aaaaaa" @click="showAddProject = false">取 消</el-button>
+                <el-button color="#6C56F6" type="primary" @click="sureMession">确 定</el-button>
             </span>
         </template>
     </el-dialog>
@@ -197,8 +196,8 @@
 
         <template #footer>
             <span class="dialog-footer">
-                <el-button class="color-white" color="#aaaaaa" @click="showRemoveCollection = false">取 消</el-button>
-                <el-button class="color-white" color="#7885d1" type="primary" @click="sureRemoveCollection">确 定</el-button>
+                <el-button plain color="#aaaaaa" @click="showRemoveCollection = false">取 消</el-button>
+                <el-button color="#6C56F6" type="primary" @click="sureRemoveCollection">确 定</el-button>
             </span>
         </template>
     </el-dialog>
@@ -561,16 +560,12 @@
             cursor: pointer;
             &:hover{
                 background: #eeeeee;
-                .add-btn{
-                    opacity: 1;
-                }
             }
             span{
                 font-size: 14px;
                 color: #6F7A93;
             }
             .add-btn{
-                opacity: 0;
                 padding: 4px;
                 border-radius: 4px;
                 cursor: pointer;
@@ -694,6 +689,4 @@
             color: $purple;
         }
     }
-
-
 </style>

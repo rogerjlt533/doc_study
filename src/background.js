@@ -42,6 +42,7 @@ function createWindow() {
       spellcheck: false,
       nodeIntegration: true,
       enableRemoteModule: true,
+      nodeIntegrationInWorker: true,
       contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
     },
     backgroundColor: '#ffffff',

@@ -1,8 +1,7 @@
 import { getToken, setToken, removeToken } from "@/utils/auth.js";
 import { getUserInfoApi, getUserSettingApi,  setUserApi, getUserNoticeApi, getUserRightApi, getUserQuickApi } from "@/api/user"
-// import { getUserBaseApi } from '@/apiDesktop/user'
+import { getUserBaseApi } from '@/apiDesktop/user'
 import { ElLoading } from "element-plus"
-import request from '@/utils/mainRequest'
 
 
 export default {
@@ -76,7 +75,7 @@ export default {
         getUserSetting({commit}, params){
             return new Promise((reslove, reject) => {
                 getUserSettingApi().then((res) => {
-                    if(res.code === 200){
+                    if(res.code == 200){
                         commit("SET_USER_SETTING", res.data);
                         reslove(res.data)
                     }
@@ -84,19 +83,19 @@ export default {
             })
         },
         // 获取用户基础信息设置
-        getUserBase({commit, rootState}){
+        async getUserBase({commit, rootState}){
             const user_id = rootState.user.userInfo.id
-            return new Promise((resolve) => {
-                request({
-                    api: "getUserBaseApi",
-                    key: "getUserBaseApi",
-                    data: {user_id}
-                }, (res) => {
-                    if(res.status_code === 200){
-                        commit("SET_USER_BASE", res.data)
-                    }
-                })
-            })
+            const res = await getUserBaseApi({user_id})
+            if(res.status_code === 200){
+                commit("SET_USER_BASE", res.data)
+            }
+            // return new Promise((reslove, reject) => {
+            //     getUserBaseApi().then((res) => {
+            //         if(res.code == 200){
+            //             commit("SET_USER_BASE", res.data)
+            //         }
+            //     })
+            // })
         },
         // 设置用户信息
         setUser({commit}, params){
