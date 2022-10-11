@@ -163,11 +163,10 @@
     }
 
     const openWrite = () => {
-        bus.emit("READ_ARTICLE", {
-            item: props.item,
-            index: props.index
-        })
-        bus.emit('CHANGE_NOTE_MODE', true)
+        // bus.emit("READ_ARTICLE", {
+        //     item: props.item,
+        //     index: props.index
+        // })
     }
 
     // 删除该笔记

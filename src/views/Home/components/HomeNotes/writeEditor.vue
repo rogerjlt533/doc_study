@@ -33,7 +33,6 @@
                 <div class="write-info">
                     <svgFont icon="create" class="color-9 mr6"></svgFont>
                     <span class="update-time mr20">{{writeInfo.updated_at}}</span>
-
                     <el-icon v-if="writeInfo.status === 'saved'" class="color-success"><SuccessFilled /></el-icon>
                     <el-icon v-else-if="writeInfo.status === 'loading'" class="is-loading color-9"><Loading /></el-icon>
                     <el-icon v-else-if="writeInfo.status === 'failed'" class="color-failed"><WarningFilled /></el-icon>
@@ -493,6 +492,11 @@
         ul, ol{
             margin: 0;
             padding-left: 30px;
+        }
+        li{
+            p{
+                margin: 6px 0;
+            }
         }
         p{
             margin: 20px 0;

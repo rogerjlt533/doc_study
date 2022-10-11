@@ -1,9 +1,11 @@
-import { simpleEditor } from './cardEditor'
-import { handleContentHtml } from '@/utils/processHtml'
+// import { compileNoteApi, quoteNoteApi } from "@/api/notes"
+import { compileNoteApi, quoteNoteApi } from "@/apiDesktop/notes"
+import { simpleEditor } from './editor'
+import { handleHtmlTagSpace } from '@/assets/js/processHtml'
 import store from "@/store"
-import request from "@/utils/mainRequest"
 
-const tagService = require('service/service/tag')
+const tagService = require('service/service/tag');
+const matchReg = /\#(\S+?)?\s{1}/g
 
 class DropNoteFun {
     constructor(){
@@ -34,8 +36,11 @@ class DropNoteFun {
             const finishNote = this.targetNote.note + this.sourceNote.note
             const editor = simpleEditor(finishNote)
 
-            const { tag_list } = handleContentHtml(editor.getHTML())
-            const { list } = tagService.tagTool.json2Tree(editor.getJSON())
+            const contentJson = editor.getJSON()
+            const editorHtml = handleHtmlTagSpace(editor.getHTML())
+
+            const tag_list = editorHtml.match(matchReg) ? editorHtml.match(matchReg).map(item => item.substr(1).trim()) : []
+            const { list } = tagService.tagTool.json2Tree(contentJson)
             const struct_list = tagService.tagTool.filterTreeKey(list)
 
             const data = {
@@ -45,20 +50,11 @@ class DropNoteFun {
                 tag_list,
                 struct_list
             }
-            request({
-                api: 'compileNoteApi',
-                key: 'compileNoteApi',
-                data
-            }, (res) => {
-                if(res.status_code === 200){
-                    store.commit('notes/RECOVERY_NOTE', res.data.note)
-                    store.commit('notes/REMOVE_NOTE', {
-                        index: this.sourceIndex,
-                        note_type: 1
-                    })
-                }
-            })
-
+            const res = await compileNoteApi(data)
+            if(res.status_code === 200){
+                store.commit('notes/RECOVERY_NOTE', res.data.note)
+                store.commit('notes/REMOVE_NOTE', { index: this.sourceIndex})
+            }
         }else if(type === 'quote'){
             let targetQuoteIds = this.targetNote.quote.map(q => q.id)
             let data = {
@@ -66,21 +62,15 @@ class DropNoteFun {
                 target_id: this.targetNote.id,
                 quote_list: [...targetQuoteIds, this.sourceNote.id]
             }
-            request({
-                api: 'quoteNoteApi',
-                key: 'quoteNoteApi',
-                data
-            }, (res) => {
-                if(res.status_code === 200){
-                    store.commit('notes/RECOVERY_NOTE',res.data.note)
-                }
-            })
+            const res = await quoteNoteApi(data)
+            if(res.status_code === 200){
+                store.commit('notes/RECOVERY_NOTE',res.data.note)
+            }
         }
     }
 
     handleDragover(ev, item){
         ev.preventDefault()
-        if(!(this.sourceNote && this.sourceNote.id)) return false
         if(this.sourceNote.id === item.id) return false
 
         if(this.sourceNote.is_self === 2){
@@ -102,8 +92,6 @@ class DropNoteFun {
 
     handleDragenter(ev, item){
         ev.preventDefault()
-        if(!(this.sourceNote && this.sourceNote.id)) return false
-
         this.lastenterEv = ev.target
 
         if(this.sourceNote.id === item.id) return false

@@ -31,9 +31,9 @@
         </div>
     </div>
 
-    <div v-loading="loadingList" v-if="notesList.length > 0">
-        <el-scrollbar ref="noteslistRef" :height="finallyHeight" class="mt10" :always="false">
-            <div class="container noteslistDom"
+    <template v-if="notesList.length > 0">
+        <el-scrollbar ref="notesListRef" :height="finallyHeight" :always="false">
+            <div class="container"
                  v-infinite-scroll="loadPage"
                  :infinite-scroll-immediate="false"
                  :infinite-scroll-distance="30"
@@ -105,7 +105,7 @@
                 </el-divider>
             </div>
         </el-scrollbar>
-    </div>
+    </template>
     <el-empty v-else description="方寸笔迹 · Organized your digital life"></el-empty>
 </template>
 
@@ -129,7 +129,7 @@
     const store = useStore();
 
     // 监听用户筛选Notes下的笔记
-    let noteslistRef = ref(null);
+    let notesListRef = ref(null)
     let nowNotes = computed(() => {
         let collectionTitle = store.state.notes.catalogActiveState.collectionTitle || ''
         let groupTitle = store.state.notes.catalogActiveState.tagGroupTitle || ''
@@ -139,19 +139,21 @@
     })
 
     // 根据编辑框高度动态修改列表的高度;
-    let finallyHeight = computed(() => store.state.notes.notesListHeight );
+    let finallyHeight = computed(() => store.state.notes.notesListHeight )
     // 当前笔记分类参数
     let isFinish = computed(() => store.state.notes.isFinish )
     let isTrash = computed(() => store.state.notes.notes.trash )
     let notesList = computed(() => store.state.notes.noteslist )
     let notesCount = computed(() => store.state.notes.catalogActiveState.short_note_count )
 
-    let loadingList = ref(false)
+    // 翻页的页数
+    let page = 1
+
     // 刷新笔记列表
     let ifRefresh = ref(true);
     function refreshList(){
         ifRefresh.value = false;
-        noteslistRef.value?.setScrollTop(0)
+        notesListRef.value?.setScrollTop(0)
         bus.emit('CLEAR_KAYWORD')
     }
     // 搜索笔记列表方法
@@ -163,11 +165,12 @@
         })
     })
     bus.on("CLEAR_KAYWORD", () => {
+        page = 1
         getNotesList({})
     })
     bus.on("MAKE_LIST_TOP", () => {
         nextTick(() => {
-            noteslistRef.value?.setScrollTop(0)
+            notesListRef.value?.setScrollTop(0)
         })
     })
 
@@ -250,9 +253,8 @@
             page, keyword, start_time, end_time
         }).then((res) => {
             ifRefresh.value = true
-            loadingList.value = false
         })
-        if(page > 1){
+        if(page === 1){
             store.dispatch('notes/getWriteNotesList',{
                 page, keyword, start_time, end_time
             }).then((res) => {
@@ -262,7 +264,6 @@
     }
 
     // 监听列表滚动
-    let page = 1
     function loadPage(){
         if(isFinish.value){
             page ++
@@ -347,7 +348,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-top: 10px;
+        height: 40px;
         .info{
             padding: 0 10px;
             span{
@@ -394,12 +395,9 @@
         }
     }
     .container{
-        position: relative;
-        padding: 2px 5px;
         &::-webkit-scrollbar {
             display: none;
         }
-
         .content-list{
             position: relative;
             background: #F6F8FC;

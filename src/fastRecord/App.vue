@@ -17,12 +17,13 @@
 </template>
 
 <script setup>
-    import { ref, nextTick } from 'vue'
+    import { ref, nextTick, getCurrentInstance } from 'vue'
     import { useStore } from "vuex"
     import { ipcRenderer } from "electron"
     import { handleContentHtml, handleHtmlTagSpace } from '@/assets/js/processHtml'
 
     const store = useStore()
+    const { proxy } = getCurrentInstance()
     const matchReg = /\#(\S+?)?\s{1}/g
 
     let content = ref('')
@@ -55,13 +56,13 @@
         store.dispatch("notes/addNotes", params).then(() => {
             content.value = ''
             ipcRenderer.send('closeFastInput')
-
         })
     }
 
     nextTick(() => {
         inputRef.value.focus()
-    }, 200)
+    })
+
 </script>
 
 <style lang="scss" scoped>

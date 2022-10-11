@@ -1,6 +1,6 @@
 <template>
     <div class="short-note-contains note-style">
-        <p class="title">笔记库</p>
+        <p class="title">全部卡片</p>
         <div class="pl10 pr10 pt10">
             <el-input
                     v-model="searchKeyword"
@@ -52,11 +52,11 @@
                     <div class="time">{{item.updated_at}}</div>
                     <div class="collection">{{item.collection?.collection}}</div>
                 </div>
-                <!--                            <div draggable="true" @dragstart="handleDragstart($event, item.note)">-->
-                <!--                                <div data-type="draggable-item">-->
-                <!--                                    <div v-html='item.note'></div>-->
-                <!--                                </div>-->
-                <!--                            </div>-->
+                <!--<div draggable="true" @dragstart="handleDragstart($event, item.note)">-->
+                <!--    <div data-type="draggable-item">-->
+                <!--        <div v-html='item.note'></div>-->
+                <!--    </div>-->
+                <!--</div>-->
                 <a href="javascript:void(0);" draggable="true" @dragstart="handleDragstart($event, item)">
                     <blockquote contenteditable="false">
                         <div v-html='item.note'></div>
@@ -75,7 +75,7 @@
 </template>
 
 <script setup>
-    import { computed, reactive, ref } from "vue"
+    import { computed, reactive, ref, onMounted } from "vue"
     import { useStore } from "vuex"
     import { getNotesApi } from "@/apiDesktop/notes"
     import { deepClone } from "@/utils/tools"
@@ -83,6 +83,11 @@
     import { Search } from '@element-plus/icons-vue'
 
     const store = useStore()
+
+    onMounted(() => {
+        getNoteList()
+        getTagList()
+    })
 
     const tagSelectRef = ref(null)
     const collectionActive = ref('')
@@ -220,8 +225,71 @@
     }
 </script>
 
-
-
-<style scoped>
-
+<style lang="scss" scoped>
+    .short-note-contains{
+        position: absolute;
+        top: 100px;
+        right: 0px;
+        width: 280px;
+        height: calc(100vh - 110px);
+        background: #ffffff;
+        z-index: 999;
+        overflow: hidden;
+        box-shadow: -4px 4px 10px 0px rgba(0, 0, 0, .1);
+        .title{
+            text-align: center;
+            padding: 10px 0 0;
+            font-size: 16px;
+            color: #999999;
+            font-weight: bold;
+        }
+        .filter{
+            border-bottom: 1px solid #eeeeee;
+        }
+        .note-list{
+            height: calc(100vh - 240px);
+            overflow: scroll;
+            scrollbar-color: transparent transparent;
+            &::-webkit-scrollbar {
+                display: none;
+            }
+            .note-header{
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px 10px 0 10px;
+                .time, .collection{
+                    color: #999999;
+                    font-size: 12px;
+                }
+                .collection{
+                    width: 110px;
+                    overflow: hidden;
+                    text-align: right;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                }
+            }
+            .note-item{
+                margin: 10px;
+                border-radius: 4px;
+                background: #F6F8FC;
+                transition: all .3s;
+                a{
+                    padding: 10px;
+                    display: block;
+                    color: #333333;
+                    font-size: 14px;
+                    text-decoration: none;
+                    word-break: break-all;
+                    blockquote{
+                        margin: 0;
+                    }
+                }
+                &:hover{
+                    box-shadow: 2px 2px 10px -4px rgba(0,0,0, .5);
+                }
+            }
+        }
+    }
 </style>

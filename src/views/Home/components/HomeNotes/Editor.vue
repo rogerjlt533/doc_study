@@ -42,7 +42,7 @@
                     <font-awesome-icon icon="list-ol" class="font-16" :color="editor.isActive('orderedList') ? '#333333' : '#9EA0AD'" />
                 </div>
                 <div class="trigger-style">
-                    <el-popover placement="right-start" :width="370" v-model:visible="showEmoji">
+                    <el-popover placement="bottom" :width="370" v-model:visible="showEmoji">
                         <VuemojiPicker @emojiClick="handleEmojiClick" :isDark="false" />
                         <template #reference>
                             <font-awesome-icon icon="face-laugh" class="font-16" color="#9EA0AD" />
@@ -63,47 +63,13 @@
                         <font-awesome-icon icon="image" class="font-16 mt4" color="#9EA0AD" />
                     </el-upload>
                 </div>
-                <!--<el-dropdown v-if="!edit" size="small" trigger="click" max-height="238px">-->
-                <!--    <div class="collect flex align-center">-->
-                <!--        <font-awesome-icon icon="book" class="font-14" style="margin-top: -2px" color="#9EA0AD" />-->
-                <!--        <span class="checked-collection line-1 ml4" v-show="collectionName">{{collectionName}}</span>-->
-                <!--    </div>-->
-                <!--    <template #dropdown>-->
-                <!--        <el-dropdown-menu>-->
-                <!--            <el-dropdown-item v-for="(item,index) in collectionListSelf" :key="index" @click="checkedCollection(item)">-->
-                <!--                {{item.collection}}-->
-                <!--            </el-dropdown-item>-->
-                <!--            <el-divider v-if="collectionListSelf.length && collectionListTeam.length" style="margin: 4px 0"></el-divider>-->
-                <!--            <el-dropdown-item v-for="(item,index) in collectionListTeam" :key="index" @click="checkedCollection(item)">-->
-                <!--                {{item.collection}}-->
-                <!--            </el-dropdown-item>-->
-                <!--        </el-dropdown-menu>-->
-                <!--    </template>-->
-                <!--</el-dropdown>-->
-                <!--<el-dropdown v-else size="small" trigger="click" max-height="238px">-->
-                <!--    <div class="collect flex align-center" @click="showEditCollection = true">-->
-                <!--        <span class="color" :style="{ background: item.collection.color }"></span>-->
-                <!--        <span class="name line-1">{{ item.collection.collection }}</span>-->
-                <!--    </div>-->
-                <!--    <template #dropdown>-->
-                <!--        <el-dropdown-menu>-->
-                <!--            <el-dropdown-item v-for="(item,index) in collectionListSelf" :key="index" @click="resetCollection(item)">-->
-                <!--                {{item.collection}}-->
-                <!--            </el-dropdown-item>-->
-                <!--            <el-divider v-if="collectionListSelf.length && collectionListTeam.length" style="margin: 4px 0"></el-divider>-->
-                <!--            <el-dropdown-item v-for="(item,index) in collectionListTeam" :key="index" @click="resetCollection(item)">-->
-                <!--                {{item.collection}}-->
-                <!--            </el-dropdown-item>-->
-                <!--        </el-dropdown-menu>-->
-                <!--    </template>-->
-                <!--</el-dropdown>-->
                 <div style="width: 100px;" v-show="showProgress">
                     <el-progress :stroke-width="10" :percentage="progressNum"></el-progress>
                 </div>
             </div>
             <el-button v-if="!edit" class="color-white btn-style" color="#734eff" type="primary" size="small" :loading="isDisabled" @click="onSubmit">记 录</el-button>
             <div v-else>
-                <el-button class="btn-style" plain color="#aaaaaa" size="small" @click="cencleEdit">取 消</el-button>
+                <el-button class="btn-style" plain color="#aaaaaa" size="small" @click="cancelEdit">取 消</el-button>
                 <el-button class="btn-style" color="#734eff" type="primary" size="small" :loading="isDisabled" @click="editContent">修 改</el-button>
             </div>
         </div>
@@ -111,7 +77,7 @@
 </template>
 
 <script setup>
-    import {reactive, nextTick, ref, defineProps, defineEmits, computed} from "vue"
+    import { reactive, nextTick, ref, defineProps, defineEmits, computed } from "vue"
     import bus from '@/utils/bus'
     import { useStore } from "vuex"
     import { getToken } from "@/utils/auth"
@@ -121,8 +87,7 @@
     import { VuemojiPicker } from 'vuemoji-picker'
     import { tipsBtn, closeTips } from "@/components/tipsButton"
     // hooks ----
-    import { editorInstance, simpleEditor, showOptions} from "./js/editor.js";
-    import { defaultCollection, defaultCollectionIndex } from "./js/repectFun.js";
+    import { editorInstance } from "./js/editor.js";
     import { imageToWordApi } from "@/api/notes"
     import { handleContentHtml, handleHtmlTagSpace } from '@/assets/js/processHtml'
     import openUrlByBrowser from "@/assets/js/openUrlByBrowser"
@@ -285,7 +250,6 @@
                     annotationNote[key] = ""
                 })
                 bus.emit("MAKE_LIST_TOP")
-                // store.dispatch("user/getUserBase")
                 store.commit("notes/CLEAR_CACHED_NOTE")
                 editor.value.commands.clearContent()
                 // 记录完后重新计算高度
@@ -325,7 +289,7 @@
             isDisabled.value = false
         })
     }
-    function cencleEdit(){
+    function cancelEdit(){
         emit('editNotesContent', false);
     }
 
@@ -380,74 +344,6 @@
         showEmoji.value = false;
     }
 
-
-
-    // 获取所有Collection
-    // let showCollect = ref(false);
-    // let collectionListSelf = computed(() => {
-    //     return store.state.collection.projectListSelf
-    // })
-    // let collectionListTeam = computed(() => {
-    //     return store.state.collection.projectListTeam
-    // })
-
-    // 获取用户信息设置
-    let userSetting = computed(() => {
-        return store.state.user.userSetting
-    })
-    let collection_id;
-
-    // let collectionName = computed(() => {
-    //     let title = "";
-    //     let index = "";
-    //     if (store.state.notes.editorCollection.checked_collection) {
-    //         title = store.state.notes.editorCollection.checked_collection;
-    //     }else{
-    //         // 初始化默认选中的笔记本
-    //         title = defaultCollection(userSetting.value.default);
-    //         index = defaultCollectionIndex(userSetting.value.default);
-    //         store.commit("notes/RECORD_COLLECTION",{
-    //             checked_collection: title,
-    //             collection_id: userSetting.value.default
-    //         });
-    //     }
-    //     return title
-    // });
-
-    // 重置collection
-    // let showEditCollection = ref(false)
-    // function resetCollection(collection){
-    //     showEditCollection.value = false
-    //     if(collection.id === props.item.collection_id) return false
-    //
-    //     const contentJson = editor.value.getJSON()
-    //     const editorHtml = handleHtmlTagSpace(editor.value.getHTML())
-    //     const tag_list = editorHtml.match(matchReg) ? editorHtml.match(matchReg).map(item => item.substr(1).trim()) : []
-    //     const contentHtml = handleContentHtml(editor.value.getHTML())
-    //
-    //     store.dispatch("notes/editNote",{
-    //         contentHtml,
-    //         contentJson,
-    //         collection_id: collection.id,
-    //         noteId: props.item.id,
-    //         index: props.index,
-    //         tag_list,
-    //         postil_list: props.item.quote.map(item => item.id)
-    //     }).then((res) => {
-    //         props.item.collection.color = res.data.collection.color;
-    //         props.item.collection.collection = res.data.collection.collection;
-    //         props.item.collection_id = res.data.collection_id;
-    //     })
-    // }
-
-    // 选中项目进行关联
-    // function checkedCollection(item){
-    //     showCollect.value = false;
-    //     store.commit("notes/RECORD_COLLECTION",{
-    //         checked_collection: item.collection,
-    //         collection_id: item.id
-    //     });
-    // }
 
     // 点击编辑框  ORC功能  图片识别文字   ----start-----
     let imageUrl = "";
@@ -756,7 +652,6 @@
             }
         }
     }
-
     .is-active{
         background: red;
         color: #fff;

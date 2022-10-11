@@ -105,7 +105,7 @@
     import bus from '@/utils/bus'
     import { getNotesHistoryApi, rollHistoryApi } from '@/apiDesktop/notes'
     // 组件 ----
-    import previewImg from "@/lib/imagePreview"
+    import previewImg from "@/components/imagePreview"
     import NoteAnnotation from "./NoteAnnotation.vue";
     import { ElMessageBox, ElNotification } from "element-plus"
     import { RefreshLeft, Loading } from '@element-plus/icons-vue'
@@ -115,14 +115,14 @@
     import openUrlByBrowser from "@/assets/js/openUrlByBrowser";
     import { getNoteNodeClick } from '../js/editorMethods'
     import { removeHtmlTag } from '@/utils/tools'
+    import fcDialog from "@/components/dialog";
 
     const remote = require('electron').remote;
     const Menu = remote.Menu;
     const MenuItem = remote.MenuItem;
 
-
     const store = useStore();
-    const emit = defineEmits(["changeAudio", 'deleteNote']);
+    const emit = defineEmits(['deleteNote']);
     const matchReg = /\#(\S+?)?\s{1}/g
 
     const props = defineProps({
@@ -188,12 +188,9 @@
 
     // 删除该笔记
     function moveTrashCan(){
-        ElMessageBox({
+        fcDialog({
             title: '提示',
             message: "确定将这条笔记扔到废纸篓吗?",
-            showCancelButton: true,
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
         }).then(() => {
             emit("deleteNote")
             store.dispatch("notes/removeNote",{

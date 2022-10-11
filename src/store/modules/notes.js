@@ -49,10 +49,10 @@ export default {
             collection_id: ''
         },
         // 记录时的collection
-        editorCollection:{
-            checked_collection: "",
-            collection_id: "",
-        },
+        // editorCollection:{
+        //     checked_collection: "",
+        //     collection_id: "",
+        // },
         // 选中笔记本时 筛选对应tag 所以记录一下collection-id
         tagToCollectionId: "",
         noteslist: [],
@@ -139,10 +139,10 @@ export default {
          * 2. collection的name也是必选的, 给用户使用时要告诉用户当前是哪个collection;
          * 牵扯筛选笔记时可能也有collection_id, 所以单独拿出一套collection来给添加笔记接口使用
          */
-        RECORD_COLLECTION(state, { collection_id = "", checked_collection = ""}){
-            state.editorCollection.checked_collection = checked_collection === undefined ? state.editorCollection.checked_collection : checked_collection;
-            state.editorCollection.collection_id = collection_id === undefined ? state.editorCollection.collection_id : collection_id;
-        },
+        // RECORD_COLLECTION(state, { collection_id = "", checked_collection = ""}){
+        //     state.editorCollection.checked_collection = checked_collection === undefined ? state.editorCollection.checked_collection : checked_collection;
+        //     state.editorCollection.collection_id = collection_id === undefined ? state.editorCollection.collection_id : collection_id;
+        // },
         // 笔记筛选长短笔记
         FILTER_NOTES_TYPE(state, { type = !state.notes.note_type }){
             state.notes.note_type = type;
@@ -371,7 +371,7 @@ export default {
         // 添加笔记
         async addNotes({state, commit, dispatch, rootState}, { contentJson, contentHtml, annotation_id, note_type, tag_list }){
             debounceFun(handleRestructureConfig(), 500) // 检测本地config.json文件格式
-            if(!state.editorCollection.collection_id){
+            if(!state.notes.collection_id){
                 ElMessageBox.confirm('保存失败，因为您还没有指定记录的笔记本~~', {
                     type: 'error',
                     cancelButtonText: '知道了',
@@ -383,7 +383,7 @@ export default {
             }
 
             const user_id = rootState.user.userInfo.id
-            const collection_id = state.editorCollection.collection_id
+            const collection_id = state.notes.collection_id
             const noteType = note_type || 1
             const source = "desktop"
             const content = contentHtml
@@ -424,7 +424,7 @@ export default {
         },
 
         // 修改笔记
-        async editNote({commit, dispatch, rootState}, params){
+        editNote({commit, dispatch, rootState}, params){
             debounceFun(handleRestructureConfig(), 500) // 检测config.json格式
 
             const user_id = rootState.user.userInfo.id
@@ -435,16 +435,22 @@ export default {
             const tag_list = params.tag_list
             const { list } = tagService.tagTool.json2Tree(params.contentJson)
             const struct_list = tagService.tagTool.filterTreeKey(list)
-            const res = await editNoteApi({user_id, note_id, collection_id, content, postil_list, tag_list, struct_list})
-            if(res.status_code === 200){
-                commit('EDIT_NOTE', { data: res.data, index: params.index, noteType: params.noteType })
-                if(res.data.tags.length > 0){
-                    dispatch("getTagsList")
-                    dispatch("getTagsAllList")
-                    dispatch('getTagsGroup')
-                }
-                return res
-            }
+
+            return new Promise((resolve, reject) => {
+                editNoteApi({user_id, note_id, collection_id, content, postil_list, tag_list, struct_list}).then((res) => {
+                    if(res.status_code === 200){
+                        commit('EDIT_NOTE', { data: res.data, index: params.index, noteType: params.noteType })
+                        if(res.data.tags.length > 0){
+                            dispatch("getTagsList")
+                            dispatch("getTagsAllList")
+                            dispatch('getTagsGroup')
+                        }
+                        resolve(res)
+                    }else{
+                        reject(res)
+                    }
+                })
+            })
         },
 
         // 分享笔记
