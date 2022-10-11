@@ -14,9 +14,9 @@
         <div class="home-right" id="homeRight" :style="{ width: homeWidth }">
             <NoteToolbar></NoteToolbar>
             <div class="short-note" v-show="noteTypeActive === 1">
-                <template v-show="trashActive === 1">
+                <div v-show="!trashActive">
                     <home-notes-editor />
-                </template>
+                </div>
                 <home-notes-list />
             </div>
             <write-editor v-show="noteTypeActive === 2"></write-editor>
@@ -99,10 +99,11 @@
             tagActive: '',
             trashActive: 1
         })
+        store.commit('notes/SET_NOTES_LIST_HEIGHT',  0)
 
         setTimeout(()=>{
             store.dispatch("notes/getTagsList")
-            store.dispatch('notes/getTagsGroup')
+            store.dispatch("notes/getGroupInitial")
             store.commit("user/SHOW_NOTICE", {data: false})
             bus.emit("CLEAR_KAYWORD")
             bus.emit("MAKE_LIST_TOP")
@@ -140,15 +141,11 @@
 
 <style lang="scss" scoped>
     .home{
-        display: flex;
-        will-change: auto;
-        >div{
-            flex-shrink: 0;
-        }
         .home-left{
             position: relative;
+            float: left;
+            height: calc(100vh - 50px);
             background: #F6F8FC;
-
             .fold-catalog{
                 display: flex;
                 flex-direction: row-reverse;
@@ -199,6 +196,8 @@
             width: 2px;
             background: #F6F8FC;
             cursor: col-resize;
+            float: left;
+            height: 100vh;
             &:hover{
                 transform: scaleX(3);
                 background: #f5f5f5;
@@ -206,7 +205,7 @@
         }
 
         .home-right{
-            min-width: 600px;
+            float: left;
             .short-note{
                 padding: 10px 10px 0 10px;
             }

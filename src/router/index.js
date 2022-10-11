@@ -1,5 +1,7 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
+import { getToken } from "@/utils/auth.js"
 import Home from '../views/Home/Home.vue'
+// import Index from "../views/Index.vue"
 
 const routes = [
   {
@@ -19,6 +21,10 @@ const routes = [
     path: '/Register',
     name: 'Register',
     component: () => import('../views/Register.vue')
+  }, {
+    path: '/PrivacyAgreement',
+    name: 'PrivacyAgreement',
+    component: () => import('../views/PrivacyAgreement.vue')
   }, {
     path: '/BuyPage',
     name: 'BuyPage',

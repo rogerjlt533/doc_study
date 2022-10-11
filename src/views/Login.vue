@@ -11,12 +11,12 @@
                     <el-form-item label="" prop="password">
                         <el-input type="password" v-model="login.form.password" size="medium" placeholder="请输入密码"></el-input>
                     </el-form-item>
-                    <!--<el-form-item label="" prop="privacy">-->
-                    <!--    <div class="userAgreement">-->
-                    <!--        <el-checkbox v-model="login.form.privacy" label="我已阅读并接受"></el-checkbox>-->
-                    <!--        <a @click="showYinsi = true"> 隐私协议</a>-->
-                    <!--    </div>-->
-                    <!--</el-form-item>-->
+                    <el-form-item label="" prop="privacy">
+                        <div class="userAgreement">
+                            <el-checkbox v-model="login.form.privacy" label="我已阅读并接受"></el-checkbox>
+                            <a @click="showYinsi = true"> 隐私协议</a>
+                        </div>
+                    </el-form-item>
                 </el-form>
             </template>
             <template v-else-if="loginWay === 'sms'">
@@ -28,27 +28,26 @@
                         <el-input v-model="login.form.sms" autocomplete="off" placeholder="请输入短信验证码登录" class="mr10" style="width:190px;"></el-input>
                         <fcCode :value="login.form.emailMobile" @start="startSms"></fcCode>
                     </el-form-item>
-                    <!--<el-form-item label="" prop="privacy">-->
-                    <!--    <div class="userAgreement">-->
-                    <!--        <el-checkbox v-model="login.form.privacy" size="small" label="我已阅读并接受"></el-checkbox>-->
-                    <!--        <a @click="showYinsi = true"> 隐私协议</a>-->
-                    <!--    </div>-->
-                    <!--</el-form-item>-->
+                    <el-form-item label="" prop="privacy">
+                        <div class="userAgreement">
+                            <el-checkbox v-model="login.form.privacy" size="small" label="我已阅读并接受"></el-checkbox>
+                            <a @click="showYinsi = true"> 隐私协议</a>
+                        </div>
+                    </el-form-item>
                 </el-form>
             </template>
-            <el-button
-                    class="btn"
-                    color="#44445F"
+            <button class="water-ripple-btn btn"
                     @click="onlogin('loginForm')"
                     v-loading="disabled"
                     element-loading-background="rgba(0, 0, 0, 0.8)"
-            >登录</el-button>
+            >登录</button>
             <div class="login-way flex justify-between">
                 <p class="noneAccount" @click="router.replace({name:'Register'})">没有账号, <font>立即注册</font></p>
                 <p class="change" v-if="loginWay === 'password' && false" @click="loginWay = 'sms'">短信验证码登录</p>
                 <p class="change" v-else-if="loginWay === 'sms'" @click="loginWay = 'password'">账号密码登录</p>
             </div>
             <div class="other-login-way">
+                <!--                <p @click="shell.openExternal('https://fangcun.in')">了解方寸笔迹</p>-->
                 <div class="oauth-bg unselectable" @click="getWxQr">
                     <img data-v-14de1f73="" title="微信" alt="微信" src="@/assets/svgPath/wx.svg" class="oauth-btn">
                 </div>
@@ -76,9 +75,11 @@
     import { reactive, ref, unref } from "vue"
     import { useRouter, useRoute, onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
     import { useStore } from "vuex"
+    import { shell } from 'electron'
     import { getSmsApi, verifySmsApi, getWxQrApi, rotateWxApi } from "@/api/user"
-    import request from '@/utils/mainRequest'
-    import { setToken } from "@/utils/auth"
+    import { wxQrLoginApi } from "@/apiDesktop/user";
+    import { loginApi, getUserBaseApi } from '@/apiDesktop/user'
+    import { setToken, encryption } from "@/utils/auth"
     import text from "@/assets/js/yinsixieyi.js"
     import { ElNotification, ElMessage, ElLoading } from "element-plus"
     import fcCode from "@/components/element/fc-code.vue";
@@ -121,8 +122,8 @@
         form: {
             emailMobile: "",
             password: "",
-            sms: ""
-            // privacy: false
+            sms: "",
+            privacy: false
         },
         rules: {
             emailMobile: [
@@ -134,9 +135,9 @@
             sms: [
                 { required: true, message: '请输入短信验证码', trigger: ['blur', 'change'] }
             ],
-            // privacy: [
-            //     { validator: validateAccept, message: '请您仔细阅读 隐私协议 并接受', trigger: 'change' }
-            // ]
+            privacy: [
+                { validator: validateAccept, message: '请您仔细阅读 隐私协议 并接受', trigger: 'change' }
+            ]
         },
     });
 
@@ -182,18 +183,16 @@
             }
         })
     }
-    function refreshWx(random){
-        request({
-            api: 'wxQrLoginApi',
-            key: 'wxQrLoginApi',
-            data: { code: random }
-        }, (res) => {
-            if(res.status_code === 200){
-                wxLogin.show = false
-                closeWxQr()
-                loginCallBack(res)
-            }
+    async function refreshWx(random){
+        const res = await wxQrLoginApi({
+            code: random
         })
+        if(res.status_code === 200){
+
+            wxLogin.show = false
+            closeWxQr()
+            loginCallBack(res)
+        }
     }
     function closeWxQr(){
         clearInterval(wxTimer)
@@ -205,21 +204,16 @@
             mobile: login.form.emailMobile,
             password: login.form.password
         }
-        request({
-            api: "loginApi",
-            key: "loginApi",
-            data
-        }, (res) => {
-            disabled.value = false
-            if(res.status_code === 200){
-                loginCallBack(res)
-            }else{
-                ElMessage({
-                    message: res.message || "系统繁忙",
-                    type: "error"
-                })
-            }
-        })
+        const res = await loginApi(data)
+        disabled.value = false
+        if(res.status_code === 200){
+            loginCallBack(res)
+        }else{
+            ElMessage({
+                message: res.message || "系统繁忙",
+                type: "error"
+            })
+        }
     }
     function smsLogin(){
         verifySmsApi({
@@ -244,7 +238,6 @@
         setToken(res.data.token)
         res.data.id = res.data.user_hash
         store.commit('user/SET_USER_INFO', res.data)
-        store.dispatch('user/getUserBase')
         setTimeout(() => {
             router.replace({
                 name: "Home"
@@ -252,7 +245,6 @@
             loginLoading.close()
         },600)
     }
-
 </script>
 <script>
     let backUrl = ""
@@ -368,9 +360,13 @@
                 }
             }
             .btn{
+                display: block;
                 margin: 30px auto 0;
                 width: 300px;
                 height: 40px;
+                color: #fff;
+                border-radius: 4px;
+                background: #44445f;
             }
         }
         .userAgreement{

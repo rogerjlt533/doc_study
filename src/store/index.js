@@ -40,37 +40,51 @@ export default createStore({
 			};
 			state.notes = {
 				cachedNote: "",
-				notesListHeight: "calc(100vh - 196px)",
-				classifyObj: {
-					title: '我的笔记',
-					actived: 0,
-					collectionActived: null,
-					collectionType: null,
-					activedTag: null
+				notesListHeight: "calc(100vh - 208px)",
+				catalogState: {
+					showSelfCollection: false,
+					showTeamCollection: false,
+					showTags: false
 				},
-				notes:{
-					tag_id: undefined,
-					group_id: undefined,
-					collection_id: undefined,
-					trash: undefined,
-					today: undefined,
+				catalogActiveState: {
+					noteTypeActive: 1,
+					collectionActive: '',
+					tagActive: '',
+					tagGroupActive: '',
+					trashActive: false,
+					collectionTitle: '',
+					tagTitle: '',
+					tagGroupTitle: ''
+				},
+				notes: {
+					tag_id: '',
+					group_id: '',
+					collection_id: '',
+					trash: '',
 					note_type: 1,
 					sort: "desc"
 				},
-				writeNoteActive:{
-					active: 0
+				writeNoteState: {
+					active: '',
+					note: '',
+					collection_id: ''
 				},
 				editorCollection:{
 					checked_collection: "",
 					collection_id: "",
 				},
 				tagToCollectionId: "",
-				writeNote: [],
 				noteslist: [],
+				notesCount: 0,
+				writeNotesList: [],
 				tagsGroupList: [],
 				tagsAllList: [],
 				tagsTopList: [],
 				tagsList: [],
+				tagInitialList: {
+					pt: [],
+					fz: []
+				},
 				isFinish: true
 			};
 			state.collection = {

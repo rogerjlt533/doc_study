@@ -5,18 +5,19 @@
     <!--		</keep-alive>-->
     <!--		<component :is="Component" v-if="!$route.meta.keepAlive"/>-->
     <!--	</router-view>-->
-    <router-view></router-view>
+    <el-config-provider :locale="locale">
+        <router-view></router-view>
+    </el-config-provider>
 </template>
 
 <script setup>
-    import { computed, ref } from 'vue'
-    import { useStore } from 'vuex'
+    import { ref } from 'vue'
     import { checkVersionApi } from '@/apiDesktop/system'
-    import { getToken } from "@/utils/auth"
-    import { ElDialog } from "element-plus"
-    import { shell } from "electron";
+    import { ElConfigProvider } from "element-plus"
+    import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
-    const store = useStore()
+    const locale = ref(null)
+    locale.value = zhCn
 
 </script>
 

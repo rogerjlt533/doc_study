@@ -20,8 +20,7 @@
     import { ref, nextTick } from 'vue'
     import { useStore } from "vuex"
     import { ipcRenderer } from "electron"
-    import { handleContentHtml, handleHtmlTagSpace } from '../assets/js/processHtml'
-
+    import { handleContentHtml, handleHtmlTagSpace } from '@/assets/js/processHtml'
 
     const store = useStore()
     const matchReg = /\#(\S+?)?\s{1}/g
