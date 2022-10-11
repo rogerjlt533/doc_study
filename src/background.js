@@ -6,6 +6,9 @@ import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
 import * as remoteMain from '@electron/remote/main';
 import { autoUpdater } from "electron-updater"
 const path = require('path')
+const store = require('./store')
+
+console.log('store', store)
 
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
