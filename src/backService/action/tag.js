@@ -63,7 +63,7 @@ exports.group = async function (user_id, collection_id, keyword = '', note_type 
     }
     for (const index in tags) {
         tags[index].group_id = ''
-        tags[index].note_count = await tagService.getNoteCount(user_id, tags[index].id, collection_id)
+        tags[index].note_count = await tagService.getNoteCount(user_id, tags[index].id, collection_id, note_type)
     }
     tags.sort((a, b) => {
         return b.note_count - a.note_count
@@ -100,12 +100,12 @@ exports.groupInitial = async function (user_id, collection_id, keyword = '', not
     }
     for (const index in tags) {
         tags[index].group_id = ''
-        tags[index].note_count = await tagService.getNoteCount(user_id, tags[index].id, collection_id)
+        tags[index].note_count = await tagService.getNoteCount(user_id, tags[index].id, collection_id, note_type)
     }
     tags.sort((a, b) => {
         return b.note_count - a.note_count
     })
-    const data = await tagService.parseGroupByInitial(tags, user_id, collection_id)
+    const data = await tagService.parseGroupByInitial(tags, user_id, collection_id, note_type)
     return {status_code: 200, message: 'success', data}
 }
 

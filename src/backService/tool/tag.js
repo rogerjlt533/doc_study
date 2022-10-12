@@ -147,10 +147,11 @@ exports.noteTags = async function (note_id) {
  * 标签对应的笔记数
  * @param tag_id
  * @param collections
+ * @param note_type
  * @param group_id
  * @returns {Promise<*>}
  */
-exports.noteCount = async function (tag_id, collections = [], group_id = 'sum') {
+exports.noteCount = async function (tag_id, collections = [], note_type = 0, group_id = 'sum') {
     if (common.empty(tag_id)) {
         return 0
     }
@@ -168,6 +169,10 @@ exports.noteCount = async function (tag_id, collections = [], group_id = 'sum') 
     if (group_id !== 'sum') {
         condition.push('note_tag_relation.group_id=?')
         options.push(group_id)
+    }
+    if (!common.empty(note_type)) {
+        condition.push('notes.note_type=?')
+        options.push(note_type)
     }
     condition.push('notes.deleted_at is null and collections.deleted_at is null')
     sql = sql.replace('#CONDITION#', condition.join(' and '))

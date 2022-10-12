@@ -26,7 +26,7 @@ exports.pullRemoteCollection = async function (token) {
     if (sync_list.length > 0) {
         return false
     }
-    const collections = await httpTool.get(httpTool.sync_host + 'api/desktop/down_flow/collection', {}, {hk: token})
+    const collections = await httpTool.get(httpTool.sync_host + 'api/desktop/v2/down_flow/collection', {}, {hk: token})
     if (collections.code !== 200) {
         return false
     }
@@ -140,7 +140,7 @@ exports.processRemoteDeleted = async function (my_collection) {
  * @returns {Promise<*>}
  */
 exports.initCollectionDownQueue = async function (token, userid, data, logs) {
-    const {id, collection, color, user_id, sort_index, members, is_default, created_at, deleted_at} = data
+    const {id, collection, color, user_id, sort_index, members, is_default, created_at, updated_at, deleted_at} = data
     const remote_id = common.decode(id)
     const remote_userid = common.decode(user_id)
     let record = await collectionTool.remote(remote_id)
@@ -165,12 +165,15 @@ exports.initCollectionDownQueue = async function (token, userid, data, logs) {
         await collectionTool.setRemote(collection_id, remote_id)
     } else {
         collection_id = record.id
-        await collectionTool.edit(collection_id, collection, color, common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss'), 0)
+        if (common.compareTime(updated_at, record.updated_at) > 0) {
+            // 远程修改时间大于本地修改时间
+            await collectionTool.edit(collection_id, collection, color, common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss'), 0)
+        }
     }
     if (common.empty(collection_id)) {
         return {init_status: false, local_collection: collection_id, default_collection: 0}
     }
-    if (sort_index >= 0) {
+    if (common.compareTime(updated_at, record.updated_at) > 0 && sort_index >= 0) {
         await collectionTool.resort(userid, collection_id, sort_index, common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss'))
     }
     // sync_type=1 and sync_direct=1
@@ -241,7 +244,7 @@ exports.initCollection = async function (token, pub_key, remote_id) {
     for (const data of collections.data) {
         data.id = common.decode(data.id)
         data.user_id = common.decode(data.user_id)
-        const {id, user_id, collection, color, sort_index, created_at, deleted_at, members} = data
+        const {id, user_id, collection, color, sort_index, created_at, updated_at, deleted_at, members} = data
         let record = await collectionTool.remote(id)
         if (common.empty(record) && !common.empty(deleted_at)) {
             return false
@@ -255,12 +258,14 @@ exports.initCollection = async function (token, pub_key, remote_id) {
             }
         } else {
             collection_id = record.id
-            await collectionTool.edit(collection_id, collection, color, common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss'), 0)
+            if (common.compareTime(updated_at, record.updated_at) > 0) {
+                await collectionTool.edit(collection_id, collection, color, common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss'), 0)
+            }
         }
         if (common.empty(collection_id)) {
             continue
         }
-        if (sort_index >= 0) {
+        if (common.compareTime(updated_at, record.updated_at) > 0 && sort_index >= 0) {
             await collectionTool.resort(user_id, collection_id, sort_index, common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss'))
         }
         // 成员同步
@@ -845,6 +850,7 @@ exports.pushLocalCollection = async function (token, pub_key, user_id, collectio
     if (collection_record.user_id !== user_id) {
         return true
     }
+    await collectionTool.editUpdateAt(collection_id)
     const sync_id = await syncTool.create(user_id, 1, 2, {collection_id})
     const {relate, sort_index} = await collectionTool.userIndex(user_id, collection_id)
     const up_params = {

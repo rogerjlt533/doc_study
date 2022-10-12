@@ -9,10 +9,11 @@ exports.tagTool = tagTool
  * @param user_id
  * @param tag_id
  * @param collection_id
+ * @param note_type
  * @param group_id
  * @returns {Promise<*>}
  */
-exports.getNoteCount = async function (user_id, tag_id, collection_id = 0, group_id = 'sum') {
+exports.getNoteCount = async function (user_id, tag_id, collection_id = 0, note_type = 0, group_id = 'sum') {
     if (common.empty(user_id)) {
         return 0
     }
@@ -31,7 +32,7 @@ exports.getNoteCount = async function (user_id, tag_id, collection_id = 0, group
     if (collections.length === 0) {
         return 0
     }
-    return await tagTool.noteCount(tag_id, collections, group_id)
+    return await tagTool.noteCount(tag_id, collections, note_type, group_id)
 }
 
 /**
@@ -39,9 +40,10 @@ exports.getNoteCount = async function (user_id, tag_id, collection_id = 0, group
  * @param tags
  * @param user_id
  * @param collection_id
+ * @param note_type
  * @returns {Promise<T[]>}
  */
-exports.parseGroup = async function (tags, user_id, collection_id) {
+exports.parseGroup = async function (tags, user_id, collection_id, note_type = 0) {
     let list = {}, groups = {}
     tags.forEach(function (item) {
         const tag_id = item.id
@@ -63,7 +65,7 @@ exports.parseGroup = async function (tags, user_id, collection_id) {
         }
         const unit = list[tag_id]
         const collections = common.empty(collection_id) ? [] : [collection_id]
-        unit.note_count = await tagTool.noteCount(tag_id, collections, group_tagid)
+        unit.note_count = await tagTool.noteCount(tag_id, collections, note_type, group_tagid)
         unit.group_id = common.encode(group_tagid)
         groups[group_tagid].list.push(unit)
     }
@@ -84,9 +86,10 @@ exports.parseGroup = async function (tags, user_id, collection_id) {
  * @param tags
  * @param user_id
  * @param collection_id
+ * @param note_type
  * @returns {Promise<Array>}
  */
-exports.parseGroupByInitial = async function (tags, user_id, collection_id) {
+exports.parseGroupByInitial = async function (tags, user_id, collection_id, note_type = 0) {
     let list = {}, default_list = {}, groups = {}, sub_groups = {}, out_groups = []
     tags.forEach(function (item) {
         const tag_id = item.id
@@ -122,7 +125,7 @@ exports.parseGroupByInitial = async function (tags, user_id, collection_id) {
         }
         const unit = list[tag_id]
         const collections = common.empty(collection_id) ? [] : [collection_id]
-        unit.note_count = await tagTool.noteCount(tag_id, collections, group_tagid)
+        unit.note_count = await tagTool.noteCount(tag_id, collections, note_type, group_tagid)
         unit.group_id = common.encode(group_tagid)
         groups[group_tagid].list.push(unit)
     }
