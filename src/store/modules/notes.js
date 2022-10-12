@@ -143,6 +143,7 @@ export default {
         //     state.editorCollection.checked_collection = checked_collection === undefined ? state.editorCollection.checked_collection : checked_collection;
         //     state.editorCollection.collection_id = collection_id === undefined ? state.editorCollection.collection_id : collection_id;
         // },
+
         // 笔记筛选长短笔记
         FILTER_NOTES_TYPE(state, { type = !state.notes.note_type }){
             state.notes.note_type = type;
@@ -161,20 +162,25 @@ export default {
             if(state.notes.trash) return
             if(note_type === 1){
                 state.notes.sort === "desc" ? state.noteslist.unshift(data) : state.noteslist.push(data)
+                state.catalogActiveState.short_note_count ++
                 return
             }
             if(note_type === 2){
                 data.desc = removeHtmlTag(data.note)
+                state.catalogActiveState.long_note_count --
                 state.notes.sort === "desc" ? state.writeNotesList.unshift(data) : state.writeNotesList.push(data)
             }
         },
         REMOVE_NOTE(state, {index, note_type}){
+            console.log(index, note_type)
             if(note_type === 1){
                 state.noteslist.splice(index, 1)
+                state.catalogActiveState.short_note_count --
                 return
             }
             if(note_type === 2){
                 state.writeNotesList.splice(index, 1);
+                state.catalogActiveState.long_note_count --
             }
         },
         EDIT_NOTE(state, {data, index, noteType = 1}){
@@ -418,7 +424,7 @@ export default {
                 commit("REMOVE_NOTE", {index, note_type})
                 dispatch("getTagsList")
                 dispatch("getTagsAllList")
-                dispatch('getTagsGroup')
+                dispatch('getGroupInitial')
                 return true
             }
         },
@@ -473,7 +479,10 @@ export default {
                 note_id: params.note_id
             })
             if(res.status_code === 200){
-                commit("REMOVE_NOTE", { index: params.index });
+                commit("REMOVE_NOTE", {
+                    index: params.index,
+                    note_type: params.note_type
+                })
             }
         },
         // 回收站删除笔记
@@ -483,7 +492,10 @@ export default {
                 note_id: params.note_id
             })
             if(res.status_code === 200){
-                commit("REMOVE_NOTE", { index: params.index });
+                commit("REMOVE_NOTE", {
+                    index: params.index,
+                    note_type: params.note_type
+                })
             }
         },
 

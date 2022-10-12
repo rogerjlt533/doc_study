@@ -20,9 +20,10 @@ export let writeTags = ref([])
 export let cursorPosition = ref(0)
 export let quoteArray = []
 export let writeInfo = reactive({
-    create_time: '',
-    update_time: '',
-    size_count: ''
+    created_at: '',
+    updated_at: '',
+    size_count: '',
+    status: 'saved',  // saved:已保存  failed:失败的  loading:保存中
 })
 
 
@@ -97,14 +98,16 @@ export function writeEditor(){
                         //     return true
                         // }
                         'Cmd-s'() {
-                            if (editTime) clearTimeout(editTime);
+                            if (editTime) clearTimeout(editTime)
+                            writeInfo.status = 'loading'
                             editTime = setTimeout(() => {
                                 edit(editor)
                             }, 500)
                             return true
                         },
                         'Ctrl-s'() {
-                            if (editTime) clearTimeout(editTime);
+                            if (editTime) clearTimeout(editTime)
+                            writeInfo.status = 'loading'
                             editTime = setTimeout(() => {
                                 edit(editor)
                             }, 500)
@@ -134,16 +137,10 @@ export function writeEditor(){
             }
         },
         onUpdate({ editor }) {
-            // getTableOfContents(editor)
-            // console.log(editor.getJSON())
-
-            if (timer) clearTimeout(timer);
+            if (timer) clearTimeout(timer)
             timer = setTimeout(() => {
+                writeInfo.status = 'loading'
                 writeInfo.size_count = editor.storage.characterCount.characters()
-                // const json = editor.getJSON()
-                // const html = editor.getHTML()
-                // handleFileOperation.saveFile(json, html).then()
-
                 edit(editor)
             }, 1500);
         },
@@ -167,7 +164,7 @@ export function getEditorStatus(item, index){
     isEdit = true
 }
 
-async function edit(editor){
+function edit(editor){
     let contentJson = editor.getJSON()
     let contentHtml = editor.getHTML()
     let params = {
@@ -180,12 +177,20 @@ async function edit(editor){
         tag_list: tagTool.json2List(contentJson),
         noteType: 2
     }
-    const res = await store.dispatch("notes/editNote", params)
-    if(res.status_code === 200){
-        writeInfo.update_time = res.data.updated_time
-        writeTags.value = res.data.tags
-        return true
-    }
+    return new Promise((resolve, reject) => {
+        store.dispatch("notes/editNote", params).then((res) => {
+            if(res.status_code === 200){
+                writeInfo.status = 'saved'
+                writeInfo.update_time = res.data.updated_time
+                writeTags.value = res.data.tags
+                resolve(true)
+            }else{
+                writeInfo.status = 'saved'
+            }
+        }).catch((err) => {
+            writeInfo.status = 'failed'
+        })
+    })
 }
 
 export function getTableOfContents(editor){

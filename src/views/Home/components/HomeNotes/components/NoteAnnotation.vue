@@ -58,7 +58,8 @@
         border-left: 2px solid #ccc;
         margin-top: 10px;
         padding: 6px;
-        background: #fafafc;
+        background: #eeeeee;
+        border-radius: 4px;
         .quote{
             color: $purple;
             font-size: 14px;

@@ -39,7 +39,7 @@
                 </div>
                 <div class="toolbar-options">
                     <span class="size_count">{{writeInfo.size_count}}字</span>
-                    <svgFont class="font width16" icon="cangku" @click="isShowShortNote = !isShowShortNote; isShowTableOfContents = false"></svgFont>
+                    <svgFont class="font width16" icon="cangku" @click="bindNoteLibrary"></svgFont>
                     <svgFont class="font" icon="dagang" @click="isShowTableOfContents = !isShowTableOfContents; isShowShortNote = false"></svgFont>
                 </div>
             </div>
@@ -58,7 +58,7 @@
         </div>
 
         <transition name="note-show">
-            <notesLibrary v-show="isShowShortNote"></notesLibrary>
+            <notesLibrary ref="notesLibraryRef" v-show="isShowShortNote"></notesLibrary>
         </transition>
         <transition name="note-show">
             <outline-component :outline="headingList" v-show="isShowTableOfContents"></outline-component>
@@ -182,6 +182,15 @@
         store.commit('notes/SET_WRITE_NOTE_STATE', {
             active: item.id
         })
+    }
+
+    // 点击笔记仓库
+    const notesLibraryRef = ref(null)
+    function bindNoteLibrary(){
+        isShowShortNote.value = !isShowShortNote.value
+        isShowTableOfContents.value = false
+
+        notesLibraryRef.value.getNoteList()
     }
 
     onMounted(() => {

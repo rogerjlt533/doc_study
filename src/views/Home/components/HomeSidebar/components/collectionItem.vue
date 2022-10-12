@@ -62,9 +62,8 @@
 
     // computed
     const collectionActive = computed(() => store.state.notes.catalogActiveState.collectionActive)
-    let noteTypeActive = computed(() => store.state.notes.catalogActiveState.noteTypeActive)
-    let projectListSelf = computed(() => store.state.collection.projectListSelf)
-    let projectListTeam = computed(() => store.state.collection.projectListTeam)
+    const projectListSelf = computed(() => store.state.collection.projectListSelf)
+    const projectListTeam = computed(() => store.state.collection.projectListTeam)
     const collectionList = computed({
         get: () => props.type === 'self' ? projectListSelf.value : projectListTeam.value,
         set: (value) => {
@@ -118,9 +117,7 @@
             tagGroupTitle: '',
             tagTitle: '',
             tagActive: '',
-            trashActive: '',
-            short_note_count: item.short_note_count || 0,
-            long_note_count: item.long_note_count || 0
+            trashActive: ''
         })
         bus.emit("changeNotesListHeight")
 
