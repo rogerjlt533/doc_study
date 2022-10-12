@@ -1,5 +1,6 @@
 const common = require('../tool/common');
 const tagTool = require('../tool/tag');
+const syncTool = require('../tool/sync');
 const collectionTool = require('../tool/collection')
 
 exports.tagTool = tagTool
@@ -149,4 +150,16 @@ exports.parseGroupByInitial = async function (tags, user_id, collection_id, note
         out_groups.push(sub_item)
     }
     return out_groups
+}
+
+/**
+ * 上传标签指定状态
+ * @param user_id
+ * @param tag_id
+ * @param is_top
+ * @returns {Promise<void>}
+ */
+exports.uploadTagTop = async function (user_id, tag_id, is_top) {
+    const params = {tag_id, note_status: is_top}
+    await syncTool.create(user_id, 31, 2, params)
 }
