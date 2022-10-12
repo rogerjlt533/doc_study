@@ -943,3 +943,61 @@ exports.initNoteQuoteQueue = async function (token, pub_key, user_id, record) {
     }
     return quotes
 }
+
+/**
+ * 下行标签置顶状态同步
+ * @param token
+ * @returns {Promise<boolean>}
+ */
+exports.pullTagTop = async function (token) {
+    const user_id = common.decodeDesktop(token)
+    const result_pull_tags = await httpTool.get(httpTool.sync_host + 'api/desktop/tags', {}, {hk: token})
+    if (result_pull_tags.code !== 200) {
+        return false
+    }
+    if (common.empty(result_pull_tags.data)) {
+        return false
+    }
+    for (const item of result_pull_tags.data) {
+        const tag = item?.tag
+        const is_top = item?.is_top
+        const record = await tagTool.findByTag(user_id, tag)
+        if (common.empty(record)) {
+            continue
+        }
+        const sync_record = await syncTool.getUploadTagTop(user_id, record.id)
+        if (!common.empty(sync_record)) {
+            continue
+        }
+        if (record.is_top === parseInt(is_top)) {
+            continue
+        }
+        await tagTool.setTopStatus(tag_id, parseInt(is_top))
+    }
+}
+
+/**
+ * 上行标签置顶状态同步
+ * @param token
+ * @returns {Promise<boolean>}
+ */
+exports.pushLocalTagTop = async function (token) {
+    const user_id = common.decodeDesktop(token)
+    const list = await syncTool.uploadTagTopList(user_id)
+    if (common.empty(list)) {
+        return false
+    }
+    await syncTool.deleteBatch("sync_type=31 and sync_direct=2 and user_id=" + user_id)
+    const tags = []
+    for (const item of list) {
+        const tag_record = await tagTool.get(item?.tag_id)
+        if (common.empty(tag_record)) {
+            continue
+        }
+        tags.push({tag: tag_record.tag, is_top: item.note_status})
+    }
+    if (tags.length > 0) {
+        await httpTool.post(httpTool.sync_host + 'api/desktop/up/tags', {tags: JSON.stringify(tags)}, {hk: token})
+    }
+    return true
+}

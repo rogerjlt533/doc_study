@@ -111,13 +111,16 @@ exports.groupInitial = async function (user_id, collection_id, keyword = '', not
 
 /**
  * 解除标签置顶
+ * @param user_id
  * @param tag_id
  * @returns {Promise<*>}
  */
-exports.normal = async function (tag_id) {
+exports.normal = async function (user_id, tag_id) {
+    user_id = common.decode(user_id)
     tag_id = common.decode(tag_id)
     const res = await tagService.tagTool.setTopStatus(tag_id, 0)
     if (res) {
+        await tagService.uploadTagTop(user_id, tag_id, 0)
         return {status_code: 200, message: 'success', data: {}}
     }
     return {status_code: 400, message: '解除失败', data: {}}
@@ -125,13 +128,16 @@ exports.normal = async function (tag_id) {
 
 /**
  * 设置标签置顶
+ * @param user_id
  * @param tag_id
  * @returns {Promise<*>}
  */
-exports.top = async function (tag_id) {
+exports.top = async function (user_id, tag_id) {
+    user_id = common.decode(user_id)
     tag_id = common.decode(tag_id)
     const res = await tagService.tagTool.setTopStatus(tag_id, 1)
     if (res) {
+        await tagService.uploadTagTop(user_id, tag_id, 1)
         return {status_code: 200, message: 'success', data: {}}
     }
     return {status_code: 400, message: '操作失败', data: {}}

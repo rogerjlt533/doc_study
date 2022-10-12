@@ -315,17 +315,6 @@ exports.getUploadTagTop = async function (user_id, tag_id) {
 }
 
 /**
- * tag top 队列
- * @param user_id
- * @param tag_id
- * @returns {Promise<*>}
- */
-exports.getUploadTagTop = async function (user_id, tag_id) {
-    const sql = 'select * from syncs where user_id=? and sync_type=31 and sync_direct=2 and tag_id=? order by status desc'
-    return await sqlite.get(sql, [user_id, tag_id])
-}
-
-/**
  *
  * @param user_id
  * @returns {Promise<void>}

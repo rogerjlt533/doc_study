@@ -153,7 +153,7 @@ exports.parseGroupByInitial = async function (tags, user_id, collection_id, note
 }
 
 /**
- * 上传标签指定状态
+ * 上传标签置顶状态
  * @param user_id
  * @param tag_id
  * @param is_top
