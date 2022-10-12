@@ -553,7 +553,7 @@ export default {
         getGroupInitial({state, commit, rootState}, params){
             return new Promise((resolve, reject) => {
                 let data = {
-                    user_id:  rootState.user.userInfo.id,
+                    user_id: rootState.user.userInfo.id,
                     collection_id: state.notes.collection_id,
                     keyword: params?.keyword || ''
                 }
@@ -567,9 +567,11 @@ export default {
 
 
         // 置顶标签
-        async setTopTags({commit}, params){
-            console.log('setTP',params)
-            const res = await setTagTopApi(params)
+        async setTopTags({commit, rootState}, params){
+            const res = await setTagTopApi({
+                user_id: rootState.user.userInfo.id,
+                tag_id: params.tag_id
+            })
             console.log('setTP',res)
             if(res.status_code === 200){
                 commit("SET_TOP_TAGS", params.tag_id)
@@ -577,9 +579,11 @@ export default {
         },
 
         // 取消置顶标签
-        async removeTopTags({commit}, params){
-            console.log('setTP',params)
-            const res = await setTagNormalApi(params)
+        async removeTopTags({commit, rootState}, params){
+            const res = await setTagNormalApi({
+                user_id: rootState.user.userInfo.id,
+                tag_id: params.tag_id
+            })
             console.log('setTP',res)
             if(res.status_code === 200){
                 commit("REMOVE_TOP_TAGS", params.tag_id)

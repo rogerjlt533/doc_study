@@ -6,10 +6,6 @@ import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
 import * as remoteMain from '@electron/remote/main';
 import { autoUpdater } from "electron-updater"
 const path = require('path')
-const store = require('./store')
-
-console.log('store', store)
-
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 app.name = '方寸笔迹-IdeaTrip'
@@ -46,7 +42,7 @@ function createWindow() {
       nodeIntegration: true,
       enableRemoteModule: true,
       nodeIntegrationInWorker: true,
-      contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
+      contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION
     },
     backgroundColor: '#ffffff',
     show: false // newBrowserWindow创建后先隐藏
@@ -109,14 +105,16 @@ ipcMain.on('updateWin', () => {
 function createSubWin(){
   subWin = new BrowserWindow({
     width: 600,
-    minWidth: 60,
+    minWidth: 200,
     height: 60,
+    maxHeight: 60,
     frame: false,
     show: false,
+    backgroundColor: '#f5f5f5',
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true,
-      contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION
+      contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
     }
   })
 
@@ -159,6 +157,16 @@ if (!gotTheLock) {
     }
   })
 }
+
+
+/**
+ * 两个渲染进程之间的通信
+ * triggerSync => 触发同步方法
+ */
+ipcMain.handle('triggerSync', () => {
+  subWin.webContents.send('listenSync')
+})
+
 
 
 // Quit when all windows are closed.

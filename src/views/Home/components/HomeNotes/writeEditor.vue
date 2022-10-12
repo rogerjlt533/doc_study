@@ -32,10 +32,10 @@
             <div class="note-toolbar">
                 <div class="write-info">
                     <svgFont icon="create" class="color-9 mr6"></svgFont>
-                    <span class="update-time mr20">{{writeInfo.updated_at}}</span>
-                    <el-icon v-if="writeInfo.status === 'saved'" class="color-success"><SuccessFilled /></el-icon>
-                    <el-icon v-else-if="writeInfo.status === 'loading'" class="is-loading color-9"><Loading /></el-icon>
-                    <el-icon v-else-if="writeInfo.status === 'failed'" class="color-failed"><WarningFilled /></el-icon>
+                    <span class="update-time mr10">{{writeInfo.updated_at}}</span>
+                    <span v-if="writeInfo.status === 'saved'" class="color-success font-12">已保存</span>
+                    <span v-else-if="writeInfo.status === 'loading'" class="is-loading color-9 font-12">保存中</span>
+                    <span v-else-if="writeInfo.status === 'failed'" class="color-failed font-12">保存失败</span>
                 </div>
                 <div class="toolbar-options">
                     <span class="size_count">{{writeInfo.size_count}}字</span>
@@ -116,11 +116,12 @@
     }
     // 读取笔记
     function readNoteDetail(item, index){
+        console.log('item', item)
         getEditorStatus(item, index)
         setNoteState(item)
         writeTags.value = item.tags
         writeInfo.size_count = editor.value.storage.characterCount.characters()
-        writeInfo.updated_at = item.updated_at
+        writeInfo.updated_at = item.updated_time
         writeInfo.created_at = item.created_at
         let quoteArr = item.quote ? item.quote.map(item => item.id) : []
         for(let i = 0; i < quoteArr.length; i ++){
@@ -138,30 +139,40 @@
             contentHtml: '<p></p>',
             note_type: 2
         }
-        const res = await store.dispatch("notes/addNotes", params)
-        getEditorStatus(res.data, 0)
-        setNoteState(res.data)
+        store.dispatch("notes/addNotes", params).then((res) => {
+            let data = res.data
+            writeInfo.updated_at = data.updated_time
+            writeInfo.created_at = data.created_at
+
+            getEditorStatus(data, 0)
+            setNoteState(data)
+        })
     }
 
     // 右击笔记
     let rightClickNote = null
     let rightClickNoteIndex = null
+    const isTrash = computed(() => store.state.notes.catalogActiveState.trashActive)
     function handleRightClick(note, index){
         let menu = new Menu()
         rightClickNote = note
         rightClickNoteIndex = index
 
-        // menu.append(new MenuItem({ label: '📝 编辑', click: editNote }))
-        // menu.append(new MenuItem({ label: '💬 引用', click: annotation }))
-        // menu.append(new MenuItem({ label: '📄 复制', role: 'copy' }))
-        // menu.append(new MenuItem({ label: '📅 笔记历史', click: getNoteHistory }))
-        // menu.append(new MenuItem({ type: 'separator' }))
-        menu.append(new MenuItem({ label: '🗑 扔到废纸篓', click: moveTrashCan }))
+        if(isTrash.value){
+            menu.append(new MenuItem({ label: '🗑 删除笔记', click: deleteNote }))
+        }else{
+            // menu.append(new MenuItem({ label: '📝 编辑', click: editNote }))
+            // menu.append(new MenuItem({ label: '💬 引用', click: annotation }))
+            // menu.append(new MenuItem({ label: '📄 复制', role: 'copy' }))
+            // menu.append(new MenuItem({ label: '📅 笔记历史', click: getNoteHistory }))
+            // menu.append(new MenuItem({ type: 'separator' }))
+            menu.append(new MenuItem({ label: '🗑 扔到废纸篓', click: moveTrashCan }))
+        }
 
         menu.popup()
     }
 
-    // 删除该笔记
+    // 废纸篓该笔记
     function moveTrashCan(){
         fcDialog({
             title: '提示',
@@ -171,8 +182,26 @@
                 id: rightClickNote.id,
                 note_type: rightClickNote.note_type,
                 index: rightClickNoteIndex
+            }).then((res) => {
+                initNoteData()
             })
             store.dispatch("user/getUserBase");
+        }).catch(()=>{})
+    }
+    // 删除该笔记
+    function deleteNote(){
+        fcDialog({
+            title: '提示',
+            message: "确定将这条笔记永久删除吗?",
+        }).then(() => {
+            store.dispatch("notes/deleteNote",{
+                note_id: rightClickNote.id,
+                index: rightClickNoteIndex,
+                note_type: 2
+            }).then((res) => {
+                initNoteData()
+            })
+            store.dispatch("user/getUserBase")
         }).catch(()=>{})
     }
 

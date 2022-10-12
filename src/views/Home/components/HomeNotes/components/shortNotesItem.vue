@@ -195,9 +195,10 @@
             emit("deleteNote")
             store.dispatch("notes/removeNote",{
                 id: props.item.id,
-                index: props.index
+                index: props.index,
+                note_type: 1
             })
-            store.dispatch("user/getUserBase");
+            store.dispatch("user/getUserBase")
         }).catch(()=>{})
     }
 
@@ -225,7 +226,8 @@
     function recoverNote(){
         store.dispatch("notes/recoverNote",{
             note_id: props.item.id,
-            index: props.index
+            index: props.index,
+            note_type: 1
         })
         store.dispatch("user/getUserBase");
     }
@@ -234,7 +236,8 @@
         emit("deleteNote")
         store.dispatch("notes/deleteNote",{
             note_id: props.item.id,
-            index: props.index
+            index: props.index,
+            note_type: 1
         })
         store.dispatch("user/getUserBase");
     }

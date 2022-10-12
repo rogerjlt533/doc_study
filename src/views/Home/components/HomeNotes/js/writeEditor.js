@@ -99,7 +99,6 @@ export function writeEditor(){
                         // }
                         'Cmd-s'() {
                             if (editTime) clearTimeout(editTime)
-                            writeInfo.status = 'loading'
                             editTime = setTimeout(() => {
                                 edit(editor)
                             }, 500)
@@ -107,7 +106,6 @@ export function writeEditor(){
                         },
                         'Ctrl-s'() {
                             if (editTime) clearTimeout(editTime)
-                            writeInfo.status = 'loading'
                             editTime = setTimeout(() => {
                                 edit(editor)
                             }, 500)
@@ -142,7 +140,7 @@ export function writeEditor(){
                 writeInfo.status = 'loading'
                 writeInfo.size_count = editor.storage.characterCount.characters()
                 edit(editor)
-            }, 1500);
+            }, 500);
         },
         onFocus(){
             handleTargetName(".write-content")
@@ -165,6 +163,7 @@ export function getEditorStatus(item, index){
 }
 
 function edit(editor){
+    writeInfo.status = 'loading'
     let contentJson = editor.getJSON()
     let contentHtml = editor.getHTML()
     let params = {
@@ -181,7 +180,7 @@ function edit(editor){
         store.dispatch("notes/editNote", params).then((res) => {
             if(res.status_code === 200){
                 writeInfo.status = 'saved'
-                writeInfo.update_time = res.data.updated_time
+                writeInfo.updated_at = res.data.updated_time
                 writeTags.value = res.data.tags
                 resolve(true)
             }else{
