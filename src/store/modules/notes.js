@@ -167,7 +167,7 @@ export default {
             }
             if(note_type === 2){
                 data.desc = removeHtmlTag(data.note)
-                state.catalogActiveState.long_note_count --
+                state.catalogActiveState.long_note_count ++
                 state.notes.sort === "desc" ? state.writeNotesList.unshift(data) : state.writeNotesList.push(data)
             }
         },
@@ -269,7 +269,7 @@ export default {
 
         // 历史笔记恢复
         RECOVERY_HISTORY(state, data){
-            let index = state.noteslist.findIndex(item => item.id == data.id);
+            let index = state.noteslist.findIndex(item => item.id === data.id);
             state.noteslist[index].note = data.note;
         },
         // 缓存当前笔记
@@ -403,10 +403,11 @@ export default {
                 commit("ADD_NOTE", {note_type: noteType, data: res.data})
                 // 判断是否有新的tag添加了进来
                 if(res.data.tags.length > 0){
-                    // commit("ADD_NEW_TAGS", res.data.tags)
-                    dispatch("getTagsList")
-                    dispatch("getTagsAllList")
-                    dispatch('getTagsGroup')
+                    setTimeout(() => {
+                        dispatch("getTagsList")
+                        dispatch("getTagsAllList")
+                        dispatch('getGroupInitial')
+                    })
                 }
                 return res
             }
@@ -414,19 +415,26 @@ export default {
         },
 
         // 删除笔记列表
-        async removeNote({commit, dispatch, rootState}, params){
+        removeNote({commit, dispatch, rootState}, params){
             const user_id = rootState.user.userInfo.id
             const note_id = params.id
             const note_type = params.note_type
             const index = params.index
-            const res = await removeNoteApi({user_id, note_id})
-            if(res.status_code === 200){
-                commit("REMOVE_NOTE", {index, note_type})
-                dispatch("getTagsList")
-                dispatch("getTagsAllList")
-                dispatch('getGroupInitial')
-                return true
-            }
+
+            return new Promise((resolve, reject) => {
+                removeNoteApi({user_id, note_id}).then((res) => {
+                    resolve(res)
+                    if(res.status_code === 200){
+                        commit("REMOVE_NOTE", {index, note_type})
+
+                        setTimeout(() => {
+                            dispatch("getTagsList")
+                            dispatch("getTagsAllList")
+                            dispatch('getGroupInitial')
+                        })
+                    }
+                })
+            })
         },
 
         // 修改笔记
@@ -447,9 +455,11 @@ export default {
                     if(res.status_code === 200){
                         commit('EDIT_NOTE', { data: res.data, index: params.index, noteType: params.noteType })
                         if(res.data.tags.length > 0){
-                            dispatch("getTagsList")
-                            dispatch("getTagsAllList")
-                            dispatch('getTagsGroup')
+                            setTimeout(() => {
+                                dispatch("getTagsList")
+                                dispatch("getTagsAllList")
+                                dispatch('getGroupInitial')
+                            })
                         }
                         resolve(res)
                     }else{
@@ -496,6 +506,7 @@ export default {
                     index: params.index,
                     note_type: params.note_type
                 })
+                return res
             }
         },
 
@@ -511,15 +522,6 @@ export default {
                     }
                 })
             })
-            // const res = await getTagListApi({
-            //     user_id: rootState.user.userInfo.id,
-            //     collection_id: state.notes.collection_id
-            //     // collection_id: state.tagToCollectionId
-            // })
-            // console.log("获取tag接口", res)
-            // if(res.status_code === 200){
-            //     commit("SET_TAGS_LIST", res.data)
-            // }
         },
         // 获取所有标签
         async getTagsAllList({state, commit, rootState}, params){
@@ -532,13 +534,6 @@ export default {
                     }
                 })
             })
-            // const res = await getTagListApi({
-            //     user_id: rootState.user.userInfo.id
-            // })
-            // console.log("获取tag ALL接口")
-            // if(res.status_code === 200){
-            //     commit("SET_TAGS_ALL_LIST", res.data)
-            // }
         },
         // 获取标签组
         async getTagsGroup({state, commit, rootState}, params){
@@ -552,15 +547,6 @@ export default {
                     }
                 })
             })
-            // const res = await getGroupListApi({
-            //     user_id: rootState.user.userInfo.id,
-            //     collection_id: state.notes.collection_id
-            //     // collection_id: state.tagToCollectionId
-            // })
-            // console.log("获取tag group 接口", res)
-            // if(res.status_code === 200){
-            //     commit("SET_TAGS_GROUP", res.data)
-            // }
         },
 
         // 根据分母获取标签

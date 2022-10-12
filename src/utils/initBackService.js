@@ -1,10 +1,14 @@
 import { getToken } from "@/utils/auth"
 import { handleLoopCall } from "@/utils/tools"
-import store from "@/store/index.js"
+import store from "@/store"
 import { computed, watch } from "vue"
 import { pullRemoteNoteQueueApi, processDownNoteApi, processDownImageApi, initCollectionNotePushQueueApi, processNotePushQueueApi, clearCompleteCollectionQueueApi, autoClearCollectionQueueApi } from '@/apiDesktop/sync'
 import { refreshProInfoApi } from '@/apiDesktop/user'
-import { fillTagInitialApi } from "@/apiDesktop/tag";
+import { fillTagInitialApi } from "@/apiDesktop/tag"
+
+// const Store = require('electron-store')
+// const electronStore = new Store()
+// const vuex = electronStore.get('vuex')
 
 const migration = require('service/tool/migration.js')
 
@@ -17,7 +21,7 @@ export const initMigration = async () => {
     await handleClearCompleteCollectionQueue()
     console.log('清理上传数据完成')
 
-    // initSync()
+    initSync()
 }
 // 执行清理已完成的同步记录
 
@@ -28,6 +32,8 @@ watch(() => user_hash.value, () => {
     initSync()
 })
 export const initSync = () => {
+    console.log('getToken', getToken())
+    console.log('user_hash', user_hash.value)
     if(!getToken() || !user_hash.value) return false
 
     setTimeout(() => {
@@ -49,10 +55,10 @@ export const initSync = () => {
         handlePullRemoteNoteQueue()
         handleProcessDownNote()
 
-        store.dispatch('collection/getCollection', { page: 1, size: 100 })
+        store.dispatch('collection/getCollection')
         store.dispatch('user/getUserBase')
         store.dispatch("notes/getTagsList")
-        store.dispatch('notes/getTagsGroup')
+        store.dispatch('notes/getGroupInitial')
     }, 30 * 1000)
 
     setInterval(() => {
@@ -72,10 +78,10 @@ function initBasicsData(){
         func: () => {
             handlePullRemoteNoteQueue()
             handleProcessDownNote()
-            store.dispatch('collection/getCollection', { page: 1, size: 100 })
+            store.dispatch('collection/getCollection')
             store.dispatch('user/getUserBase')
             store.dispatch("notes/getTagsList")
-            store.dispatch('notes/getTagsGroup')
+            store.dispatch('notes/getGroupInitial')
         },
         startCount: 0,
         endCount: 8,
