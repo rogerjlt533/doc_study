@@ -1,6 +1,6 @@
 import { computed, ref } from "vue"
 import store from "@/store/index.js"
-import { closeTips } from "@/lib/tipsButton"
+import { closeTips } from "@/components/tipsButton"
 import dependence from './dependence'
 import { Editor } from '@tiptap/vue-3'
 import { Extension } from '@tiptap/core'

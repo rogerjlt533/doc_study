@@ -84,8 +84,9 @@
 
     const store = useStore()
 
+    defineExpose({ getNoteList })
+
     onMounted(() => {
-        getNoteList()
         getTagList()
     })
 

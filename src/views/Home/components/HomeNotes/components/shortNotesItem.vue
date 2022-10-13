@@ -150,7 +150,7 @@
             menu.append(new MenuItem({ label: '📝 编辑', click: editNote }))
             menu.append(new MenuItem({ label: '💬 引用', click: annotation }))
             menu.append(new MenuItem({ label: '📄 复制', role: 'copy' }))
-            menu.append(new MenuItem({ label: '📅 笔记历史', click: getNoteHistory }))
+            // menu.append(new MenuItem({ label: '📅 笔记历史', click: getNoteHistory }))
             menu.append(new MenuItem({ type: 'separator' }))
             menu.append(new MenuItem({ label: '🗑 扔到废纸篓', click: moveTrashCan }))
         }

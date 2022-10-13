@@ -60,21 +60,13 @@ export function deepClone (obj) {
     return o
 }
 
-/**
- * 防抖函数
- *
- * @param {Function} func 要执行的回调函数
- * @param {Number} wait 延时的时间
- */
-let timeout = null
-export function debounceFun(func, wait = 500){
-    if (timeout !== null) {
-        clearTimeout(timeout)
-        timeout = null
+// 防抖函数
+export function debounceFun(fn, delay = 500){
+    let timer = null;
+    return function (){
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(fn, delay);
     }
-    timeout = setTimeout(() => {
-        typeof func === 'function' && func()
-    }, wait)
 }
 
 // 轮询函数
@@ -92,124 +84,4 @@ export function handleLoopCall({ func, startCount = 1, endCount = 1, time = 5 })
             })
         }
     }, time * 1000)
-}
-
-// 过滤特殊字符的标签
-export function filterSpecialFont(data){
-    const reg = /^#{2,}/g
-    return data?.length ? data.filter((tag) => !reg.test(tag)) : []
-}
-
-// 去除标签外包围的 span
-export function handleTagHtml(json, html, isEdit){
-    if(html.indexOf(`data-type="mention"`) !== -1){
-        loopData(isEdit, json.content)
-    }
-    return json
-}
-function loopData(isEdit, data){
-    if(data && data.length){
-        data.forEach((item,index) => {
-            if(item.content && item.content.length){
-                loopData(isEdit, item.content)
-            }else{
-                if(tagsInCenter(item, data, index)){
-                    item.type = 'text'
-                    item.text = `${item.attrs.id || '#'}`
-                    delete item.attrs
-                }else if(tagsInFirst(item, data, index)){
-                    item.type = 'text'
-                    item.text = `#${item.attrs.id}`
-                    delete item.attrs
-                }else if(tagsInLast(item, data, index)){
-                    item.type = 'text'
-                    item.text = `${item.attrs.id || '#'}`
-                    delete item.attrs
-                }else if(onlyTag(item, data, index)){
-                    item.type = 'text'
-                    item.text = `#${item.attrs.id} `
-                    delete item.attrs
-                }
-            }
-        })
-    }
-    return data
-}
-
-function tagsInCenter(item, data, index){
-    return item.type === 'mention'
-        && (data[index - 1]?.type === 'text'
-            && data[index - 1]?.text === '/'
-            && data[index + 1]?.type === 'text'
-            && data[index + 1]?.text === '/')
-}
-function tagsInLast(item, data, index){
-    return item.type === 'mention'
-        && (data[index - 1]
-            && data[index - 1].type === 'text'
-            && data[index - 1].text === '/'
-            && (!data[index + 1]
-                || data[index + 1].text !== '/'))
-}
-function tagsInFirst(item, data, index){
-    return item.type === 'mention'
-        && (data[index + 1]?.type === 'text'
-            && data[index + 1]?.text === '/')
-}
-function onlyTag(item, data, index){
-    return item.type === 'mention'
-        &&  ((!data[index - 1]
-            || data[index - 1].text !== '/')
-            && (!data[index + 1]
-                || data[index + 1].text !== '/'))
-}
-
-/**
- * 查询当前月份
- */
-export function getDate(type) {
-    const date = new Date()
-    let year = date.getFullYear()
-    let month = date.getMonth() + 1
-    let day = date.getDate()
-
-    if(month < 10){
-        month = `0${month}`
-    }
-
-    if (type === 'year') {
-        return `${year}`
-    } else if(type === 'month'){
-        return `${year}-${month}`
-    } else {
-        return `${year}-${month}-${day}`
-    }
-}
-// 获取本月的最后一天
-export function getLastDay(data){
-    let year = data.split("-")[0]
-    let month = data.split("-")[1]
-
-    const lastDate = new Date(year, month, 0)
-    return lastDate.getDate()
-}
-
-/**
- * 判断时区是否为东八区
- */
-export function isEast8th(){
-    return (new Date().getTimezoneOffset()/60)*(-1) === 8
-}
-
-/**
- * 检查url连接是否合法
- */
-export function checkUrl(URL){
-    let str = URL
-    // 判断URL地址的正则表达式为:http(s)?://([\w-]+\.)+[\w-]+(/[\w- ./?%&=]*)?
-    // 下面的代码中应用了转义字符"\"输出一个字符"/"
-    let Expression = /http(s)?:\/\/([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?/;
-    let objExp = new RegExp(Expression);
-
-    return objExp.test(str)
 }

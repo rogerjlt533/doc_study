@@ -120,15 +120,16 @@
             trashActive: ''
         })
         bus.emit("changeNotesListHeight")
+        store.commit("user/SHOW_NOTICE",{data: false})
 
         // writeInfo
         setTimeout(() => {
-            store.dispatch("notes/getTagsList")
-            store.dispatch("notes/getGroupInitial")
-            store.commit("user/SHOW_NOTICE",{data: false})
             bus.emit("CLEAR_KAYWORD")
             bus.emit("MAKE_LIST_TOP")
         })
+        setTimeout(() => {
+            store.dispatch("notes/getTagsList")
+        }, 100)
     }
 
     function editCollection(){

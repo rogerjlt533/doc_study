@@ -70,7 +70,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        height: 100vh;
+        height: 40px;
+        overflow: hidden;
         padding: 0 20px;
         background: #f5f5f5;
         -webkit-app-region: drag;

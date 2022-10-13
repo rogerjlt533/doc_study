@@ -207,9 +207,6 @@ function addNotes(editor){
         }else{
             writeInfo.status = 'failed'
         }
-    }).catch((err) => {
-        console.log('err', err)
-        writeInfo.status = 'failed'
     })
 }
 

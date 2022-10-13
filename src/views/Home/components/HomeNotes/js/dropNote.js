@@ -53,7 +53,10 @@ class DropNoteFun {
             const res = await compileNoteApi(data)
             if(res.status_code === 200){
                 store.commit('notes/RECOVERY_NOTE', res.data.note)
-                store.commit('notes/REMOVE_NOTE', { index: this.sourceIndex})
+                store.commit('notes/REMOVE_NOTE', {
+                    index: this.sourceIndex,
+                    note_type: 1
+                })
             }
         }else if(type === 'quote'){
             let targetQuoteIds = this.targetNote.quote.map(q => q.id)

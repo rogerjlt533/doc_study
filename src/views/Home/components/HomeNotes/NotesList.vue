@@ -177,29 +177,31 @@
     // 筛选笔记方法
     let filterList = [
         {
-            label: "创建时间 ▲",
+            label: "创建时间 ↓",
             value: "desc",
             orderby_create: 1,
             icon: 'arrow-down-1-9'
         },{
-            label: "创建时间 ▼",
+            label: "创建时间 ↑",
             value: "asc",
             orderby_create: 1,
             icon: 'arrow-down-9-1'
         },{
-            label: "更新时间 ▲",
+            label: "更新时间 ↓",
             value: "desc",
             orderby_create: 0,
             icon: 'arrow-down-1-9'
         },{
-            label: "更新时间 ▼",
+            label: "更新时间 ↑",
             value: "asc",
             orderby_create: 0,
             icon: 'arrow-down-9-1'
         }
     ]
     let sortDefault = reactive({
-        label: '更新时间 ▼',
+        label: "更新时间 ↓",
+        value: "desc",
+        orderby_create: 0,
         icon: 'arrow-down-1-9'
     })
 
@@ -253,12 +255,18 @@
             page, keyword, start_time, end_time
         }).then((res) => {
             ifRefresh.value = true
+            store.commit('notes/CHANGE_CATALOG_ACTIVE_STATE', {
+                short_note_count: res.data.count || 0
+            })
         })
         if(page === 1){
             store.dispatch('notes/getWriteNotesList',{
                 page, keyword, start_time, end_time
             }).then((res) => {
                 bus.emit('readWriteNoteData')
+                store.commit('notes/CHANGE_CATALOG_ACTIVE_STATE', {
+                    long_note_count: res.data.count || 0
+                })
             })
         }
     }
