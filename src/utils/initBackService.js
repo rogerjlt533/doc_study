@@ -2,7 +2,7 @@ import { getToken } from "@/utils/auth"
 import { handleLoopCall } from "@/utils/tools"
 import store from "@/store"
 import { computed, watch } from "vue"
-import { pullRemoteNoteQueueApi, processDownNoteApi, processDownImageApi, initCollectionNotePushQueueApi, processNotePushQueueApi, clearCompleteCollectionQueueApi, autoClearCollectionQueueApi } from '@/apiDesktop/sync'
+import { pullRemoteNoteQueueApi, processDownNoteApi, processDownImageApi, initCollectionNotePushQueueApi, processNotePushQueueApi, clearCompleteCollectionQueueApi, autoClearCollectionQueueApi, pullTagTopApi, pushTagTopApi } from '@/apiDesktop/sync'
 import { refreshProInfoApi } from '@/apiDesktop/user'
 import { fillTagInitialApi } from "@/apiDesktop/tag"
 
@@ -64,12 +64,14 @@ export const initSync = () => {
     setInterval(() => {
         if(!getToken() || !user_hash.value) return false
         handleAutoClearCollectionQueue()
+        handlePullTagTop()
     }, 5 * 60 * 1000)
 
     setInterval(() => {
         if(!getToken() || !user_hash.value) return false
         handleRefreshProInfo()
         handleProcessDownImage()
+        handlePushTagTop()
     }, 3 * 60 * 1000)
 }
 
@@ -146,3 +148,16 @@ function handleRefreshProInfo(){
     refreshProInfoApi(data)
 }
 
+function handlePullTagTop(){
+    const data = {
+        token: getToken()
+    }
+    pullTagTopApi(data)
+}
+
+function handlePushTagTop(){
+    const data = {
+        token: getToken()
+    }
+    pushTagTopApi(data)
+}

@@ -400,7 +400,7 @@ export default {
 
             const res = await newNoteApi({user_id, collection_id, noteType, source, content, url, postil_list, tag_list, struct_list})
             if(res.status_code === 200){
-                commit("ADD_NOTE", {note_type: noteType, data: res.data})
+                commit("ADD_NOTE", { note_type: noteType, data: res.data })
                 // 判断是否有新的tag添加了进来
                 if(res.data.tags.length > 0){
                     setTimeout(() => {
@@ -411,7 +411,6 @@ export default {
                 }
                 return res
             }
-
         },
 
         // 删除笔记列表

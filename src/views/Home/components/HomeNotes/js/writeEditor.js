@@ -89,14 +89,6 @@ export function writeEditor(){
             Extension.create({
                 addKeyboardShortcuts() {
                     return {
-                        // 'Tab'({editor}) {
-                        //     editor.commands.insertContent("    ")
-                        //     return true
-                        // }
-                        // 'Enter'({editor}){
-                        //     console.log(editor)
-                        //     return true
-                        // }
                         'Cmd-s'() {
                             if (editTime) clearTimeout(editTime)
                             editTime = setTimeout(() => {
@@ -137,10 +129,9 @@ export function writeEditor(){
         onUpdate({ editor }) {
             if (timer) clearTimeout(timer)
             timer = setTimeout(() => {
-                writeInfo.status = 'loading'
                 writeInfo.size_count = editor.storage.characterCount.characters()
                 edit(editor)
-            }, 500);
+            }, 500)
         },
         onFocus(){
             handleTargetName(".write-content")
@@ -164,6 +155,12 @@ export function getEditorStatus(item, index){
 
 function edit(editor){
     writeInfo.status = 'loading'
+
+    if(!noteItem?.collection_id) {
+        addNotes(editor)
+        return false
+    }
+
     let contentJson = editor.getJSON()
     let contentHtml = editor.getHTML()
     let params = {
@@ -176,19 +173,43 @@ function edit(editor){
         tag_list: tagTool.json2List(contentJson),
         noteType: 2
     }
-    return new Promise((resolve, reject) => {
-        store.dispatch("notes/editNote", params).then((res) => {
-            if(res.status_code === 200){
-                writeInfo.status = 'saved'
-                writeInfo.updated_at = res.data.updated_time
-                writeTags.value = res.data.tags
-                resolve(true)
-            }else{
-                writeInfo.status = 'saved'
-            }
-        }).catch((err) => {
+
+    store.dispatch("notes/editNote", params).then((res) => {
+        if(res.status_code === 200){
+            writeInfo.status = 'saved'
+            writeInfo.updated_at = res.data.updated_time
+            writeTags.value = res.data.tags
+        }else{
             writeInfo.status = 'failed'
-        })
+        }
+    }).catch((err) => {
+        writeInfo.status = 'failed'
+    })
+}
+
+function addNotes(editor){
+    let contentJson = editor.getJSON()
+    let contentHtml = editor.getHTML()
+
+    let params = {
+        contentJson,
+        contentHtml,
+        annotation_id: quoteArray,
+        tag_list: tagTool.json2List(contentJson),
+        note_type: 2
+    }
+    store.dispatch("notes/addNotes", params).then((res) => {
+        console.log('res', res.status_code === 200)
+        if(res.status_code === 200){
+            writeInfo.status = 'saved'
+            writeInfo.updated_at = res.data.updated_time
+            getEditorStatus(res.data, 0)
+        }else{
+            writeInfo.status = 'failed'
+        }
+    }).catch((err) => {
+        console.log('err', err)
+        writeInfo.status = 'failed'
     })
 }
 

@@ -1,6 +1,6 @@
 <template>
     <div class="home" id="homeBox">
-        <div class="home-left" :style="{ paddingTop: catalogPaddingTop }">
+        <div class="home-left" :style="{ paddingTop: catalogPaddingTop, height: `calc(100vh - ${catalogPaddingTop})` }">
             <div class="home-menu" id="homeLeft">
                 <home-notes-catalog />
                 <home-notes-tag />
@@ -59,6 +59,8 @@
 
     let store = useStore();
     let route = useRoute();
+
+    console.log('window-window-window',window)
 
     // computed ---------------
     let trashActive = computed(() => store.state.notes.catalogActiveState.trashActive)
@@ -144,7 +146,6 @@
         .home-left{
             position: relative;
             float: left;
-            height: calc(100vh - 50px);
             background: #F6F8FC;
             .fold-catalog{
                 display: flex;

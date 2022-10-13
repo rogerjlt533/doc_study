@@ -9,7 +9,7 @@
             :x="100" :y="100"
     >
         <div class="tags-manage-title unselectable flex justify-between align-center">
-            <span class="title">标签管理器</span>
+            <span class="title">我的标签</span>
             <el-icon
                     :size="18"
                     class="cursor-p"
@@ -172,5 +172,4 @@
         display: flex;
         flex-wrap: wrap;
     }
-
 </style>
