@@ -89,8 +89,10 @@
     // hooks ----
     import { editorInstance } from "./js/editor.js";
     import { imageToWordApi } from "@/api/notes"
-    import { handleContentHtml, handleHtmlTagSpace } from '@/assets/js/processHtml'
+    import { handleContentHtml, handleHtmlTagSpace } from '@/utils/processHtml'
     import openUrlByBrowser from "@/assets/js/openUrlByBrowser"
+    import { filterSpecialFont } from '@/utils/tools'
+
     const remote = require('electron').remote;
     const Menu = remote.Menu;
     const MenuItem = remote.MenuItem;
@@ -239,7 +241,7 @@
             contentHtml,
             annotation_id: annotationNote.id,
             note_type: 1,
-            tag_list
+            tag_list: filterSpecialFont(tag_list)
         }
 
         isDisabled.value = true
@@ -282,7 +284,7 @@
             collection_id: props.collectionId,
             noteId: props.noteId,
             index: props.index,
-            tag_list,
+            tag_list: filterSpecialFont(tag_list),
             postil_list: props.item.quote.map(item => item.id)
         }
 

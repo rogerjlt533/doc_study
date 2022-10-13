@@ -20,7 +20,7 @@
     import { ref, nextTick, getCurrentInstance } from 'vue'
     import { useStore } from "vuex"
     import { ipcRenderer } from "electron"
-    import { handleContentHtml, handleHtmlTagSpace } from '@/assets/js/processHtml'
+    import { handleContentHtml, handleHtmlTagSpace } from '@/utils/processHtml'
 
     const store = useStore()
     const { proxy } = getCurrentInstance()

@@ -85,3 +85,73 @@ export function handleLoopCall({ func, startCount = 1, endCount = 1, time = 5 })
         }
     }, time * 1000)
 }
+
+// 过滤特殊字符的标签
+export function filterSpecialFont(data){
+    const reg = /^#{2,}/g
+    return data.filter((tag) => !reg.test(tag))
+}
+
+// 去除标签外包围的 span
+export function handleTagHtml(json, html, isEdit){
+    if(html.indexOf(`data-type="mention"`) !== -1){
+        loopData(isEdit, json.content)
+    }
+    return json
+}
+function loopData(isEdit, data){
+    if(data && data.length){
+        data.forEach((item,index) => {
+            if(item.content && item.content.length){
+                loopData(isEdit, item.content)
+            }else{
+                if(tagsInCenter(item, data, index)){
+                    item.type = 'text'
+                    item.text = `${item.attrs.id || '#'}`
+                    delete item.attrs
+                }else if(tagsInFirst(item, data, index)){
+                    item.type = 'text'
+                    item.text = `#${item.attrs.id}`
+                    delete item.attrs
+                }else if(tagsInLast(item, data, index)){
+                    item.type = 'text'
+                    item.text = `${item.attrs.id || '#'} `
+                    delete item.attrs
+                }else if(onlyTag(item, data, index)){
+                    item.type = 'text'
+                    item.text = isEdit ? `#${item.attrs.id} ` : `#${item.attrs.id}`
+                    delete item.attrs
+                }
+            }
+        })
+    }
+    return data
+}
+
+function tagsInCenter(item, data, index){
+    return item.type === 'mention'
+        && (data[index - 1]?.type === 'text'
+            && data[index - 1]?.text === '/'
+            && data[index + 1]?.type === 'text'
+            && data[index + 1]?.text === '/')
+}
+function tagsInLast(item, data, index){
+    return item.type === 'mention'
+        && (data[index - 1]
+            && data[index - 1].type === 'text'
+            && data[index - 1].text === '/'
+            && (!data[index + 1]
+                || data[index + 1].text !== '/'))
+}
+function tagsInFirst(item, data, index){
+    return item.type === 'mention'
+        && (data[index + 1]?.type === 'text'
+            && data[index + 1]?.text === '/')
+}
+function onlyTag(item, data, index){
+    return item.type === 'mention'
+        &&  ((!data[index - 1]
+            || data[index - 1].text !== '/')
+            && (!data[index + 1]
+                || data[index + 1].text !== '/'))
+}
