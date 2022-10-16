@@ -32,7 +32,7 @@ exports.restore = async function (user_id, note_id) {
     let relations = await tagService.tagTool.noteTagRelations(note.id, 'id')
     relations = common.list_column(relations, 'id')
     const tag_list = common.empty(history.note) ? [] : JSON.parse(note.tag_list)
-    const struct_list = common.empty(history.struct_tag_json) ? [] : JSON.parse(history.struct_tag_json)
+    const struct_list = common.empty(history.note) ? [] : JSON.parse(history.struct_tag_json)
     const edit_relations = await noteService.bindTags(user_id, note_id, tag_list)
     // 删除失效的标签关联
     relations = relations.filter(item => {return edit_relations.indexOf(item) === -1})
