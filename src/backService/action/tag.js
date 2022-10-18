@@ -98,14 +98,16 @@ exports.groupInitial = async function (user_id, collection_id, keyword = '', not
     if (common.empty(tags)) {
         return {status_code: 200, message: 'success', data: []}
     }
-    for (const index in tags) {
-        tags[index].group_id = ''
-        tags[index].note_count = await tagService.getNoteCount(user_id, tags[index].id, collection_id, note_type)
+    const available_list = []
+    for (const item of tags) {
+        const group_id = '', id = item.id, is_top = item.is_top, tag = item.tag
+        const note_count = await tagService.getNoteCount(user_id, item.id, collection_id, note_type)
+        available_list.push({ group_id, id, is_top, note_count, tag })
     }
     tags.sort((a, b) => {
         return b.note_count - a.note_count
     })
-    const data = await tagService.parseGroupByInitial(tags, user_id, collection_id, note_type)
+    const data = await tagService.parseGroupByInitial(available_list, user_id, collection_id, note_type)
     return {status_code: 200, message: 'success', data}
 }
 

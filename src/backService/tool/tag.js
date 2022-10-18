@@ -27,6 +27,16 @@ exports.findByTag = async function (user_id, tag) {
 }
 
 /**
+ * 获取对应标签记录
+ * @param id
+ * @returns {Promise<any>}
+ */
+exports.get = async function (id) {
+    const sql = "SELECT * FROM tags WHERE id=? and deleted_at is null"
+    return await sqlite.get(sql, [id])
+}
+
+/**
  * 修改声母
  * @param tag_id
  * @param initial

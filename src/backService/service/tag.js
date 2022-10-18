@@ -103,7 +103,7 @@ exports.parseGroupByInitial = async function (tags, user_id, collection_id, note
             if (!default_list.hasOwnProperty(initial_tag)) {
                 default_list[initial_tag] = {name: initial_tag, is_default: 1, list: []}
             }
-            default_list[initial_tag].list.push(item)
+            default_list[initial_tag].list.push(JSON.parse(JSON.stringify(item)))
         }
     })
     default_list = Object.values(default_list)
@@ -124,7 +124,7 @@ exports.parseGroupByInitial = async function (tags, user_id, collection_id, note
         if (!groups.hasOwnProperty(group_tagid)) {
             groups[group_tagid] = {name, allow_search: 1, group_id: common.encode(group_tagid), list: []}
         }
-        const unit = list[tag_id]
+        const unit = JSON.parse(JSON.stringify(list[tag_id]))
         const collections = common.empty(collection_id) ? [] : [collection_id]
         unit.note_count = await tagTool.noteCount(tag_id, collections, note_type, group_tagid)
         unit.group_id = common.encode(group_tagid)
