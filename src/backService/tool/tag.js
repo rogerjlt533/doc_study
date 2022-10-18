@@ -196,6 +196,48 @@ exports.noteCount = async function (tag_id, collections = [], note_type = 0, gro
 }
 
 /**
+ * 标签对应的笔记数
+ * @param tag_id
+ * @param collections
+ * @param note_type
+ * @param group_id
+ * @returns {Promise<*>}
+ */
+exports.trashNoteCount = async function (tag_id, collections = [], note_type = 0, group_id = 'sum') {
+    if (common.empty(tag_id)) {
+        return 0
+    }
+    const condition = [], options = []
+    let sql = "select COUNT(DISTINCT notes.id) AS ts_count from tags" +
+        " left join note_tag_relation on tags.id=note_tag_relation.tag_id" +
+        " left join notes on notes.id=note_tag_relation.note_id" +
+        " left join collections on collections.id=notes.collection_id" +
+        " where #CONDITION#"
+    condition.push('notes.status=?', 'tags.id=?')
+    options.push(0, tag_id)
+    if (collections.length > 0) {
+        condition.push('notes.collection_id in (' +  collections.join(',') + ')')
+    }
+    if (group_id !== 'sum') {
+        condition.push('note_tag_relation.group_id=?')
+        options.push(group_id)
+    }
+    if (!common.empty(note_type)) {
+        condition.push('notes.note_type=?')
+        options.push(note_type)
+    }
+    condition.push('notes.deleted_at is null and collections.deleted_at is null')
+    sql = sql.replace('#CONDITION#', condition.join(' and '))
+    const row = await sqlite.get(sql, options)
+    if (common.empty(row)) {
+        return 0
+    } else if (common.empty(row.ts_count)) {
+        return 0
+    }
+    return row.ts_count
+}
+
+/**
  * collection 笔记计数键值对数组
  * @param collection_id
  * @returns {Promise<{}>}

@@ -112,6 +112,45 @@ exports.groupInitial = async function (user_id, collection_id, keyword = '', not
 }
 
 /**
+ * 声母标签分组
+ * @param user_id
+ * @param collection_id
+ * @param keyword
+ * @param note_type
+ * @returns {Promise<*>}
+ */
+exports.groupTrashInitial = async function (user_id, collection_id, keyword = '', note_type = 0) {
+    user_id = common.decode(user_id)
+    if (!common.empty(collection_id)) {
+        collection_id = common.decode(collection_id)
+    } else {
+        collection_id = 0
+    }
+    if (!common.empty(keyword)) {
+        keyword = keyword.trim()
+    }
+    const group_res = await collectionService.collectionTool.getIsGroup(user_id, collection_id)
+    if (!group_res.status) {
+        return {status_code: 400, message: group_res.message, data: []}
+    }
+    const tags = await tagService.tagTool.tags(user_id, collection_id, group_res.is_group, keyword, note_type)
+    if (common.empty(tags)) {
+        return {status_code: 200, message: 'success', data: []}
+    }
+    const available_list = []
+    for (const item of tags) {
+        const group_id = '', id = item.id, is_top = item.is_top, tag = item.tag
+        const note_count = await tagService.getTrashNoteCount(user_id, item.id, collection_id, note_type)
+        available_list.push({ group_id, id, is_top, note_count, tag })
+    }
+    tags.sort((a, b) => {
+        return b.note_count - a.note_count
+    })
+    const data = await tagService.parseTrashGroupByInitial(available_list, user_id, collection_id, note_type)
+    return {status_code: 200, message: 'success', data}
+}
+
+/**
  * 解除标签置顶
  * @param user_id
  * @param tag_id
