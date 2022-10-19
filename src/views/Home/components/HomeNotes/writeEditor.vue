@@ -71,7 +71,15 @@
     import { useStore } from "vuex"
     import bus from '@/utils/bus'
     // hooks
-    import { writeEditor, getEditorStatus, getTableOfContents, writeInfo, quoteArray, writeTags } from './js/writeEditor'
+    import {
+        writeEditor,
+        getEditorStatus,
+        getTableOfContents,
+        editNow,
+        writeInfo,
+        quoteArray,
+        writeTags
+    } from './js/writeEditor'
     import { getNoteNodeClick } from './js/editorMethods'
     // 组件
     import { EditorContent } from '@tiptap/vue-3'
@@ -116,7 +124,9 @@
     }
     // 读取笔记
     function readNoteDetail(item, index){
-        console.log('item', item)
+
+        editNow()  // 切换笔记本之前先将当前的笔记内容保存
+
         getEditorStatus(item, index)
         setNoteState(item)
         writeTags.value = item.tags
@@ -127,7 +137,6 @@
         for(let i = 0; i < quoteArr.length; i ++){
             quoteArray.push(quoteArr[i])
         }
-
         getTableOfContents(editor.value).then((res)=>{
             headingList.value = res
         })
@@ -218,8 +227,9 @@
     function bindNoteLibrary(){
         isShowShortNote.value = !isShowShortNote.value
         isShowTableOfContents.value = false
-
+        if(!isShowShortNote.value) return
         notesLibraryRef.value.getNoteList()
+        notesLibraryRef.value.getTagList()
     }
 
     onMounted(() => {

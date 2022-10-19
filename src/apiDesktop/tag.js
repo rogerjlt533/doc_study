@@ -36,3 +36,21 @@ export function setTagNormalApi(data){
         data
     })
 }
+
+// 更新标签声母，填充空声母
+export function fillTagInitialApi(data){
+    return request({
+        url: 'actionTag.fillTagInitial',
+        action: actionTag.fillTagInitial,
+        data
+    })
+}
+
+// 声母标签分组
+export function getGroupInitialApi(data){
+    return request({
+        url: 'actionTag.groupInitial',
+        action: actionTag.groupInitial,
+        data
+    })
+}

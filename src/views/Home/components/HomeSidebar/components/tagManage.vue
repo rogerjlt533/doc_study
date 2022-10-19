@@ -13,7 +13,7 @@
             <el-icon
                     :size="18"
                     class="cursor-p"
-                    @click="emit('close')"
+                    @click="closeManage"
                     @mousedown="$event.stopPropagation()"><Close/></el-icon>
         </div>
         <div class="tags-manage" @mousedown="$event.stopPropagation()" @mouseup="$event.stopPropagation()">
@@ -28,6 +28,7 @@
                         ref="tagInputRef"
                         clearable
                         v-model="groupInitial.tagKeyword"
+                        @input="searchGroupInitial"
                         @change="searchGroupInitial">
                 </el-input>
             </div>
@@ -51,7 +52,7 @@
                 <template v-if="groupInitial.fzList.length">
                     <div v-for='(item,index) in groupInitial.fzList' :key="index">
                         <el-divider content-position="center">
-                            <span class="color-9 font-12">{{item.name}}123</span>
+                            <span class="color-9 font-12">{{item.name}}</span>
                         </el-divider>
                         <div class="group-tag" v-for="group in item.list" :key="group.id">
                             <div class="tags-group-title">
@@ -70,7 +71,7 @@
                         </div>
                     </div>
                 </template>
-                <span v-else>你还没有创建分组标签~</span>
+                <p class="text-center font-12 color-9 pt20" v-else>你还没有创建分组标签~</p>
             </div>
         </div>
     </VueDragResize>
@@ -99,13 +100,21 @@
         fzList: computed(() => store.state.notes.tagInitialList.fz),
         activeTab: 'pt'
     })
+    let timer = null
     function searchGroupInitial(){
-        store.dispatch('notes/getGroupInitial', { keyword: groupInitial.tagKeyword })
+        if(timer) clearTimeout(timer)
+        timer = setTimeout(() => {
+            store.dispatch('notes/getGroupInitial', { keyword: groupInitial.tagKeyword })
+        }, 500)
     }
     function clickTab(event) {
         const dataset = event.target.dataset
         if(!dataset.type) return
         groupInitial.activeTab = dataset.type
+    }
+
+    function closeManage(){
+        emit('close')
     }
 </script>
 

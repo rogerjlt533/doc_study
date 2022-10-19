@@ -143,7 +143,7 @@
         <template #footer>
             <span class="dialog-footer">
                 <el-button plain color="#aaaaaa" @click="showAddProject = false">取 消</el-button>
-                <el-button color="#6C56F6" type="primary" @click="sureMession">确 定</el-button>
+                <el-button color="#6C56F6" type="primary" @click="confirmModify">确 定</el-button>
             </span>
         </template>
     </el-dialog>
@@ -411,7 +411,7 @@
     };
 
     // 确认修改
-    function sureMession(){
+    function confirmModify(){
         const form = unref(projectFormRef);
         form.validate(async (valid) => {
             if(!valid) return false;

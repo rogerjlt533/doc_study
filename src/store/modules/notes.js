@@ -406,8 +406,8 @@ export default {
                     setTimeout(() => {
                         dispatch("getTagsList")
                         dispatch("getTagsAllList")
-                        dispatch('getGroupInitial')
-                    })
+                        dispatch("getGroupInitial")
+                    }, 500)
                 }
                 return res
             }
@@ -429,8 +429,8 @@ export default {
                         setTimeout(() => {
                             dispatch("getTagsList")
                             dispatch("getTagsAllList")
-                            dispatch('getGroupInitial')
-                        })
+                            dispatch("getGroupInitial")
+                        }, 500)
                     }
                 })
             })
@@ -457,8 +457,8 @@ export default {
                             setTimeout(() => {
                                 dispatch("getTagsList")
                                 dispatch("getTagsAllList")
-                                dispatch('getGroupInitial')
-                            })
+                                dispatch("getGroupInitial")
+                            }, 500)
                         }
                         resolve(res)
                     }else{
@@ -514,7 +514,8 @@ export default {
             return new Promise(resolve => {
                 getTagListApi({
                     user_id: rootState.user.userInfo.id,
-                    collection_id: state.notes.collection_id
+                    collection_id: state.notes.collection_id,
+                    note_type: state.catalogActiveState.noteTypeActive
                 }).then((res) => {
                     if(res.status_code === 200){
                         commit("SET_TAGS_LIST", res.data)
@@ -554,7 +555,8 @@ export default {
                 let data = {
                     user_id: rootState.user.userInfo.id,
                     collection_id: state.notes.collection_id,
-                    keyword: params?.keyword || ''
+                    keyword: params?.keyword || '',
+                    note_type: state.catalogActiveState.noteTypeActive
                 }
                 getGroupInitialApi(data).then((res) => {
                     if(res.status_code === 200){

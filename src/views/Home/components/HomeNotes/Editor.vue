@@ -256,8 +256,6 @@
                 editor.value.commands.clearContent()
                 // 记录完后重新计算高度
                 store.commit("notes/SET_NOTES_LIST_HEIGHT", 100)
-                // 更新笔记数量
-                store.commit('notes/UPDATE_NOTE_COUNT', { type: 'short', status: 1 })
             }
         })
     }

@@ -24,7 +24,7 @@
                         <div>
                             <span class="color" :style="{ background: item.collection.color }"></span>
                             <span class="name">{{item.collection.collection}}</span>
-                            <font-awesome-icon v-show="item.collection.is_team === 1" icon="user-friends" class="mr6" style="font-size: 12px;" color="#9EA0AD" />
+                            <font-awesome-icon v-show="item.collection.is_team === 1" icon="user-friends" class="mr6 font-12" color="#9EA0AD" />
                         </div>
                         <template #dropdown>
                             <el-dropdown-menu>
@@ -111,7 +111,7 @@
     import { RefreshLeft, Loading } from '@element-plus/icons-vue'
     // hooks ----
     import { simpleEditor } from "../js/editor"
-    import { handleContentHtml, handleHtmlTagSpace } from '@/assets/js/processHtml'
+    import { handleContentHtml, handleHtmlTagSpace } from '@/utils/processHtml'
     import openUrlByBrowser from "@/assets/js/openUrlByBrowser";
     import { getNoteNodeClick } from '../js/editorMethods'
     import { removeHtmlTag } from '@/utils/tools'

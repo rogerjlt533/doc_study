@@ -6,10 +6,6 @@ import { pullRemoteNoteQueueApi, processDownNoteApi, processDownImageApi, initCo
 import { refreshProInfoApi } from '@/apiDesktop/user'
 import { fillTagInitialApi } from "@/apiDesktop/tag"
 
-// const Store = require('electron-store')
-// const electronStore = new Store()
-// const vuex = electronStore.get('vuex')
-
 const migration = require('service/tool/migration.js')
 
 // 初始化数据库
@@ -58,7 +54,6 @@ export const initSync = () => {
         store.dispatch('collection/getCollection')
         store.dispatch('user/getUserBase')
         store.dispatch("notes/getTagsList")
-        store.dispatch('notes/getGroupInitial')
     }, 30 * 1000)
 
     setInterval(() => {
@@ -83,7 +78,6 @@ function initBasicsData(){
             store.dispatch('collection/getCollection')
             store.dispatch('user/getUserBase')
             store.dispatch("notes/getTagsList")
-            store.dispatch('notes/getGroupInitial')
         },
         startCount: 0,
         endCount: 8,

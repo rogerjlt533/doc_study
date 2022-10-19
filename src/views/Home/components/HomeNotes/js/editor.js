@@ -7,6 +7,7 @@ import { Extension } from '@tiptap/core'
 import { generateJSON } from '@tiptap/html'
 import smartRules from "./smartRules"
 import suggestion from './suggestion'
+import { handleTagHtml } from '@/utils/tools'
 // 用于图片粘贴上传
 import {createImageExtension, handleTargetName} from "./pasteImage.js"
 
@@ -69,7 +70,9 @@ export function editorInstance(content, editorBox, isEdit = false, className, on
             }),
         ],
         onCreate(){
-            const data = handleTagHtml(editor, isEdit)
+            const json = editor.getJSON()
+            const html = editor.getHTML()
+            const data = handleTagHtml(json, html, isEdit)
             editor.commands.setContent(data)
             if(isEdit) return false;
             store.commit("notes/SET_NOTES_LIST_HEIGHT", editorBox.value?.offsetHeight)
@@ -151,7 +154,9 @@ export function simpleEditor (content){
     if(editor){
         editor.commands.setContent(content)
     }
-    const data = handleTagHtml(editor, true)
+    const json = editor.getJSON()
+    const html = editor.getHTML()
+    const data = handleTagHtml(json, html, true)
     editor.commands.setContent(data)
 
     return editor
@@ -180,71 +185,6 @@ export function handleHtmlToJson(html){
             },
         }),
     ])
-}
-
-function handleTagHtml(editor, isEdit){
-    const json = editor.getJSON()
-    const html = editor.getHTML()
-    if(html.indexOf(`data-type="mention"`) !== -1){
-        loopData(isEdit, json.content)
-    }
-    return json
-}
-function loopData(isEdit, data){
-    if(data && data.length){
-        data.forEach((item,index) => {
-            if(item.content && item.content.length){
-                loopData(isEdit, item.content)
-            }else{
-                if(tagsInCenter(item, data, index)){
-                    item.type = 'text'
-                    item.text = `${item.attrs.id || '#'}`
-                    delete item.attrs
-                }else if(tagsInFirst(item, data, index)){
-                    item.type = 'text'
-                    item.text = `#${item.attrs.id}`
-                    delete item.attrs
-                }else if(tagsInLast(item, data, index)){
-                    item.type = 'text'
-                    item.text = `${item.attrs.id || '#'} `
-                    delete item.attrs
-                }else if(onlyTag(item, data, index)){
-                    item.type = 'text'
-                    item.text = isEdit ? `#${item.attrs.id} ` : `#${item.attrs.id}`
-                    delete item.attrs
-                }
-            }
-        })
-    }
-    return data
-}
-
-function tagsInCenter(item, data, index){
-    return item.type === 'mention'
-        && (data[index - 1]?.type === 'text'
-            && data[index - 1]?.text === '/'
-            && data[index + 1]?.type === 'text'
-            && data[index + 1]?.text === '/')
-}
-function tagsInLast(item, data, index){
-    return item.type === 'mention'
-        && (data[index - 1]
-            && data[index - 1].type === 'text'
-            && data[index - 1].text === '/'
-            && (!data[index + 1]
-                || data[index + 1].text !== '/'))
-}
-function tagsInFirst(item, data, index){
-    return item.type === 'mention'
-        && (data[index + 1]?.type === 'text'
-            && data[index + 1]?.text === '/')
-}
-function onlyTag(item, data, index){
-    return item.type === 'mention'
-        &&  ((!data[index - 1]
-            || data[index - 1].text !== '/')
-            && (!data[index + 1]
-                || data[index + 1].text !== '/'))
 }
 
 

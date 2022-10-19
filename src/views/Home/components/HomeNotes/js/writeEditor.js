@@ -7,10 +7,11 @@ import smartRules from "./smartRules"
 import suggestion from './suggestion'
 import { createImageExtension, handleTargetName } from "./pasteImage.js" // 用于图片粘贴上传
 import { generateJSON } from '@tiptap/html'
-import bus from '@/utils/bus'
+import { filterSpecialFont } from '@/utils/tools'
 
 const tagTool = require('service/tool/tag')
 
+let editor = null
 let timer = null
 let editTime = null
 let isEdit = false
@@ -29,7 +30,7 @@ export let writeInfo = reactive({
 
 // 写作模式编辑器
 export function writeEditor(){
-    const editor = new Editor({
+    editor = new Editor({
         content: ``,
         autofocus: true,
         parseOptions: {
@@ -127,11 +128,14 @@ export function writeEditor(){
             }
         },
         onUpdate({ editor }) {
-            if (timer) clearTimeout(timer)
+            if (timer) {
+                clearTimeout(timer)
+                timer = null
+            }
             timer = setTimeout(() => {
                 writeInfo.size_count = editor.storage.characterCount.characters()
                 edit(editor)
-            }, 500)
+            }, 1500)
         },
         onFocus(){
             handleTargetName(".write-content")
@@ -153,7 +157,7 @@ export function getEditorStatus(item, index){
     isEdit = true
 }
 
-function edit(editor){
+export function edit(editor){
     writeInfo.status = 'loading'
 
     if(!noteItem?.collection_id) {
@@ -163,6 +167,7 @@ function edit(editor){
 
     let contentJson = editor.getJSON()
     let contentHtml = editor.getHTML()
+
     let params = {
         contentHtml,
         contentJson,
@@ -170,7 +175,7 @@ function edit(editor){
         noteId: noteItem.id,
         index: noteIndex,
         postil_list: quoteArray,
-        tag_list: tagTool.json2List(contentJson),
+        tag_list: filterSpecialFont(tagTool.json2List(contentJson)),
         noteType: 2
     }
 
@@ -187,6 +192,14 @@ function edit(editor){
     })
 }
 
+export function editNow(){
+    if( !timer ) return
+
+    clearTimeout(timer)
+    timer = null
+    edit(editor)
+}
+
 function addNotes(editor){
     let contentJson = editor.getJSON()
     let contentHtml = editor.getHTML()
@@ -195,7 +208,7 @@ function addNotes(editor){
         contentJson,
         contentHtml,
         annotation_id: quoteArray,
-        tag_list: tagTool.json2List(contentJson),
+        tag_list: filterSpecialFont(tagTool.json2List(contentJson)),
         note_type: 2
     }
     store.dispatch("notes/addNotes", params).then((res) => {

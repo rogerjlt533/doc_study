@@ -34,7 +34,11 @@
     import {ref, defineProps, defineEmits, computed, defineExpose} from 'vue'
     import { useStore } from "vuex"
     import bus from '@/utils/bus'
+    // hooks
+    import { editNow } from '../../HomeNotes/js/writeEditor'
+    // 组件
     import draggable from 'vuedraggable'
+
 
     const remote = require('electron').remote;
     const Menu = remote.Menu;
@@ -121,6 +125,9 @@
         })
         bus.emit("changeNotesListHeight")
         store.commit("user/SHOW_NOTICE",{data: false})
+
+        // 切换笔记本之前先将当前的笔记内容保存
+        editNow()
 
         // writeInfo
         setTimeout(() => {

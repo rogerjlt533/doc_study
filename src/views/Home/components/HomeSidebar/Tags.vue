@@ -72,9 +72,6 @@
             border-radius: 4px;
             &:hover{
                 background: #eeeeee;
-                .add-btn{
-                    opacity: 1;
-                }
             }
             .tags-icon{
                 color: #9EA0AD;
@@ -90,7 +87,6 @@
             }
         }
         .add-btn{
-            opacity: 0;
             padding: 4px;
             border-radius: 4px;
             cursor: pointer;
