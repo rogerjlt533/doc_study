@@ -107,7 +107,6 @@ function createSubWin(){
     width: 600,
     minWidth: 200,
     height: 60,
-    maxHeight: 60,
     frame: false,
     show: false,
     backgroundColor: '#f5f5f5',

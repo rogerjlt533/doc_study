@@ -8,6 +8,7 @@ export let downloadProcess = ref({})
 export function handleUpdate(){
     // 发现新版本
     ipcRenderer.once('autoUpdater-canUpdate', (event, info) => {
+        console.log('info', event, info)
         ElMessageBox.confirm(`发现有新版本【v${info.version}】，是否更新？`, {
             type: 'warning',
             confirmButtonText: '现在更新',
@@ -39,6 +40,12 @@ export function handleUpdate(){
         downloadProcess.value = process
         showUpdater.value = true
     })
+    // 下载更新失败
+    ipcRenderer.once('autoUpdater-error', (event, err) => {
+        console.log('err', err)
+        ElNotification.error('更新失败，请重试！')
+        showUpdater.value = false
+    })
     // 下载完成
     ipcRenderer.once('autoUpdater-downloaded', () => {
         ElMessageBox.confirm(`更新完成，是否关闭应用程序安装新版本?`, {
@@ -49,15 +56,4 @@ export function handleUpdate(){
             ipcRenderer.send('exit-app')
         }).catch(()=>{})
     })
-    // 下载更新失败
-    ipcRenderer.once('autoUpdater-error', (event, err) => {
-        console.log('err', err)
-        ElNotification.error('更新失败，请重试！')
-        showUpdater.value = false
-    })
-    // 没有可下载的资源
-    ipcRenderer.once('autoUpdater-noCanUpdate', () => {
-        ElNotification.error('您已经是最高版本了')
-    })
-
 }
