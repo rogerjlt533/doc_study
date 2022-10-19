@@ -64,16 +64,6 @@
             bus.emit("SET_TEXT_EDITOR_TAG", {
                 tag: tag
             })
-            // store.commit("notes/CHANGE_CLASSIFY_ACTIVED",{
-            //     collectionTitle: store.state.notes.classifyObj.collectionTitle,
-            //     groupTitle: group.name ? group.name : '',
-            //     tagTitle: `#${tag}`,
-            //     tag_id: id,
-            //     activedTag: id,
-            //     activedGroup: group_id,
-            //     collectionActived: store.state.notes.classifyObj.collectionActived,
-            //     collection_id: store.state.notes.tagToCollectionId
-            // })
 
             store.commit('notes/CHANGE_FILTER_NOTE_PARAMS', {
                 tag_id: id,

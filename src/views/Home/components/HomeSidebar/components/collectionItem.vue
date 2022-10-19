@@ -34,10 +34,9 @@
     import {ref, defineProps, defineEmits, computed, defineExpose} from 'vue'
     import { useStore } from "vuex"
     import bus from '@/utils/bus'
-    // hooks
-    import { editNow } from '../../HomeNotes/js/writeEditor'
     // 组件
     import draggable from 'vuedraggable'
+    import {ElMessageBox} from "element-plus";
 
 
     const remote = require('electron').remote;
@@ -109,6 +108,27 @@
 
     // 项目筛选
     function clickProject(item){
+        const editNoteCount = store.state.notes.editNoteCount
+        if(editNoteCount > 0){
+            ElMessageBox.confirm('还有正在编辑的卡片哦~', {
+                type: 'warning',
+                confirmButtonText: "去编辑",
+                cancelButtonText: '全部取消',
+                showClose: false,
+                closeOnClickModal: false,
+                closeOnPressEscape: false,
+                distinguishCancelAndClose: true
+            }).then().catch(() => {
+                bus.emit('closeEditorInstance')
+                store.commit('notes/SET_EDIT_NOTE_COUNT')
+                handleChangeCollection(item)
+            })
+            return false
+        }
+        bus.emit("changeNotesListHeight")
+        handleChangeCollection(item)
+    }
+    function handleChangeCollection(item){
         store.commit('notes/CHANGE_FILTER_NOTE_PARAMS', {
             collection_id: item.id,
             group_id: '',
@@ -123,11 +143,7 @@
             tagActive: '',
             trashActive: ''
         })
-        bus.emit("changeNotesListHeight")
         store.commit("user/SHOW_NOTICE",{data: false})
-
-        // 切换笔记本之前先将当前的笔记内容保存
-        editNow()
 
         // writeInfo
         setTimeout(() => {
@@ -136,6 +152,7 @@
         })
         setTimeout(() => {
             store.dispatch("notes/getTagsList")
+            store.dispatch("notes/getGroupInitial")
         }, 100)
     }
 
