@@ -28,8 +28,6 @@ watch(() => user_hash.value, () => {
     initSync()
 })
 export const initSync = () => {
-    console.log('getToken', getToken())
-    console.log('user_hash', user_hash.value)
     if(!getToken() || !user_hash.value) return false
 
     setTimeout(() => {

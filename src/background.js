@@ -42,7 +42,7 @@ function createWindow() {
       nodeIntegration: true,
       enableRemoteModule: true,
       nodeIntegrationInWorker: true,
-      contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION
+      contextIsolation: false
     },
     backgroundColor: '#ffffff',
     show: false // newBrowserWindow创建后先隐藏
@@ -110,6 +110,7 @@ function createSubWin(){
     frame: false,
     show: false,
     backgroundColor: '#f5f5f5',
+    parent: win,
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true,

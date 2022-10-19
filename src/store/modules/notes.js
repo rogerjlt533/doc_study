@@ -1,14 +1,12 @@
 import { shareNoteApi } from "@/api/notes"
 import { removeHtmlTag, deepClone } from '@/utils/tools'
-// import { getHtmlToJson } from "@/views/Home/components/HomeNotes/js/writeEditor"
 import { getNotesApi, newNoteApi, removeNoteApi, editNoteApi } from '@/apiDesktop/notes'
-import { getTagListApi, getGroupListApi, setTagTopApi, setTagNormalApi, getGroupInitialApi } from '@/apiDesktop/tag'
+import { getTagListApi, getGroupListApi, setTagTopApi, setTagNormalApi, getGroupInitialApi, getGroupTrashInitialApi } from '@/apiDesktop/tag'
 import { delTrashNoteApi, restoreTrashNoteApi } from '@/apiDesktop/trash'
 import { handleRestructureConfig } from '@/assets/js/restructureConfig'
 import { debounceFun } from '@/utils/tools'
 import {ElMessageBox} from "element-plus";
 import bus from '@/utils/bus';
-import {isPromise} from "@electron/remote/dist/src/common/type-utils";
 
 const tagService = require('service/service/tag');
 
@@ -48,13 +46,7 @@ export default {
             note: '',
             collection_id: ''
         },
-        // 记录时的collection
-        // editorCollection:{
-        //     checked_collection: "",
-        //     collection_id: "",
-        // },
-        // 选中笔记本时 筛选对应tag 所以记录一下collection-id
-        tagToCollectionId: "",
+        editNoteCount: 0,
         noteslist: [],
         notesCount: 0,
         writeNotesList: [],
@@ -79,7 +71,9 @@ export default {
          * 5.页面初始化时
          */
         SET_NOTES_LIST_HEIGHT(state, data){
-            state.notesListHeight = `calc(100vh - ${data + 96}px)`
+            console.log('height', data)
+            state.notesListHeight = `calc(100vh - ${data + 110}px)`
+            console.log('state.notesListHeight', state.notesListHeight)
         },
         // 设置目录的展开收起状态
         CHANGE_CATALOG_STATE(state, { showSelfCollection, showTeamCollection, showTags }){
@@ -132,18 +126,6 @@ export default {
         SORT_CHANGE_COLLECTION_ACTIVE(state, { collectionActive }){
             state.catalogActiveState.collectionActive = collectionActive
         },
-        /**
-         * 记录笔记的collection
-         * 声明:
-         * 1. collection的id是必选的, 因为记录笔记时一定要有默认记录的collection;
-         * 2. collection的name也是必选的, 给用户使用时要告诉用户当前是哪个collection;
-         * 牵扯筛选笔记时可能也有collection_id, 所以单独拿出一套collection来给添加笔记接口使用
-         */
-        // RECORD_COLLECTION(state, { collection_id = "", checked_collection = ""}){
-        //     state.editorCollection.checked_collection = checked_collection === undefined ? state.editorCollection.checked_collection : checked_collection;
-        //     state.editorCollection.collection_id = collection_id === undefined ? state.editorCollection.collection_id : collection_id;
-        // },
-
         // 笔记筛选长短笔记
         FILTER_NOTES_TYPE(state, { type = !state.notes.note_type }){
             state.notes.note_type = type;
@@ -181,6 +163,18 @@ export default {
             if(note_type === 2){
                 state.writeNotesList.splice(index, 1);
                 state.catalogActiveState.long_note_count --
+            }
+        },
+        SET_EDIT_NOTE_COUNT(state, data){
+            // 1 为 +   0 为 —
+            if(data === undefined) {
+                state.editNoteCount = 0
+                return
+            }
+            if(data === 1){
+                state.editNoteCount ++
+            }else{
+                state.editNoteCount --
             }
         },
         EDIT_NOTE(state, {data, index, noteType = 1}){
@@ -311,8 +305,21 @@ export default {
                 noteParams.params = deepClone(params)
                 getNotesApi(noteParams).then((res) => {
                     if(res.status_code === 200){
+                        const imgReg = /<img.*?(?:>|\/>)/gi
+                        const srcReg = /src=[\'\"]?([^\'\"]*)[\'\"]?/i
+
                         let list = res.data.note || []
                         let count = res.data.count
+
+                        list = list.map(note => {
+                            let arr = note.note.match(imgReg);  // arr 为包含所有img标签的数组
+                            let srcArr = []
+                            if(arr && arr.length){
+                                srcArr = arr.map(src => src.match(srcReg)[1])
+                            }
+                            note.srcArr = srcArr
+                            return note
+                        })
 
                         // 判断是否列表结束
                         let pageSize = data.page === 1 ? 20 : size
@@ -559,6 +566,23 @@ export default {
                     note_type: state.catalogActiveState.noteTypeActive
                 }
                 getGroupInitialApi(data).then((res) => {
+                    if(res.status_code === 200){
+                        commit('SET_TAG_INITIAL_LIST', res.data)
+                    }
+                })
+            })
+        },
+
+        // 根据分母获取标签
+        getGroupTrashInitial({state, commit, rootState}, params){
+            return new Promise((resolve, reject) => {
+                let data = {
+                    user_id: rootState.user.userInfo.id,
+                    collection_id: '',
+                    keyword: params?.keyword || '',
+                    note_type: state.catalogActiveState.noteTypeActive
+                }
+                getGroupTrashInitialApi(data).then((res) => {
                     if(res.status_code === 200){
                         commit('SET_TAG_INITIAL_LIST', res.data)
                     }

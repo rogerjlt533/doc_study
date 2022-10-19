@@ -77,7 +77,7 @@
 </template>
 
 <script setup>
-    import { reactive, nextTick, ref, defineProps, defineEmits, computed } from "vue"
+    import { reactive, nextTick, ref, defineProps, defineEmits, computed, onBeforeUnmount } from "vue"
     import bus from '@/utils/bus'
     import { useStore } from "vuex"
     import { getToken } from "@/utils/auth"
@@ -155,6 +155,19 @@
         }))
         menu.popup()
     }
+
+    let editorBox = ref(null)
+    let editor = ref(null)
+    editor.value = editorInstance(props.content, editorBox, props.edit, className, onSubmit, editContent)
+    // 监听修改列表高度
+    bus.on('changeNotesListHeight', async () => {
+        await nextTick()
+        let annotationHeight = annotationRef.value ? annotationRef.value.offsetHeight : 0
+        let editorBoxHeight = editorBox.value ? editorBox.value.offsetHeight : 0
+
+        console.log('editorBoxHeight',editorBoxHeight)
+        store.commit('notes/SET_NOTES_LIST_HEIGHT', editorBoxHeight + annotationHeight)
+    })
 
     // 图片上传方法
     let uploadHeader = {
@@ -289,10 +302,12 @@
         isDisabled.value = true
         store.dispatch("notes/editNote", params).then((res) => {
             isDisabled.value = false
+            store.commit('notes/SET_EDIT_NOTE_COUNT', 0)
         })
     }
     function cancelEdit(){
         emit('editNotesContent', false);
+        store.commit('notes/SET_EDIT_NOTE_COUNT', 0)
     }
 
     // 监听选择标签
@@ -384,13 +399,17 @@
     }
     //  ----end-----
 
+    // 组件销毁前，取消bus监听
+    onBeforeUnmount(() => {
+        bus.off('changeNotesListHeight')
+        bus.off('SET_TEXT_EDITOR_TAG')
+        bus.off('SET_ANNOTATION_ID')
+    })
+
     /**
      * 初始化编辑器
      * 1.由于有用户自定义快捷用语,所以需要在获取到数据后再加载编辑器,否则会出现快捷用语失效的bug
      */
-    let editorBox = ref(null)
-    let editor = ref(null)
-    editor.value = editorInstance(props.content, editorBox, props.edit, className, onSubmit, editContent)
     // let quickList = computed(() => { return store.state.user.userQuickList })
     // if(!(quickList.value && quickList.value.length > 0)){  // 判断有没有相关数据,没有数据重新调用接口
     //     store.dispatch("user/getUserQuickList").then((res) => {
@@ -413,13 +432,6 @@
     //     }
     // })
 
-    // 监听修改列表高度
-    bus.on('changeNotesListHeight', async () => {
-        await nextTick()
-        let annotationHeight = annotationRef.value ? annotationRef.value.offsetHeight : 0
-        let editorBoxHeight = editorBox.value ? editorBox.value.offsetHeight : 0
-        store.commit('notes/SET_NOTES_LIST_HEIGHT', editorBoxHeight + annotationHeight)
-    })
 
 </script>
 

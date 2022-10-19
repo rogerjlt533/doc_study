@@ -78,7 +78,6 @@ export function createImageExtension () {
             },
         }],
         renderHTML: ({ HTMLAttributes }) => {
-            console.log("123123123asdasdasd")
             return ['img', HTMLAttributes]
         } ,
 

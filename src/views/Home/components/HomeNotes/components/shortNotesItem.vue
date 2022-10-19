@@ -29,14 +29,14 @@
                         <template #dropdown>
                             <el-dropdown-menu>
                                 <el-dropdown-item
-                                        :class="[collect.id === item.collection_id ? 'actived' : '']"
+                                        :class="[collect.id === item.collection_id ? 'collect-dropdown-active' : '']"
                                         v-for="(collect,index) in collectionListSelf" :key="index"
                                         @click="resetCollection(collect,index)">
                                     {{collect.collection}}
                                 </el-dropdown-item>
                                 <el-divider v-if="collectionListSelf.length && collectionListTeam.length" style="margin: 4px 0"></el-divider>
                                 <el-dropdown-item
-                                        :class="[collect.id === item.collection_id ? 'actived' : '']"
+                                        :class="[collect.id === item.collection_id ? 'collect-dropdown-active' : '']"
                                         v-for="(collect,index) in collectionListTeam" :key="index"
                                         @click="resetCollection(collect,index)">
                                     {{collect.collection}}
@@ -47,7 +47,7 @@
                     <div v-else>
                         <span class="color" :style="{ background: item.collection.color }"></span>
                         <span class="name">{{item.collection.collection}}</span>
-                        <font-awesome-icon v-show="item.collection.is_team == 1" icon="user-friends" class="mr6" style="font-size: 12px;" color="#9EA0AD" />
+                        <font-awesome-icon v-show="item.collection.is_team == 1" icon="user-friends" class="mr6 font-12" color="#9EA0AD" />
                     </div>
                 </div>
             </div>
@@ -67,6 +67,17 @@
         <span class="flod ml10" v-if="isOverHeight > 200" @click="isFlod = !isFlod">
             {{!isFlod ? "展开" : "收起"}}
         </span>
+        <!--<div class="picture-box">-->
+        <!--    <div class="picture" v-for="(img,index) in item.srcArr">-->
+        <!--        <el-image-->
+        <!--            class="picture-img"-->
+        <!--            fit="cover"-->
+        <!--            :src="img"-->
+        <!--            :preview-src-list="item.srcArr"-->
+        <!--            :initial-index="index"-->
+        <!--        ></el-image>-->
+        <!--    </div>-->
+        <!--</div>-->
 
         <!-- 历史笔记 -->
         <el-drawer
@@ -168,7 +179,6 @@
         const editorHtml = handleHtmlTagSpace(editor.getHTML())
         const tag_list = editorHtml.match(matchReg) ? editorHtml.match(matchReg).map(item => item.substr(1).trim()) : []
         const contentHtml = handleContentHtml(editor.getHTML())
-
         const res = await store.dispatch("notes/editNote",{
             contentHtml,
             contentJson,
@@ -213,7 +223,8 @@
     // 编辑笔记
     function editNote(){
         setTimeout(() => {
-            props.item.ifEditCon = true;
+            props.item.ifEditCon = true
+            store.commit('notes/SET_EDIT_NOTE_COUNT', 1)
         }, 150)
     }
     // 双击编辑笔记
@@ -293,11 +304,6 @@
     })
 </script>
 
-<style lang="scss">
-    .note-drawer{
-        background: #f5f5f5;
-    }
-</style>
 <style lang="scss" scoped>
     .line-one{
         display: flex;
@@ -368,12 +374,32 @@
         max-height: 220px;
         overflow: hidden;
     }
-    .trigger-style{
-        &:hover{
-            box-shadow: 0px 1px 4px -2px rgba($color: #000000, $alpha: 0.5);
-        }
-        &:active{
-            box-shadow: 0px 0px 4px -3px rgba($color: #000000, $alpha: 0.5);
+    //.trigger-style{
+    //    &:hover{
+    //        box-shadow: 0px 1px 4px -2px rgba($color: #000000, $alpha: 0.5);
+    //    }
+    //    &:active{
+    //        box-shadow: 0px 0px 4px -3px rgba($color: #000000, $alpha: 0.5);
+    //    }
+    //}
+
+    .picture-box{
+        @include flexAlignJustify(center, flex-start);
+        margin: 10px 10px 0 10px;
+        padding: 10px 5px;
+        background: #FFFFFF;
+        border-radius: 8px;
+        .picture{
+            @include flexAlignJustify(center, center);
+            width: 80px;
+            height: 80px;
+            background: #eeeeee;
+            border-radius: 4px;
+            margin: 0 5px;
+            .picture-img{
+                width: 76px;
+                height: 76px;
+            }
         }
     }
 
@@ -418,5 +444,15 @@
                 padding: 10px;
             }
         }
+    }
+</style>
+<style lang="scss">
+    .note-drawer{
+        background: #f5f5f5;
+    }
+
+    .collect-dropdown-active{
+        background-color: rgba($color: $purple, $alpha: 0.1) !important;
+        color: $purple !important;
     }
 </style>
