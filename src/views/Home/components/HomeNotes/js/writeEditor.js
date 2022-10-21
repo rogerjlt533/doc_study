@@ -141,7 +141,7 @@ export function writeEditor(){
             handleTargetName(".write-content")
         },
         onBlur(){
-
+            editNow()
         },
         beforeDestroy() {
             editor.destroy()
@@ -192,7 +192,7 @@ export function edit(editor){
     })
 }
 
-export function editNow(){
+function editNow(){
     if( !timer ) return
 
     clearTimeout(timer)

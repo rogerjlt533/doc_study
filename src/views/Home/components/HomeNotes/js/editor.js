@@ -28,6 +28,7 @@ export function editorInstance(content, editorBox, isEdit = false, className, on
             whitespace: 'pre'
         },
         extensions: [
+            dependence.HardBreak,
             dependence.Document,
             dependence.Paragraph,
             dependence.Text,

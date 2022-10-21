@@ -75,7 +75,6 @@
         writeEditor,
         getEditorStatus,
         getTableOfContents,
-        editNow,
         writeInfo,
         quoteArray,
         writeTags
@@ -124,9 +123,6 @@
     }
     // 读取笔记
     function readNoteDetail(item, index){
-
-        editNow()  // 切换笔记本之前先将当前的笔记内容保存
-
         getEditorStatus(item, index)
         setNoteState(item)
         writeTags.value = item.tags

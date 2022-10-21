@@ -1,11 +1,10 @@
-import  { Node, nodeInputRule, Extension }  from  '@tiptap/core' ;
+import { Node, nodeInputRule, Extension } from '@tiptap/core';
 import { Plugin } from 'prosemirror-state';
-import dependence from "./dependence.js";
 // 用于图片粘贴上传
 import {ElLoading, ElMessage} from "element-plus";
 import axios from "axios";
 import { getToken } from "@/utils/auth";
-// import  { dropImagePlugin, UploadFn }  from  './drop_image' ;
+import bus from '@/utils/bus'
 
 const IMAGE_INPUT_REGEX = /!\[(.+|:?)\]\((\S+)(?:(?:\s+)["'](\S+)["'])?\)/;
 export const inputRegex = /(!\[(.+|:?)]\((\S+)(?:(?:\s+)["'](\S+)["'])?\))/
@@ -114,8 +113,9 @@ export function createImageExtension () {
 
                                     if (uploadFn && image) {
                                         uploadFn(image).then((src) => {
+                                            bus.emit('handlePasteImage', src)
                                             const node = schema.nodes.image.create({
-                                                src: src,
+                                                src: src
                                             });
                                             const transaction = view.state.tr.replaceSelectionWith(node);
                                             view.dispatch(transaction);

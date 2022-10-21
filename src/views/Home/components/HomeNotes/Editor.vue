@@ -54,7 +54,6 @@
                             ref="elUploadRef"
                             class="upload-demo"
                             :action="api + '/api/user/upload'"
-                            multiple
                             :show-file-list="false"
                             :on-progress="uploadLoading"
                             :on-success="uploadSuccess"
@@ -64,7 +63,7 @@
                     </el-upload>
                 </div>
                 <div style="width: 100px;" v-show="showProgress">
-                    <el-progress :stroke-width="10" :percentage="progressNum"></el-progress>
+                    <el-progress color="#6C56F6" :stroke-width="10" :percentage="progressNum"></el-progress>
                 </div>
             </div>
             <el-button v-if="!edit" class="color-white btn-style" color="#734eff" type="primary" size="small" :loading="isDisabled" @click="onSubmit">记 录</el-button>
@@ -181,14 +180,7 @@
         if(response.code === 200){
             elUploadRef.value.clearFiles()
             if(response.data.file){
-                editor.value.chain().insertContent([
-                    {
-                        content: [
-                            {type: 'image',attrs: { src: response.data.file }}
-                        ],
-                        type: "paragraph"
-                    }
-                ]).run()
+                handlePasteImage(response.data.file)
             }
         }
     }
@@ -196,6 +188,13 @@
         showProgress.value = true
         progressNum.value = parseInt(event.percent)
     }
+    function handlePasteImage(src){
+        const imageHtml = `<img src="${src}"><p></p>`
+        editor.value.chain().insertContent( imageHtml ).focus().run()
+    }
+    bus.on('handlePasteImage', (src) => {
+        handlePasteImage(src)
+    })
 
     // 提交输入内容
     let annotationNote = reactive({
@@ -221,7 +220,7 @@
         store.commit("notes/SET_NOTES_LIST_HEIGHT", editorBox.value.offsetHeight)
     }
     // 监听展示引用模块
-    bus.on("SET_ANNOTATION_ID", async ({item, isOverHeight}) => {
+    bus.on("setAnnotationId", async ({item, isOverHeight}) => {
         Object.keys(annotationNote).forEach((key) => {
             annotationNote[key] = item[key]
         })
@@ -264,7 +263,7 @@
                 Object.keys(annotationNote).forEach((key) => {
                     annotationNote[key] = ""
                 })
-                bus.emit("MAKE_LIST_TOP")
+                bus.emit("handleMakeListTop")
                 store.commit("notes/CLEAR_CACHED_NOTE")
                 editor.value.commands.clearContent()
                 // 记录完后重新计算高度
@@ -311,7 +310,7 @@
     }
 
     // 监听选择标签
-    bus.on("SET_TEXT_EDITOR_TAG", (data) => {
+    bus.on("setTagToEditor", (data) => {
         if(data.tag){
             let content = editor.value?.getHTML();  // 获取编辑器中的内容
             /**
@@ -361,7 +360,6 @@
         showEmoji.value = false;
     }
 
-
     // 点击编辑框  ORC功能  图片识别文字   ----start-----
     let imageUrl = "";
     function clickEditorNode(e){
@@ -402,8 +400,9 @@
     // 组件销毁前，取消bus监听
     onBeforeUnmount(() => {
         bus.off('changeNotesListHeight')
-        bus.off('SET_TEXT_EDITOR_TAG')
-        bus.off('SET_ANNOTATION_ID')
+        bus.off('setTagToEditor')
+        bus.off('setAnnotationId')
+        bus.off('handlePasteImage')
     })
 
     /**
@@ -480,10 +479,14 @@
             line-height: 20px;
         }
         img{
-            margin: 0 auto;
-            max-width: calc(100% - 2px);
+            display: block;
+            margin: 4px auto;
+            max-width: calc(100% - 20px);
             border-radius: 4px;
             outline: none;
+            &.ProseMirror-selectednode {
+                box-shadow: 0 0 0 4px rgb(108 86 246 / 30%);
+            }
         }
     }
     .el-upload-list{
