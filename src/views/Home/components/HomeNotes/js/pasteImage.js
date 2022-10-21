@@ -1,19 +1,12 @@
 import  { Node, nodeInputRule, Extension }  from  '@tiptap/core' ;
 import { Plugin } from 'prosemirror-state';
+import dependence from "./dependence.js";
 // 用于图片粘贴上传
 import {ElLoading, ElMessage} from "element-plus";
 import axios from "axios";
 import { getToken } from "@/utils/auth";
 // import  { dropImagePlugin, UploadFn }  from  './drop_image' ;
 
-/**
- * Matches following attributes in Markdown-typed image: [, alt, src, title]
- *
- * Example:
- * ![Lorem](image.jpg) -> [, "Lorem", "image.jpg"]
- * ![](image.jpg "Ipsum") -> [, "", "image.jpg", "Ipsum"]
- * ![Lorem](image.jpg "Ipsum") -> [, "Lorem", "image.jpg", "Ipsum"]
- */
 const IMAGE_INPUT_REGEX = /!\[(.+|:?)\]\((\S+)(?:(?:\s+)["'](\S+)["'])?\)/;
 export const inputRegex = /(!\[(.+|:?)]\((\S+)(?:(?:\s+)["'](\S+)["'])?\))/
 
@@ -52,8 +45,7 @@ async function uploadFn(file) {
 export function createImageExtension () {
     return Node.create({
         name: 'image',
-        inline: true,
-        group: 'inline',
+        group: 'block',
         draggable: true,
         addAttributes: () => ({
             src: {},

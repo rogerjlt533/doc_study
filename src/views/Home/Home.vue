@@ -24,19 +24,20 @@
     </div>
 
     <el-dialog
-            title="应用更新......"
+            title="应用更新"
             v-model="showUpdater"
             :close-on-click-modal="false"
             :close-on-press-escape="false"
             :show-close="false"
-            width="450px"
-            top="26vh"
-            center>
-        <template v-if="downloadProcess">
-            <p>{{'当前:' + downloadProcess.transferred + '   /   共' + downloadProcess.total}}</p>
-            <el-progress :text-inside="true" :stroke-width="18" :percentage="downloadProcess.percent"></el-progress>
-            <p>正在下载({{downloadProcess.speed}})......</p>
-        </template>
+            top="30vh"
+            width="400px"
+            center
+    >
+        <div class="pb20 pl10 pr10 pt6" v-if="downloadProcess">
+            <p class="mb10">{{'当前:' + downloadProcess.transferred + '   /   共' + downloadProcess.total}}</p>
+            <el-progress color="#6C56F6" :text-inside="true" :stroke-width="18" :percentage="downloadProcess.percent"></el-progress>
+            <p class="mt10">正在下载：({{downloadProcess.speed}})</p>
+        </div>
     </el-dialog>
 </template>
 

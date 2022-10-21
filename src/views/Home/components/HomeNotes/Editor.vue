@@ -480,11 +480,10 @@
             line-height: 20px;
         }
         img{
+            margin: 0 auto;
             max-width: calc(100% - 2px);
-            &.ProseMirror-selectednode {
-                margin: 1px;
-                outline: 1px solid #68CEF8;
-            }
+            border-radius: 4px;
+            outline: none;
         }
     }
     .el-upload-list{

@@ -96,6 +96,7 @@
         writeTypeText.value = newVal === 2 ? '卡片速记' : '写作模式'
     })
     function changeWriteModel(){
+        const isTrash = store.state.notes.catalogActiveState.trashActive
         store.commit('notes/CHANGE_CATALOG_ACTIVE_STATE', {
             noteTypeActive: noteTypeActive.value === 1 ? 2 : 1
         })
@@ -104,7 +105,11 @@
         })
         setTimeout(() => {
             store.dispatch("notes/getTagsList")
-            store.dispatch("notes/getGroupInitial")
+            if(isTrash){
+                store.dispatch('notes/getGroupTrashInitial')
+            }else{
+                store.dispatch('notes/getGroupInitial')
+            }
         })
     }
 

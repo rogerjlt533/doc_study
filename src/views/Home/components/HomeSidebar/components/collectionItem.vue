@@ -112,8 +112,11 @@
         if(editNoteCount > 0){
             ElMessageBox.confirm('还有正在编辑的卡片哦~', {
                 type: 'warning',
-                confirmButtonText: "去编辑",
-                cancelButtonText: '全部取消',
+                customClass: 'edit-note-message-box',
+                confirmButtonText: "返回编辑 ",
+                confirmButtonClass: 'edit-note-confirm-btn',
+                cancelButtonText: '放弃保存',
+                cancelButtonClass: 'edit-note-cancel-btn',
                 showClose: false,
                 closeOnClickModal: false,
                 closeOnPressEscape: false,
@@ -276,5 +279,42 @@
     }
     .opacity1{
         opacity: 1;
+    }
+</style>
+<style lang="scss">
+    .edit-note-message-box{
+        width: 300px !important;
+        .edit-note-confirm-btn{
+            background: $purple !important;
+            border-color: $purple !important;
+            &:focus-visible {
+                outline: none;
+                outline-offset: 0;
+            }
+            &:focus{
+                background: $purple !important;
+                opacity: 0.8;
+            }
+            &:hover{
+                background: $purple !important;
+                opacity: 0.8;
+            }
+        }
+        .edit-note-cancel-btn{
+            &:focus-visible {
+                outline: none;
+                outline-offset: 0;
+            }
+            &:focus{
+                background: #eeeeee !important;
+                color: #999999;
+                border-color: #cccccc;
+            }
+            &:hover{
+                background: #eeeeee !important;
+                color: #999999;
+                border-color: #cccccc;
+            }
+        }
     }
 </style>

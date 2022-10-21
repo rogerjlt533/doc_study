@@ -10,12 +10,13 @@ import suggestion from './suggestion'
 import { handleTagHtml } from '@/utils/tools'
 // 用于图片粘贴上传
 import {createImageExtension, handleTargetName} from "./pasteImage.js"
+import Image from "@tiptap/extension-image";
 
 let timer = null
 let cachedHtml = computed(() => store.state.notes.cachedNote )
 
 // 简记模式
-export const showOptions = ref(false)
+// export const showOptions = ref(false)
 export function editorInstance(content, editorBox, isEdit = false, className, onSubmit = ()=>{}, editContent = ()=>{}){
     const editor = new Editor({
         content: content || cachedHtml.value,
@@ -104,11 +105,11 @@ export function editorInstance(content, editorBox, isEdit = false, className, on
             closeTips(); // 及时关闭识别文字的弹窗
         },
         onFocus(){
-            showOptions.value = true
+            // showOptions.value = true
             handleTargetName(isEdit ? `.${className.value}` : ".container-editor")
         },
         onBlur(){
-            showOptions.value = false
+            // showOptions.value = false
         },
         beforeDestroy() {
             editor.destroy()
@@ -133,6 +134,7 @@ Editor.simpleEditor = function (content){
                 dependence.ListItem,
                 dependence.Underline,
                 dependence.Bold,
+                new createImageExtension(),
                 dependence.Link.configure({
                     openOnClick: true
                 }),
@@ -173,6 +175,7 @@ export function handleHtmlToJson(html){
         dependence.ListItem,
         dependence.Underline,
         dependence.Bold,
+        dependence.Image,
         dependence.Link.configure({
             openOnClick: true
         }),

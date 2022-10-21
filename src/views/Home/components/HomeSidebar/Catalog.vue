@@ -236,7 +236,6 @@
     // 异步组件
     const maskCom = defineAsyncComponent(() => import('@/components/maskCom'))
 
-
     const store = useStore();
 
     // ref
@@ -450,10 +449,17 @@
 
     // 展示知识图谱
     let showKnowledgeGraph = ref(false)
-    async function knowledgeGraph({item, index}){
+    async function knowledgeGraph({item}){
         const user_id = store.state.user.userInfo.id
         getGraph(user_id, item, showKnowledgeGraph)
     }
+    bus.on('showKnowledgeGraph',() => {
+        let item = {
+            collection: store.state.notes.catalogActiveState.collectionTitle,
+            id: store.state.notes.catalogActiveState.collectionActive
+        }
+        knowledgeGraph({item})
+    })
 
     onMounted( () => {
         store.dispatch("collection/getCollection")

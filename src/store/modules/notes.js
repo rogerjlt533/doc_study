@@ -9,6 +9,8 @@ import {ElMessageBox} from "element-plus";
 import bus from '@/utils/bus';
 
 const tagService = require('service/service/tag');
+const imgReg = /<img.*?(?:>|\/>)/gi
+const srcReg = /src=[\'\"]?([^\'\"]*)[\'\"]?/i
 
 export default {
     namespaced: true,
@@ -71,9 +73,7 @@ export default {
          * 5.页面初始化时
          */
         SET_NOTES_LIST_HEIGHT(state, data){
-            console.log('height', data)
             state.notesListHeight = `calc(100vh - ${data + 110}px)`
-            console.log('state.notesListHeight', state.notesListHeight)
         },
         // 设置目录的展开收起状态
         CHANGE_CATALOG_STATE(state, { showSelfCollection, showTeamCollection, showTags }){
@@ -143,6 +143,7 @@ export default {
         ADD_NOTE(state, {note_type, data}){
             if(state.notes.trash) return
             if(note_type === 1){
+                data = handleNoteImg(data)
                 state.notes.sort === "desc" ? state.noteslist.unshift(data) : state.noteslist.push(data)
                 state.catalogActiveState.short_note_count ++
                 return
@@ -154,7 +155,6 @@ export default {
             }
         },
         REMOVE_NOTE(state, {index, note_type}){
-            console.log(index, note_type)
             if(note_type === 1){
                 state.noteslist.splice(index, 1)
                 state.catalogActiveState.short_note_count --
@@ -184,6 +184,7 @@ export default {
                     state.writeNotesList[index][key] = data[key]
                 })
             }else{
+                data = handleNoteImg(data)
                 Object.keys(state.noteslist[index]).forEach((key) => {
                     state.noteslist[index][key] = data[key]
                 })
@@ -193,6 +194,7 @@ export default {
             state.isFinish = data;
         },
         RECOVERY_NOTE(state, data){
+            data = handleNoteImg(data)
             let index = state.noteslist.findIndex(item => item.id === data.id)
             state.noteslist[index] = data
         },
@@ -305,21 +307,12 @@ export default {
                 noteParams.params = deepClone(params)
                 getNotesApi(noteParams).then((res) => {
                     if(res.status_code === 200){
-                        const imgReg = /<img.*?(?:>|\/>)/gi
-                        const srcReg = /src=[\'\"]?([^\'\"]*)[\'\"]?/i
+
 
                         let list = res.data.note || []
                         let count = res.data.count
 
-                        list = list.map(note => {
-                            let arr = note.note.match(imgReg);  // arr 为包含所有img标签的数组
-                            let srcArr = []
-                            if(arr && arr.length){
-                                srcArr = arr.map(src => src.match(srcReg)[1])
-                            }
-                            note.srcArr = srcArr
-                            return note
-                        })
+                        list = list.map(note => handleNoteImg(note))
 
                         // 判断是否列表结束
                         let pageSize = data.page === 1 ? 20 : size
@@ -628,6 +621,22 @@ function getNoteIntroduction(item, index = 0){
     // const htmlJson = getHtmlToJson(item.note)
     // item.title = htmlJson.content[0].content && htmlJson.content[0].content[0] ? htmlJson.content[0].content[0].text : ''
     // item.desc = removeHtmlTag(item.note, ' ').replace(item.title, '')
+}
+
+
+function handleNoteImg(note){
+    note.curtNote = note.note
+    let imgArr = note.note.match(imgReg)
+    let imgSrc = []
+    if(imgArr && imgArr.length){
+        imgSrc = imgArr.map(src => src.match(srcReg)[1])
+        imgArr.forEach((img) => {
+            note.curtNote = note.curtNote.replace(img, '')
+        })
+    }
+    note.imgSrc = imgSrc
+
+    return note
 }
 
 

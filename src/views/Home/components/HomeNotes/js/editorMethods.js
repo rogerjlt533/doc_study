@@ -1,6 +1,6 @@
 import { computed } from 'vue'
 import openUrlByBrowser from "@/assets/js/openUrlByBrowser";
-import previewImg from "@/lib/imagePreview";
+import previewImg from "@/components/imagePreview";
 import bus from '@/utils/bus'
 import store from "@/store/index.js"
 

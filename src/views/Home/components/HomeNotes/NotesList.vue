@@ -125,8 +125,8 @@
     import { ElMessageBox, ElNotification } from "element-plus"
     // 异步组件 -----
     const HomeNotesEditor = defineAsyncComponent(() => import('./Editor.vue'))
-    const NoteAnnotation = defineAsyncComponent(() => import('./components/NoteAnnotation.vue'))
     const shortNotesItem = defineAsyncComponent(() => import('./components/shortNotesItem.vue'))
+    const NoteAnnotation = defineAsyncComponent(() => import('./components/NoteAnnotation.vue'))
     // const writeNotesItem = defineAsyncComponent(() => import('./components/writeNotesItem.vue'))
 
     const store = useStore();
@@ -228,6 +228,7 @@
     function closeEdit(item){
         item.ifEditCon = false
     }
+
     // 关闭笔记引用
     function closeQuote(item, i){
         ElMessageBox.confirm('确定删除该引用吗？',{

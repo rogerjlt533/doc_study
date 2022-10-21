@@ -19,6 +19,7 @@
     import {ref, defineProps, computed} from "vue";
     import bus from '@/utils/bus';
     import { useStore } from "vuex";
+    import {ElMessageBox} from "element-plus";
 
     const remote = require('electron').remote;
     const Menu = remote.Menu;
@@ -59,7 +60,29 @@
             ? store.state.notes.catalogActiveState.tagGroupActive : undefined
     })
     function filterNoteList({ id, tag, group_id = '' }){
-
+        const editNoteCount = store.state.notes.editNoteCount
+        if(editNoteCount > 0){
+            ElMessageBox.confirm('还有正在编辑的卡片哦~', {
+                type: 'warning',
+                customClass: 'edit-note-message-box',
+                confirmButtonText: "返回编辑 ",
+                confirmButtonClass: 'edit-note-confirm-btn',
+                cancelButtonText: '放弃保存',
+                cancelButtonClass: 'edit-note-cancel-btn',
+                showClose: false,
+                closeOnClickModal: false,
+                closeOnPressEscape: false,
+                distinguishCancelAndClose: true
+            }).then().catch(() => {
+                bus.emit('closeEditorInstance')
+                store.commit('notes/SET_EDIT_NOTE_COUNT')
+                handleChangeTags({ id, tag, group_id })
+            })
+            return false
+        }
+        handleChangeTags({ id, tag, group_id })
+    }
+    function handleChangeTags({ id, tag, group_id }){
         setTimeout(() => {
             bus.emit("SET_TEXT_EDITOR_TAG", {
                 tag: tag

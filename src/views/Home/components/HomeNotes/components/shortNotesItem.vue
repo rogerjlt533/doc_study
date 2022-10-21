@@ -52,11 +52,9 @@
                 </div>
             </div>
         </div>
-        <div
-                ref="htmlRef" class="line-two"
-                :class="[ isOverHeight > 200 && !isFlod ? 'max-height' : '']"
-        >
-            <div class="content-html" v-html="item.note" @click="getNoteNodeClick" @dblclick="dblclickNote"></div>
+        <!--:class="[ isOverHeight > 200 && !isFlod ? 'max-height' : '']"-->
+        <div ref="htmlRef" class="line-two">
+            <div class="content-html" v-html="noteDetail" @click="getNoteNodeClick" @dblclick="dblclickNote"></div>
             <div class="resource-url" v-if="item.url" @click="openUrlByBrowser(item.url)">
                 <div>
                     <span>来源网站</span>
@@ -64,20 +62,25 @@
                 </div>
             </div>
         </div>
-        <span class="flod ml10" v-if="isOverHeight > 200" @click="isFlod = !isFlod">
-            {{!isFlod ? "展开" : "收起"}}
-        </span>
-        <!--<div class="picture-box">-->
-        <!--    <div class="picture" v-for="(img,index) in item.srcArr">-->
-        <!--        <el-image-->
-        <!--            class="picture-img"-->
-        <!--            fit="cover"-->
-        <!--            :src="img"-->
-        <!--            :preview-src-list="item.srcArr"-->
-        <!--            :initial-index="index"-->
-        <!--        ></el-image>-->
-        <!--    </div>-->
-        <!--</div>-->
+        <!--<span class="flod ml10" v-if="isOverHeight > 200" @click="isFlod = !isFlod">{{!isFlod ? "展开" : "收起"}}</span>-->
+        <div class="picture-box" v-if="item.imgSrc?.length">
+            <el-divider content-position="right">
+                <span class="card-detail unselectable" @click="openCardDetails">
+                    {{showThumbnail ? '卡片原文' : '折叠'}}
+                </span>
+            </el-divider>
+            <div class="picture" v-show="showThumbnail">
+                <el-image
+                        v-for="(img,index) in item.imgSrc"
+                        class="picture-img"
+                        fit="cover"
+                        :src="img"
+                        :preview-src-list="item.imgSrc"
+                        :initial-index="index"
+                ></el-image>
+            </div>
+        </div>
+
 
         <!-- 历史笔记 -->
         <el-drawer
@@ -111,22 +114,20 @@
 </template>
 
 <script setup>
-    import {ref, defineProps, onMounted, defineEmits, watch, computed, nextTick} from "vue";
+    import {ref, defineProps, onMounted, defineEmits, computed, defineAsyncComponent} from "vue";
     import { useStore } from "vuex"
     import bus from '@/utils/bus'
-    import { getNotesHistoryApi, rollHistoryApi } from '@/apiDesktop/notes'
-    // 组件 ----
-    import previewImg from "@/components/imagePreview"
-    import NoteAnnotation from "./NoteAnnotation.vue";
-    import { ElMessageBox, ElNotification } from "element-plus"
-    import { RefreshLeft, Loading } from '@element-plus/icons-vue'
+    import {getNotesHistoryApi, removePostilApi, rollHistoryApi} from '@/apiDesktop/notes'
     // hooks ----
     import { simpleEditor } from "../js/editor"
     import { handleContentHtml, handleHtmlTagSpace } from '@/utils/processHtml'
     import openUrlByBrowser from "@/assets/js/openUrlByBrowser";
     import { getNoteNodeClick } from '../js/editorMethods'
-    import { removeHtmlTag } from '@/utils/tools'
     import fcDialog from "@/components/dialog";
+    // 组件 ----
+    import previewImg from "@/components/imagePreview"
+    import {ElMessageBox, ElNotification} from "element-plus"
+    import { RefreshLeft } from '@element-plus/icons-vue'
 
     const remote = require('electron').remote;
     const Menu = remote.Menu;
@@ -148,6 +149,10 @@
             default: ""
         }
     });
+
+    // let noteDetailVal = props.item.curtNote
+    // const noteDetail = computed(() => noteDetailVal)
+    const noteDetail = ref(props.item.curtNote)
 
     // 右击笔记本
     const handleRightClick = () => {
@@ -252,6 +257,14 @@
         })
         store.dispatch("user/getUserBase");
     }
+
+    // 展开全文逻辑
+    const showThumbnail = ref(true)
+    function openCardDetails(){
+        showThumbnail.value = !showThumbnail.value
+        noteDetail.value = showThumbnail.value ? props.item.curtNote : props.item.note
+    }
+
 
     // 获取笔记历史
     let showNoteHistory = ref(false);
@@ -384,21 +397,32 @@
     //}
 
     .picture-box{
-        @include flexAlignJustify(center, flex-start);
         margin: 10px 10px 0 10px;
-        padding: 10px 5px;
-        background: #FFFFFF;
-        border-radius: 8px;
-        .picture{
-            @include flexAlignJustify(center, center);
-            width: 80px;
-            height: 80px;
-            background: #eeeeee;
+        padding: 10px 0px;
+        .card-detail{
+            cursor: pointer;
+            padding: 4px 8px;
             border-radius: 4px;
-            margin: 0 5px;
+            color: #666666;
+            background: #FFFFFF;
+            &:hover{
+                background: rgba($color: $purple, $alpha: 0.5);
+                color: #FFFFFF;
+            }
+            &:active{
+                background: rgba($color: $purple, $alpha: 0.3);
+                color: #FFFFFF;
+            }
+        }
+        .picture{
+            @include flexAlignJustify(center, flex-start);
+            flex-wrap: wrap;
             .picture-img{
-                width: 76px;
-                height: 76px;
+                width: 80px;
+                height: 80px;
+                margin: 2px 6px;
+                border: 2px solid #dcdfe6;
+                border-radius: 4px;
             }
         }
     }
@@ -454,5 +478,14 @@
     .collect-dropdown-active{
         background-color: rgba($color: $purple, $alpha: 0.1) !important;
         color: $purple !important;
+    }
+
+    .picture-box{
+        .el-divider__text{
+            background: #F6F8FC !important;
+        }
+        .el-divider--horizontal{
+            margin: 10px 0;
+        }
     }
 </style>

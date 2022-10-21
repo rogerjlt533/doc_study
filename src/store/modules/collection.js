@@ -51,8 +51,8 @@ export default {
         async getCollection({commit, rootState}, params){
             const res = await getCollectionApi({
                 user_id: rootState.user.userInfo.id,
-                pages: params.page,
-                size: params.size
+                pages: 1,
+                size: 100
             })
             if(res.status_code === 200){
                 commit("SET_PROJECT_LIST", res.data)
