@@ -188,6 +188,8 @@ export default {
                 Object.keys(state.noteslist[index]).forEach((key) => {
                     state.noteslist[index][key] = data[key]
                 })
+
+                console.log('state.noteslist[index]', state.noteslist[index])
             }
         },
         SET_NOTESlIST_IF_DOWN(state, data){
@@ -307,8 +309,6 @@ export default {
                 noteParams.params = deepClone(params)
                 getNotesApi(noteParams).then((res) => {
                     if(res.status_code === 200){
-
-
                         let list = res.data.note || []
                         let count = res.data.count
 
@@ -383,7 +383,7 @@ export default {
                     cancelButtonText: '知道了',
                     confirmButtonText: '马上新建'
                 }).then(() => {
-                    bus.emit('ADD_COLLECTION')
+                    bus.emit('handleAddCollection')
                 })
                 return false
             }

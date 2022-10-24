@@ -192,7 +192,8 @@
         const imageHtml = `<img src="${src}"><p></p>`
         editor.value.chain().insertContent( imageHtml ).focus().run()
     }
-    bus.on('handlePasteImage', (src) => {
+    bus.on('handlePasteImage', ({type, src}) => {
+        if(type !== 'card') return
         handlePasteImage(src)
     })
 
