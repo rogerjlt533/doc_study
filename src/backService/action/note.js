@@ -40,8 +40,6 @@ exports.new = async function (user_id, collection_id, note_type, source, content
     postil_list = common.empty(postil_list) ? [] : postil_list
     tag_list = common.empty(tag_list) ? [] : tag_list
     struct_list = common.empty(struct_list) ? [] : struct_list
-    // 去掉末尾的空格 @Ivone
-    content = content.trimEnd()
     const note_id = await noteService.noteTool.create(user_id, collection_id, note_type, source, content, common.empty(url) ? '' : url, JSON.stringify(tag_list), JSON.stringify(struct_list))
     if (common.empty(note_id)) {
         return {status_code: 500, message: '记录创建失败', data: {}}
@@ -60,7 +58,6 @@ exports.new = async function (user_id, collection_id, note_type, source, content
     const quote = await noteService.noteQuote({id: note_id})
     const data = {
         id: common.encode(note_id),
-        remote_id: '',
         collection_id: common.encode(collection_id),
         hash_code: note.hash_code,
         todo_id: common.encode(0),
@@ -81,44 +78,10 @@ exports.new = async function (user_id, collection_id, note_type, source, content
         note_type,
         url: note.url
     }
-    await syncService.addNotePushQueue(user_id, note_id)
-    // await syncService.initNoteQuoteQueue(common.encodeDesktop(user_id), '', user_id, note)
-    // const params = {note_id, collection_id}
-    // await syncService.syncTool.create(user_id, 21, 2, params)
+    await syncService.initNoteQuoteQueue(common.encodeDesktop(user_id), '', user_id, note)
+    const params = {note_id, collection_id}
+    await syncService.syncTool.create(user_id, 21, 2, params)
     return {status_code: 200, message: 'success', data}
-}
-
-/**
- * 更换笔记本
- * @param user_id
- * @param note_id
- * @param collection_id
- * @returns {Promise<*>}
- */
-exports.changeCollection = async function (user_id, note_id, collection_id) {
-    user_id = common.decode(user_id)
-    note_id = common.decode(note_id)
-    collection_id = common.decode(collection_id)
-    const note = await noteService.noteTool.get(note_id)
-    if (common.empty(note) || common.empty(collection_id)) {
-        return {status_code: 400, message: '参数错误', data: {}}
-    }
-    const origin_collection_id = note.collection_id
-    if (parseInt(origin_collection_id) === parseInt(collection_id)) {
-        return {status_code: 400, message: '同步笔记本,无需变更', data: {}}
-    }
-    const group_res = await collectionService.collectionTool.getIsGroup(user_id, note.collection_id)
-    if (!group_res.status) {
-        return {status_code: 400, message: group_res.message, data: {}}
-    }
-    if (note.user_id !== user_id) {
-        return {status_code: 400, message: '非本人记录不可修改', data: {}}
-    }
-    await noteService.noteTool.changeCollection(note, collection_id)
-    await syncService.addNotePushQueue(user_id, note_id)
-    // const params = {note_id, collection_id}
-    // await syncService.syncTool.create(user_id, 21, 2, params)
-    return {status_code: 200, message: 'success', data: {}}
 }
 
 /**
@@ -139,7 +102,6 @@ exports.edit = async function (user_id, note_id, collection_id, content, postil_
     if (common.empty(note)) {
         return {status_code: 400, message: '参数错误', data: {}}
     }
-    const origin_note_hash = note.hash_code
     const origin_collection_id = note.collection_id
     if (!common.empty(collection_id)) {
         collection_id = common.decode(collection_id)
@@ -154,28 +116,20 @@ exports.edit = async function (user_id, note_id, collection_id, content, postil_
     if (note.user_id !== user_id) {
         return {status_code: 400, message: '非本人记录不可修改', data: {}}
     }
-    let save_time = note.last_update
     let relations = await tagService.tagTool.noteTagRelations(note_id, 'id')
     relations = common.list_column(relations, 'id')
     if (content !== note.note) {
-        save_time = common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
+        const save_time = common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
         await noteService.noteTool.history(note_id, 2, 2001, note.note, save_time, note.tag_json, note.struct_tag_json)
-        if (note.note_type === 1) {
-            await noteService.noteTool.updateNoteWeight(note_id, 1, save_time)
-        }
     }
-    // 去掉末尾的空格 @Ivone
-    content = content.trimEnd()
-    await noteService.noteTool.update(note_id, collection_id, content, JSON.stringify(tag_list), JSON.stringify(struct_list), save_time, note.updated_at)
+    await noteService.noteTool.update(note_id, collection_id, content, JSON.stringify(tag_list), JSON.stringify(struct_list), note.created_at)
     let origin_postil_list = await noteService.noteTool.postils(note_id, 'note_id')
     origin_postil_list = common.list_column(origin_postil_list, 'note_id')
-    let compare_origin_postil_list = JSON.parse(JSON.stringify(origin_postil_list))
     postil_list = common.empty(postil_list) ? [] : postil_list
     tag_list = common.empty(tag_list) ? [] : tag_list
     struct_list = common.empty(struct_list) ? [] : struct_list
     for (const postil of postil_list) {
         if (!common.empty(postil)) {
-            compare_origin_postil_list = compare_origin_postil_list.filter(origin_item => origin_item !== common.decode(postil))
             await noteService.noteTool.postil(common.decode(postil), note_id)
         }
     }
@@ -203,7 +157,6 @@ exports.edit = async function (user_id, note_id, collection_id, content, postil_
     const quote = await noteService.noteQuote({id: note_id})
     const data = {
         id: common.encode(note_id),
-        remote_id: common.empty(note.remote_id) ? '' :common.encode(note.remote_id),
         collection_id: common.encode(collection_id),
         hash_code: note.hash_code,
         todo_id: common.encode(note.todo_id),
@@ -224,12 +177,9 @@ exports.edit = async function (user_id, note_id, collection_id, content, postil_
         note_type: note.note_type,
         url: note.url
     }
-    // await syncService.initNoteQuoteQueue(common.encodeDesktop(user_id), '', user_id, note)
-    if (compare_origin_postil_list.length > 0 || origin_note_hash !== note.hash_code) {
-        await syncService.addNotePushQueue(user_id, note_id)
-        // const params = {note_id, collection_id}
-        // await syncService.syncTool.create(user_id, 21, 2, params)
-    }
+    await syncService.initNoteQuoteQueue(common.encodeDesktop(user_id), '', user_id, note)
+    const params = {note_id, collection_id}
+    await syncService.syncTool.create(user_id, 21, 2, params)
     return {status_code: 200, message: 'success', data}
 }
 
@@ -251,15 +201,11 @@ exports.remove = async function (user_id, note_id) {
     }
     const save_time = common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
     await noteService.noteTool.history(note_id, 3, 3001, note.note, save_time, note.tag_json, note.struct_tag_json)
-    if (note.note_type === 1) {
-        await noteService.noteTool.updateNoteWeight(note_id, -1, save_time)
-    }
     await noteService.noteTool.remove(note_id, save_time)
     // await noteService.noteTool.removePostil(note_id)
-    await syncService.addNotePushQueue(user_id, note_id)
-    // await syncService.initNoteQuoteQueue(common.encodeDesktop(user_id), '', user_id, note)
-    // const params = {note_id, collection_id: note.collection_id}
-    // await syncService.syncTool.create(user_id, 21, 2, params)
+    await syncService.initNoteQuoteQueue(common.encodeDesktop(user_id), '', user_id, note)
+    const params = {note_id, collection_id: note.collection_id}
+    await syncService.syncTool.create(user_id, 21, 2, params)
     return {status_code: 200, message: 'success', data: {}}
 }
 
@@ -355,10 +301,7 @@ exports.compile = async function(user_id, target_id, source_id, tag_list = [], s
     }
     const save_time = common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
     await noteService.noteTool.history(target_id, 2, 2001, target.note, save_time, target.tag_json, target.struct_tag_json)
-    await noteService.noteTool.update(target_id, target.collection_id, target.note + '<p></p>' + source.note, JSON.stringify(tag_list), JSON.stringify(struct_list), save_time, save_time)
-    if (target.note_type === 1) {
-        await noteService.noteTool.updateNoteWeight(target_id, 1, save_time)
-    }
+    await noteService.noteTool.update(target_id, target.collection_id, target.note + '<p></p>' + source.note, JSON.stringify(tag_list), JSON.stringify(struct_list), target.created_at)
     let relations = await tagService.tagTool.noteTagRelations(target_id, 'id')
     relations = common.list_column(relations, 'id')
     const edit_relations = await noteService.bindTags(user_id, target_id, tag_list)
@@ -376,14 +319,12 @@ exports.compile = async function(user_id, target_id, source_id, tag_list = [], s
     await noteService.noteTool.remove(source_id, save_time)
     await noteService.noteTool.removePostil(source_id)
     const info = await noteService.info(user_id, target_id);
-    await syncService.addNotePushQueue(user_id, source.id)
-    await syncService.addNotePushQueue(user_id, target.id)
-    // await syncService.initNoteQuoteQueue(common.encodeDesktop(user_id), '', user_id, source)
-    // let params = {note_id: source_id, collection_id: source.collection_id}
-    // await syncService.syncTool.create(user_id, 21, 2, params)
-    // await syncService.initNoteQuoteQueue(common.encodeDesktop(user_id), '', user_id, target)
-    // params = {note_id: target_id, collection_id: target.collection_id}
-    // await syncService.syncTool.create(user_id, 21, 2, params)
+    await syncService.initNoteQuoteQueue(common.encodeDesktop(user_id), '', user_id, source)
+    let params = {note_id: source_id, collection_id: source.collection_id}
+    await syncService.syncTool.create(user_id, 21, 2, params)
+    await syncService.initNoteQuoteQueue(common.encodeDesktop(user_id), '', user_id, target)
+    params = {note_id: target_id, collection_id: target.collection_id}
+    await syncService.syncTool.create(user_id, 21, 2, params)
     return {status_code: 200, message: 'success', data: {note: info.note}}
 }
 
@@ -419,23 +360,14 @@ exports.quote = async function(user_id, target_id, quote_list = []) {
     }
     for (const item of add_list) {
         await noteService.noteTool.postil(item, target_id)
-        const note = await noteService.noteTool.get(item)
-        if (note?.note_type === 1) {
-            await noteService.noteTool.updateNoteWeight(note.id, 2)
-        }
     }
     for (const item of del_list) {
         await noteService.noteTool.removePostil(item, target_id)
-        const note = await noteService.noteTool.get(item)
-        if (note?.note_type === 1) {
-            await noteService.noteTool.updateNoteWeight(note.id, -2)
-        }
     }
     const info = await noteService.info(user_id, target_id);
-    await syncService.addNotePushQueue(user_id, target_id)
-    // await syncService.initNoteQuoteQueue(common.encodeDesktop(user_id), '', user_id, note)
-    // const params = {note_id: target_id, collection_id: note.collection_id}
-    // await syncService.syncTool.create(user_id, 21, 2, params)
+    await syncService.initNoteQuoteQueue(common.encodeDesktop(user_id), '', user_id, note)
+    const params = {note_id: target_id, collection_id: note.collection_id}
+    await syncService.syncTool.create(user_id, 21, 2, params)
     return {status_code: 200, message: 'success', data: {note: info.note}}
 }
 
@@ -488,11 +420,11 @@ exports.roll = async function (user_id, history_id) {
     }
     let relations = await tagService.tagTool.noteTagRelations(note.id, 'id')
     relations = common.list_column(relations, 'id')
-    const save_time = common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
     if (history.former_note !== note.note) {
+        const save_time = common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
         await noteService.noteTool.history(note.id, 4, 4002, note.note, save_time, note.tag_json, note.struct_tag_json)
     }
-    await noteService.noteTool.update(note.id, note.collection_id, history.former_note, history.tag_list, history.struct_tag_json, save_time, save_time)
+    await noteService.noteTool.update(note.id, note.collection_id, history.former_note, history.tag_list, history.struct_tag_json, note.created_at)
     const tag_list = common.empty(history.tag_list) ? [] : JSON.parse(history.tag_list)
     const struct_list = common.empty(history.struct_tag_json) ? [] : JSON.parse(history.struct_tag_json)
     const edit_relations = await noteService.bindTags(user_id, note.id, tag_list)
@@ -505,10 +437,9 @@ exports.roll = async function (user_id, history_id) {
         await tagService.tagTool.clearNoteTagNode(note.id)
         await noteService.bindStructTags(user_id, note.id, struct_list)
     }
-    await syncService.addNotePushQueue(user_id, note.id)
-    // await syncService.initNoteQuoteQueue(common.encodeDesktop(user_id), '', user_id, note)
-    // const params = {note_id: note.id, collection_id: note.collection_id}
-    // await syncService.syncTool.create(user_id, 21, 2, params)
+    await syncService.initNoteQuoteQueue(common.encodeDesktop(user_id), '', user_id, note)
+    const params = {note_id: note.id, collection_id: note.collection_id}
+    await syncService.syncTool.create(user_id, 21, 2, params)
     return {status_code: 200, message: 'success', data: {}}
 }
 
@@ -531,104 +462,4 @@ exports.countByTag = async function (user_id, tag_id, collection_id) {
     }
     const count = await noteService.noteTool.count(user_id, params)
     return {status_code: 200, message: 'success', data: {count}}
-}
-
-/**
- * 转化为写作笔记
- * @param user_id
- * @param note_id
- * @returns {Promise<*>}
- */
-exports.convertToPage = async function (user_id, note_id) {
-    user_id = common.decode(user_id)
-    note_id = common.decode(note_id)
-    // 权限验证
-    const user_right_result = await userService.userTool.userRights(user_id)
-    if (common.empty(user_right_result.is_pro)) {
-        return {status_code: 401, message: '升级pro权限可切换卡片', data: {}}
-    }
-    const note = await noteService.noteTool.get(note_id)
-    if (common.empty(note)) {
-        return {status_code: 400, message: '参数错误', data: {}}
-    }
-    if (note.user_id !== user_id) {
-        return {status_code: 400, message: '非本人记录不可删除', data: {}}
-    }
-    if (note.note_type !== 1) {
-        return {status_code: 400, message: '非卡片笔记不可转化', data: {}}
-    }
-    if (note.note_type === 2) {
-        return {status_code: 400, message: '该笔记已是写作笔记', data: {}}
-    }
-    const tag_json = JSON.parse(note.tag_json)
-    const struct_tag_json = await tagService.tagTool.convertTagToStruct(tag_json)
-    const save_time = common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
-    await noteService.noteTool.updateNoteType(note_id, 2, !common.empty(tag_json) ? JSON.stringify(tag_json) : '', !common.empty(struct_tag_json) ? JSON.stringify(struct_tag_json) : '', save_time)
-    await noteService.noteTool.history(note_id, 2, 2001, note.note, save_time, note.tag_json, note.struct_tag_json)
-    await tagService.tagTool.clearNoteTag(note_id)
-    await noteService.bindStructTags(user_id, note_id, struct_tag_json)
-    await syncService.addNotePushQueue(user_id, note_id)
-    // const params = {note_id, collection_id: note.collection_id}
-    // await syncService.syncTool.create(user_id, 21, 2, params)
-    return {status_code: 200, message: 'success', data: {}}
-}
-
-/**
- * 日历笔记计数
- * @param user_id hash
- * @param note_type
- * @param collection_id
- * @param from_time 2022-07-01
- * @param end_time 2022-07-31
- * @param month 2022-07
- * @param orderby_create
- * @returns {Promise<{status_code: number, data: Array, message: string}>}
- */
-exports.calendar = async function (user_id, note_type, collection_id, from_time, end_time, month, orderby_create) {
-    user_id = common.decode(user_id)
-    collection_id = common.decode(collection_id)
-    const data = await noteService.calendarNoteCount(user_id, {note_type, collection_id, month, from_time, end_time, orderby_create})
-    return {status_code: 200, message: 'success', data}
-}
-
-/**
- * 获取远程笔记id
- * @param note_id
- * @returns {Promise<*>}
- */
-exports.getRemoteId = async function (note_id) {
-    note_id = common.decode(note_id)
-    const note = await noteService.noteTool.get(note_id)
-    if (common.empty(note)) {
-        return {status_code: 400, message: '参数错误', data: {}}
-    }
-    const remote_id = common.empty(note.remote_id) ? '' : common.encode(note.remote_id)
-    const data = {remote_id}
-    return {status_code: 200, message: 'success', data}
-}
-
-/**
- * 紧急推送本地单个笔记
- * @param user_id
- * @param note_id
- * @returns {Promise<*>}
- */
-exports.urgentPushNote = async function (user_id, note_id) {
-    user_id = common.decode(user_id)
-    note_id = common.decode(note_id)
-    const note = await noteService.noteTool.get(note_id)
-    if (common.empty(note)) {
-        return {status_code: 400, message: '参数错误', data: {}}
-    }
-    const user_right_result = await userService.userTool.userRights(user_id)
-    if (common.empty(user_right_result.is_pro)) {
-        return {status_code: 400, message: 'pro权限可以操作', data: {}}
-    }
-    if (note.user_id !== user_id) {
-        return {status_code: 400, message: '非个人笔记，无权限操作', data: {}}
-    }
-    await syncService.initUrgentNoteQuoteQueue(common.encodeDesktop(user_id), '', user_id, note)
-    const sync_params = {note_id: note.id, collection_id: note.collection_id, sync_urgent: 1}
-    await syncService.syncTool.create(user_id, 21, 2, sync_params)
-    return {status_code: 200, message: 'success', data: {}}
 }
