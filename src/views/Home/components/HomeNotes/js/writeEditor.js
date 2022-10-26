@@ -72,7 +72,7 @@ export function writeEditor(){
                 width: 2
             }),
             new smartRules(),
-            new createImageExtension(),
+            new createImageExtension(handlePasteImage),
             dependence.Link.configure({
                 HTMLAttributes: {
                     class: 'link-class',
@@ -149,6 +149,11 @@ export function writeEditor(){
     });
 
     return editor;
+}
+
+export const handlePasteImage = (src) => {
+    const imageHtml = `<img src="${src}"><p></p>`
+    editor.chain().insertContent( imageHtml ).focus().run()
 }
 
 export function getEditorStatus(item, index){

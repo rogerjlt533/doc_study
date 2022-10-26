@@ -36,7 +36,7 @@
             </el-timeline>
         </div>
         <div class="history" v-else>
-            <el-empty description="没有找到相关的历史笔记"></el-empty>
+            <el-empty description="没有相关历史笔记哦~~"></el-empty>
         </div>
     </div>
 </template>

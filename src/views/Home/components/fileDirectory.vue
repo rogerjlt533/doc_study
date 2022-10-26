@@ -1,274 +1,223 @@
 <template>
-    <div class="home" id="homeBox">
-        <div class="home-left" v-show="showCatalog">
-            <div class="fold-catalog">
-                <font-awesome-icon class="icon-angles-left" @click="handleShowCatalog" icon="angles-left" />
+    <div class="file-container">
+        <div class="mode">
+            <div class="mode-1" @click="switchNoteMode(true)">
+                <font-awesome-icon class="icon-font plus" icon="plus"></font-awesome-icon>
             </div>
-            <div class="home-menu" id="homeLeft">
-                <home-notes-catalog />
-                <home-notes-tag />
-            </div>
-            <div class="trash-btn unselectable" :class="trashActive ? 'active' : '' " @click="showNotes">
-                <svgFont class="font-14" :color="trashActive ? '#ffffff' : '#6F7A93'" icon="trash"></svgFont>
-                <span class="pl6">废纸篓</span>
+            <div class="mode-2" @click="switchNoteMode(false)">
+                <h4 class="unselectable">记录</h4>
+                <font-awesome-icon class="icon-font" icon="angle-right"></font-awesome-icon>
             </div>
         </div>
-        <div id="resizeL" v-show="showCatalog"></div>
-        <div class="home-right" id="homeRight" :style="{ width: showCatalog ? homeWidth : '100%' }">
-            <NoteToolbar @switch="changeWriteModel" :isWrite="isWrite"></NoteToolbar>
-            <div class="short-note" v-show="!isWrite">
-                <home-notes-editor />
-                <home-notes-list />
+        <div class="file-box" v-if="notesLongList && notesLongList.length">
+            <div
+                    class="file-list unselectable"
+                    v-for="(item, index) in notesLongList"
+                    :key="item.id"
+                    :class="[writeNoteActive.active === item.id ? 'active' : '']"
+                    @click="triggerNote(item, index)"
+                    @contextmenu="rightClickNote(item, index)"
+            >
+                <div class="file-content">
+                    <p class="note-title line-1" v-if="item.title">{{item.title}}</p>
+                    <p class='note-title note-title-none' v-else>您还没有开始写作哦~~</p>
+                    <p class='note-desc line-2' v-if="item.desc?.trim()">{{item.desc}}</p>
+                    <p class='note-desc note-desc-none' v-else>写点东西吧......</p>
+                    <span class="note-time">{{item.update_time || item.updated_time}}</span>
+                </div>
             </div>
-            <write-editor v-show="isWrite"></write-editor>
         </div>
     </div>
-
-    <el-dialog
-            title="应用更新......"
-            v-model="showUpdater"
-            :close-on-click-modal="false"
-            :close-on-press-escape="false"
-            :show-close="false"
-            width="450px"
-            top="26vh"
-            center>
-        <template v-if="downloadProcess">
-            <p>{{'当前:' + downloadProcess.transferred + '   /   共' + downloadProcess.total}}</p>
-            <el-progress :text-inside="true" :stroke-width="18" :percentage="downloadProcess.percent"></el-progress>
-            <p>正在下载({{downloadProcess.speed}})......</p>
-        </template>
-    </el-dialog>
 </template>
 
 <script setup>
-    import { ref, computed, onMounted, defineAsyncComponent } from "vue"
-    import { useStore } from "vuex"
-    import { useRoute } from 'vue-router'
-    // hooks
+    import {ref, defineEmits, onMounted, computed} from "vue"
+    import { useStore } from "vuex";
     import bus from '@/utils/bus'
-    import { homeWidth, dragControllerDivL } from './components/js/columnDrop'
-    import { showCatalog, handleShowCatalog } from './components/HomeSidebar/js/controlShowCatalog'
-    import { showUpdater, downloadProcess, handleUpdate } from './components/js/update'
-    // 组件
-    // import { Delete } from '@element-plus/icons-vue'
-    import HomeNotesCatalog from './components/HomeSidebar/Catalog.vue'
-    // 异步组件
-    const HomeNotesTag = defineAsyncComponent(() => import('./components/HomeSidebar/Tags.vue'))
-    const HomeNotesEditor = defineAsyncComponent(() => import('./components/HomeNotes/Editor.vue'))
-    const HomeNotesList = defineAsyncComponent(() => import('./components/HomeNotes/NotesList.vue'))
-    const writeEditor = defineAsyncComponent(() => import('./components/HomeNotes/writeEditor.vue'))
-    const NoteToolbar = defineAsyncComponent(() => import('./components/HomeNotes/NoteToolbar.vue'))
+    import handleFileOperation from './HomeNotes/js/handleFile'
+    import { ElMessageBox, ElNotification } from "element-plus"
+    const {ipcRenderer} = require('electron')
+    const remote = require('electron').remote;
+    const Menu = remote.Menu;
+    const MenuItem = remote.MenuItem;
 
-    let store = useStore();
-    let route = useRoute();
 
-    // 骨架屏loading
-    let loading = ref(false)
+    const emits = defineEmits(['switch'])
+    const store = useStore()
 
-    // computed ---------------
-    let trashActive = computed(() => store.state.notes.catalogActiveState.trashActive)
+    let notesLongList = computed(() =>  store.state.notes.notesLongList )
+    let writeNoteActive = computed(() => store.state.notes.writeNoteActive)
 
-    // methods --------------
-    // 获取标签
-    async function getTags() {
-        await store.dispatch("notes/getTagsList")
-        await store.dispatch("notes/getTagsAllList")
+    // console.log(ipcRenderer)
+    // window.addEventListener('contextmenu', function (e) {
+    //     e.preventDefault()
+    //     let menu = new Menu()
+    //     //添加菜单功能, label: 菜单名称， accelerator：快捷键，click：点击方法
+    //     menu.append(new MenuItem({ label: '复制', click: ()=>{console.log('1111')} }))
+    //     //添加菜单分割线
+    //     menu.append(new MenuItem({ type: 'separator' }))
+    //     //添加菜单功能
+    //     menu.append(new MenuItem({ label: '粘贴', click: ()=>{console.log('22222')}  }))
+    //     menu.popup()
+    // }, false)
+
+    let rightClickItem = {}
+    function rightClickNote(item, index){
+        rightClickItem.item = item
+        rightClickItem.index = index
+        let menu = new Menu()
+        // 添加菜单功能, label: 菜单名称， accelerator：快捷键，click：点击方法
+        // menu.append(new MenuItem({ label: '重命名', click: renameItem }))
+        // 添加菜单分割线
+        // menu.append(new MenuItem({ type: 'separator' }))
+        // 添加菜单功能
+        menu.append(new MenuItem({ label: '删除', click: deleteItem }))
+        menu.popup()
     }
-    // 获取笔记列表
-    function getNotesList(){
-        store.dispatch("notes/getNotesList",{
-            page: 1,
-            keyword: undefined,
-        }).then(() => {
-            loading.value = false
-        })
-    }
-
-    // 保护 防止列表接口卡主导致页面无法恢复的问题
-    function timeoutLoading(){
-        setTimeout(() => {
-            loading.value = false
-        }, 5000)
-    }
-
-    // 切换写作模式
-    let isWrite = ref(store.state.notes.notes.note_type === 2 )
-    function changeWriteModel(){
-        isWrite.value = !isWrite.value
-        store.commit('notes/FILTER_NOTES_TYPE', { type: isWrite.value ? 2 : 1 })
-    }
-    // async function addNote(){
-    //     let params = {
-    //         contentJson: {"type":"doc","content":[{"type":"paragraph"}]} ,
-    //         contentHtml: '<p></p>',
-    //         note_type: 2
-    //     }
-    //     const res = await store.dispatch("notes/addNotes", params)
-    //     bus.emit("READ_ARTICLE", { item: res.data, index: 0})
-    // }
-    // function saveWriteNote(){
-    //     // bus.emit('SAVE_WRITE_NOTE')
-    // }
-
-    function showNotes(){
-        store.commit('notes/CHANGE_FILTER_NOTE_PARAMS', {
-            collection_id: '',
-            group_id: '',
-            tag_id: '',
-            trash: 1,
-        })
-        store.commit('notes/CHANGE_CATALOG_ACTIVE_STATE', {
-            collectionActive: '',
-            collectionTitle: '',
-            tagGroupTitle: '',
-            tagTitle: '',
-            tagActive: '',
-            trashActive: 1
-        })
-
-        bus.emit('CHANGE_NOTE_MODE', false)
-        setTimeout(()=>{
-            store.dispatch("notes/getTagsList")
-            store.dispatch('notes/getTagsGroup')
-            store.commit("user/SHOW_NOTICE", {data: false})
-            bus.emit("CLEAR_KAYWORD");
-            bus.emit("MAKE_LIST_TOP");
-        })
+    function deleteItem(){
+        ElMessageBox.confirm('确定删除这条笔记吗？', {
+            type: 'warning',
+            confirmButtonText: '删除',
+            cancelButtonText: '取消'
+        }).then(async ()=>{
+            const id = rightClickItem?.item.id
+            const index = rightClickItem?.index
+            const res = await store.dispatch("notes/removeNote",{ id, index, note_type: 2 })
+            if(res){
+                ElNotification.success('删除成功！')
+            }
+        }).catch(()=>{})
     }
 
+    function switchNoteMode(type = false){
+        if(type){
+            addNote()
+        }
+        emits('switch', type)
+        store.commit('notes/CHANGE_WRITE_NOTE_ACTIVE', { active: -1 })
+    }
+    function triggerNote(item, index){
+        emits('switch', true)
+        // bus.emit("READ_ARTICLE", {item, index})
+        store.commit('notes/CHANGE_WRITE_NOTE_ACTIVE', { active: item.id })
+    }
+    async function addNote(){
+        let params = {
+            contentJson: {"type":"doc","content":[{"type":"paragraph"}]} ,
+            contentHtml: '<p></p>',
+            note_type: 2
+        }
+        const res = await store.dispatch("notes/addNotes", params)
+        // bus.emit("READ_ARTICLE", { item: res.data, index: 0})
+        // store.commit('notes/SET_WRITE_NOTE_FILE', list)
+        // handleFileOperation.createFile().then((res) => {
+        //     if(res.status === 'success'){
+        //         let list = notesLongList.value
+        //         list.unshift(res.data)
+        //         store.commit('notes/SET_WRITE_NOTE_FILE', list)
+        //         readThisArticle(res.data)
+        //     }
+        // })
+    }
 
     // mounted ------------
-    onMounted( async() => {
-        handleUpdate()
-
-        getTags()
-        store.commit("notes/RESET_NOTES_LIST");
-        getNotesList()
-        timeoutLoading()
-
-        dragControllerDivL()
-        // dragControllerDivR()
+    onMounted(() => {
+        // handleFile = new FileOperation()
+        // // 获取文件的名称列表
+        // handleFile.readFolder()
     })
 
 </script>
-<script>
-    export default {
-        created(){
-            document.querySelector('body').style.overflow = 'hidden'
-        },
-        activated() {
-            document.querySelector('body').style.overflow = 'hidden'
-        },
-        beforeRouteLeave (to, from, next) {
-            document.querySelector('body').style.overflow = 'visible'
-            next();
-        }
-    }
-</script>
 
 <style lang="scss" scoped>
-    .home{
-        display: flex;
-        will-change: auto;
-        >div{
-            flex-shrink: 0;
-        }
-        .home-left{
-            position: relative;
-            background: #F6F8FC;
-
-            .fold-catalog{
+    .file-container{
+        .mode{
+            display: flex;
+            margin-bottom: 4px;
+            >div{
                 display: flex;
-                flex-direction: row-reverse;
-                overflow: hidden;
-                padding: 13px 10px;
-                -webkit-app-region: drag;
-            }
-            .home-menu{
-                width: 220px;
-                max-width: 300px;
-                min-width: 160px;
-                height: calc(100vh - 100px);
-                padding: 0 15px 10px;
-                overflow: scroll;
-                scrollbar-color: transparent transparent;
-                &::-webkit-scrollbar {
-                    display: none;
-                }
-            }
-            .trash-btn{
-                position: absolute;
-                bottom: 18px;
-                left: 10px;
-                right: 10px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: #eeeeee;
-                color: #6F7A93;
-                padding: 8px 10px;
                 border-radius: 4px;
+                padding: 10px;
+                background: rgba($color: $purple, $alpha: 0.1);
                 cursor: pointer;
+                transition: all .3s;
                 &:hover{
-                    background: #e5e5e5;
+                    h4, .icon-font{
+                        color: #ffffff;
+                    }
+                    background: rgba($color: $purple, $alpha: 0.5);
                 }
-                span{
-                    font-size: 14px;
-                    line-height: 14px;
+            }
+            .mode-1{
+                margin-right: 4px;
+            }
+            .mode-2{
+                width: calc(100% - 46px);
+                justify-content: space-between;
+            }
+            h4{
+                margin: 0;
+                color: #666666;
+                font-size: 16px;
+            }
+            .icon-font{
+                width: 14px;
+                padding: 4px;
+                border-radius: 4px;
+                color: #666666;
+            }
+        }
+        .file-box{
+            height: calc(100vh - 94px);
+            overflow: scroll;
+            scrollbar-color: transparent transparent;
+            &::-webkit-scrollbar {
+                display: none;
+            }
+            .file-list{
+                padding: 12px 4px 8px;
+                cursor: pointer;
+                border-radius: 4px;
+                border-bottom: 1px solid #eeeeee;
+                &:hover{
+                    background: #f4f4f4;
+                }
+                .file-content{
+                    .file-header{
+                        .time{
+                            font-size: 12px;
+                            color: #999999;
+                        }
+                    }
+                    .note-title{
+                        width: 100%;
+                        color: #333333;
+                        font-size: 14px;
+                        font-weight: 700;
+                    }
+                    .note-title-none{
+                        color: #999999;
+                        font-size: 14px;
+                    }
+                    .note-desc{
+                        font-size: 12px;
+                        color: #666666;
+                        margin-top: 6px;
+                    }
+                    .note-desc-none{
+                        color: #999999;
+                    }
+                    .note-time{
+                        display: inline-block;
+                        color: #999999;
+                        font-size: 12px;
+                        margin-top: 6px;
+                    }
                 }
             }
             .active{
-                background: $purple !important;
-                color: #FFFFFF !important;
+                background: #f4f4f4;
             }
-        }
-
-        #resizeL{
-            width: 2px;
-            background: #F6F8FC;
-            cursor: col-resize;
-            &:hover{
-                transform: scaleX(3);
-                background: #f5f5f5;
-            }
-        }
-
-        .home-right{
-            min-width: 600px;
-            .short-note{
-                padding: 10px 10px 0 10px;
-            }
-        }
-
-        .icon-angles-left{
-            color: $purple2;
-            font-size: 16px;
-            padding: 4px;
-            border-radius: 2px;
-            &:hover{
-                background: rgba($color: $purple, $alpha: 0.1);
-            }
-        }
-    }
-
-</style>
-<style lang="scss">
-    // element-ui
-    .el-dropdown-menu__item:not(.is-disabled):hover, .el-dropdown-menu__item:focus{
-        background-color: rgba($color: $purple, $alpha: 0.1) !important;
-        color: $purple !important;
-    }
-    .delete{
-        .el-dropdown-menu__item:not(.is-disabled):hover, .el-dropdown-menu__item:focus{
-            background-color: rgba($color: $error, $alpha: 0.1) !important;
-            color: $error !important;
-        }
-    }
-    .el-dropdown-menu{
-        .actived{
-            background-color: rgba($color: $purple, $alpha: 0.1) !important;
-            color: $purple !important;
         }
     }
 </style>

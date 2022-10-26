@@ -68,7 +68,7 @@ function createWindow() {
 
   // windows 环境下创建系统托盘
   if(!(process.platform === 'darwin')){
-    tray = new Tray(path.join(__static, 'fangcun.ico'))
+    tray = new Tray(path.join(__static, 'mini_32x32.ico'))
     tray.setToolTip('方寸笔迹')
     // 托盘菜单
     const contextMenu = Menu.buildFromTemplate([

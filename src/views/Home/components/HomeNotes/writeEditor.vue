@@ -106,6 +106,10 @@
     bus.on('readWriteNoteData', () => {
         initNoteData()
     })
+    bus.on('handlePasteImage', ({type, src}) => {
+        if(type !== 'write') return
+        handlePasteImage(src)
+    })
 
     // 初始化数据
     function initNoteData(){
@@ -226,6 +230,12 @@
         if(!isShowShortNote.value) return
         notesLibraryRef.value.getNoteList()
         notesLibraryRef.value.getTagList()
+    }
+
+    // 粘贴上传图片
+    function handlePasteImage(src){
+        const imageHtml = `<img src="${src}"><p></p>`
+        editor.value.chain().insertContent( imageHtml ).focus().run()
     }
 
     onMounted(() => {
@@ -443,7 +453,7 @@
         }
         .write-con{
             height: calc(100vh - 120px);
-            padding: 20px 80px 0;
+            padding: 20px 40px 0;
             font-size: 16px;
             flex-shrink: 0;
             overflow: scroll;
@@ -583,10 +593,13 @@
             line-height: 20px;
         }
         img{
-            max-width: calc(100% - 2px);
+            display: block;
+            margin: 20px auto;
+            max-width: calc(100% - 20px);
+            border-radius: 4px;
+            outline: none;
             &.ProseMirror-selectednode {
-                margin: 1px;
-                outline: 1px solid #68CEF8;
+                box-shadow: 0 0 0 4px rgb(108 86 246 / 30%);
             }
         }
     }
