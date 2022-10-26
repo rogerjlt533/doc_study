@@ -19,23 +19,23 @@
                     </div>
                     <div v-else class="desc no-desc">
                         <svgFont class="note-icon" icon="note" color="#6F7A94"></svgFont>
-                        暂无内容 ~ ~
+                        ♨ 还没开始写
                     </div>
                 </div>
                 <p class="text-center font-12 color-9 pt20">笔记总数：{{notesCount}}</p>
             </div>
             <div class="text-center font-12 color-9 pt20" v-else>
-                <p>开始创作吧~</p>
+                <p>🎨 写作即思考本身，开启一段深度思考吧</p>
             </div>
         </div>
         <div class="write-content">
             <div class="note-toolbar">
                 <div class="write-info">
-                    <svgFont icon="create" class="color-9 mr6"></svgFont>
+                    <svgFont icon="markdown" class="color-9 mr6"></svgFont>
                     <span class="update-time mr10">{{writeInfo.updated_at}}</span>
                     <span v-if="writeInfo.status === 'saved'" class="color-9 font-12">已保存</span>
-                    <span v-else-if="writeInfo.status === 'loading'" class="is-loading color-9 font-12">保存中</span>
-                    <span v-else-if="writeInfo.status === 'failed'" class="color-failed font-12">保存失败</span>
+                    <span v-else-if="writeInfo.status === 'loading'" class="is-loading color-9 font-12">存储中 ...</span>
+                    <span v-else-if="writeInfo.status === 'failed'" class="color-failed font-12">本地存储失败，请尝试另存</span>
                 </div>
                 <div class="toolbar-options">
                     <span class="size_count">{{writeInfo.size_count}}字</span>
