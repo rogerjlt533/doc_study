@@ -28,8 +28,8 @@ function createWindow() {
     Menu.setApplicationMenu(null)
   }
   win = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: 1000,
+    height: 650,
     frame: !(process.platform === 'darwin'),
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : '',
     webPreferences: {
@@ -48,7 +48,7 @@ function createWindow() {
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
-    if (!process.env.IS_TEST) win.webContents.openDevTools()
+    // if (!process.env.IS_TEST) win.webContents.openDevTools()
   } else {
     createProtocol('app')
     win.loadURL('app://./index.html')
