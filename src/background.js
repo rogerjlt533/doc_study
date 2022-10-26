@@ -70,6 +70,7 @@ function createWindow() {
   if(!(process.platform === 'darwin')){
     tray = new Tray(path.join(__static, 'mini_32x32.ico'))
     tray.setToolTip('方寸笔迹')
+
     // 托盘菜单
     const contextMenu = Menu.buildFromTemplate([
       {
@@ -81,7 +82,7 @@ function createWindow() {
         click: () => { subWin.show() }
       },
       {
-        label: '🔴 离开方寸笔迹',
+        label: '🎈 离开方寸笔迹',
         click: () => { win.destroy(); subWin.destroy(); app.quit(); tray.destroy(); }
       }
     ]);
