@@ -90,7 +90,7 @@ function createWindow() {
     // 双击触发
     tray.on('double-click', () => {
       // 双击通知区图标实现应用的显示或隐藏
-      win.isVisible() ? win.hide() : win.show()
+      win.isVisible() ? win.hide() : win.show();
       win.isVisible() ? win.setSkipTaskbar(false) : win.setSkipTaskbar(true);
     })
   }
