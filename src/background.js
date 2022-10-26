@@ -73,11 +73,15 @@ function createWindow() {
     // 托盘菜单
     const contextMenu = Menu.buildFromTemplate([
       {
-        label: '显示',
+        label: '🏠 显示主窗口',
         click: () => { win.show() }
       },
       {
-        label: '退出',
+        label: '💡 快速记录',
+        click: () => { subWin.show() }
+      },
+      {
+        label: '🔴 离开方寸笔迹',
         click: () => { win.destroy(); subWin.destroy(); app.quit(); tray.destroy(); }
       }
     ]);
@@ -97,7 +101,7 @@ function createSubWin(){
   subWin = new BrowserWindow({
     width: 600,
     minWidth: 200,
-    height: 60,
+    height: 55,
     frame: false,
     show: false,
     backgroundColor: '#f5f5f5',
@@ -111,7 +115,7 @@ function createSubWin(){
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     subWin.loadURL(process.env.WEBPACK_DEV_SERVER_URL + 'fastRecord')
-    if (!process.env.IS_TEST) subWin.webContents.openDevTools()
+    // if (!process.env.IS_TEST) subWin.webContents.openDevTools()
   } else {
     createProtocol('app')
     subWin.loadURL('app://./fastRecord.html')
@@ -201,6 +205,10 @@ app.on('ready', async () => {
   // 注册打开快捷窗口事件
   globalShortcut.register('Alt+F', function () {
     subWin.show()
+  })
+  // 注册关闭快捷窗口事件
+  globalShortcut.register('esc', function () {
+    subWin.hide()
   })
 })
 
