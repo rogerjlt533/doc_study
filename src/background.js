@@ -1,6 +1,6 @@
 'user strict'
 
-import { app, protocol, BrowserWindow, Menu, dialog, ipcMain, globalShortcut, Tray } from 'electron'
+import { app, protocol, BrowserWindow, Menu, ipcMain, globalShortcut, Tray } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
 import * as remoteMain from '@electron/remote/main';
@@ -8,14 +8,12 @@ import { autoUpdater } from "electron-updater"
 const path = require('path')
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
-app.name = '方寸笔迹-IdeaTrip'
 
 const ElectronStore = require('electron-store');
 ElectronStore.initRenderer();
 
 remoteMain.initialize();
 
-// Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
@@ -26,7 +24,6 @@ let tray = null
 let subWin = null
 
 function createWindow() {
-  // Create the browser window.
   if(!(process.platform === 'darwin')){
     Menu.setApplicationMenu(null)
   }
@@ -36,27 +33,24 @@ function createWindow() {
     frame: !(process.platform === 'darwin'),
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : '',
     webPreferences: {
-      // Use pluginOptions.nodeIntegration, leave this alone
-      // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
       spellcheck: false,
       nodeIntegration: true,
       enableRemoteModule: true,
       nodeIntegrationInWorker: true,
-      contextIsolation: false
+      contextIsolation: false,
+      scrollBounce: true,
     },
     backgroundColor: '#ffffff',
-    show: false // newBrowserWindow创建后先隐藏
+    show: false
   })
   remoteMain.enable(win.webContents);
+  win.title = '方寸笔迹-IdeaTrip'
 
-  // win.webContents.openDevTools()
   if (process.env.WEBPACK_DEV_SERVER_URL) {
-    // Load the url of the dev server if in development mode
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
     if (!process.env.IS_TEST) win.webContents.openDevTools()
   } else {
     createProtocol('app')
-    // Load the index.html when not in development
     win.loadURL('app://./index.html')
   }
 
@@ -97,9 +91,6 @@ function createWindow() {
     })
   }
 }
-ipcMain.on('updateWin', () => {
-  win.reload();
-})
 
 // 创建子页面，快捷输入框
 function createSubWin(){
@@ -114,7 +105,7 @@ function createSubWin(){
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true,
-      contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
+      contextIsolation: false,
     }
   })
 
@@ -139,10 +130,6 @@ function createSubWin(){
     subWin.hide();
   })
 }
-ipcMain.on('closeFastInput', () => {
-  subWin.hide();
-})
-
 
 const gotTheLock = app.requestSingleInstanceLock()
 if (!gotTheLock) {
@@ -159,55 +146,53 @@ if (!gotTheLock) {
 }
 
 
+
 /**
- * 两个渲染进程之间的通信
+ * 通信
+ * updateWin => 刷新窗口
+ * closeFastInput => 隐藏快速记录窗口
  * triggerSync => 触发同步方法
  */
+ipcMain.on('updateWin', () => {
+  win.reload();
+})
+ipcMain.on('closeFastInput', () => {
+  subWin.hide();
+})
 ipcMain.handle('triggerSync', () => {
   subWin.webContents.send('listenSync')
 })
 
 
-
-// Quit when all windows are closed.
+/**
+ * app 监听事件
+ */
 app.on('window-all-closed', () => {
-  // On macOS it is common for applications and their menu bar
-  // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
 
-
 app.on('activate', () => {
-  // On macOS it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  // if (BrowserWindow.getAllWindows().length === 0) createWindow()
   if(win){
     win.show()
   }
 })
 
 app.on('before-quit', () => {
-  // subWin.destroy()
-  // subWin = null
   willQuitApp = true
 });
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
   if (isDevelopment && !process.env.IS_TEST) {
-    // Install Vue Devtools
     try {
       await installExtension(VUEJS3_DEVTOOLS)
     } catch (e) {
       console.error('Vue Devtools failed to install:', e.toString())
     }
   }
-  await createWindow()
 
+  await createWindow()
   // 运行APP检测更新。
   await autoUpdater.checkForUpdates()
 
@@ -219,8 +204,6 @@ app.on('ready', async () => {
   })
 })
 
-
-// Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   if (process.platform === 'win32') {
     process.on('message', (data) => {
@@ -253,7 +236,6 @@ autoUpdater.setFeedURL({
 function sendStatusToWindow(status, params) {
   win.webContents.send(status, params)
 }
-
 autoUpdater.on('update-available', (info) => {
   sendStatusToWindow('autoUpdater-canUpdate', info)
 })
