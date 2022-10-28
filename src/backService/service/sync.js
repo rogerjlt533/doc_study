@@ -972,7 +972,7 @@ exports.pullTagTop = async function (token) {
         if (record.is_top === parseInt(is_top)) {
             continue
         }
-        await tagTool.setTopStatus(tag_id, parseInt(is_top))
+        await tagTool.setTopStatus(record.id, parseInt(is_top))
     }
 }
 

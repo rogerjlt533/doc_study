@@ -424,6 +424,20 @@ exports.remove = async function (collection_id) {
 }
 
 /**
+ * 修改笔记本修改时间
+ * @param collection_id
+ * @returns {Promise<*>}
+ */
+exports.editUpdateAt = async function (collection_id) {
+    if (!common.empty(collection_id)) {
+        const save_time = common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
+        let sql = "update collections set updated_at=? where id=? and deleted_at is null"
+        return await sqlite.update(sql, [save_time, collection_id]);
+    }
+    return 0
+}
+
+/**
  * 获取is_group
  * @param user_id
  * @param collection_id

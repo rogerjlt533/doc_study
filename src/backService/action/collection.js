@@ -36,8 +36,7 @@ exports.new = async function (user_id, collection, color, parent_id = 0) {
     data.collection = collection
     data.color = collection_info.color
     data.updated_at = collection_info.created_at
-    await syncService.addCollectionPushQueue(user_id, collection_id)
-    // await syncService.pushLocalCollection(common.encodeDesktop(user_id), '', user_id, collection_id)
+    await syncService.pushLocalCollection(common.encodeDesktop(user_id), '', user_id, collection_id)
     return {status_code: 200, message: 'success', data}
 }
 
@@ -73,8 +72,7 @@ exports.edit = async function (user_id, collection_id, collection, color, parent
     data.collection = collection
     data.color = collection_info.color
     data.updated_at = collection_info.updated_at
-    await syncService.addCollectionPushQueue(user_id, collection_id)
-    // await syncService.pushLocalCollection(common.encodeDesktop(user_id), '', user_id, collection_id)
+    await syncService.pushLocalCollection(common.encodeDesktop(user_id), '', user_id, collection_id)
     return {status_code: 200, message: 'success', data}
 }
 
@@ -100,8 +98,7 @@ exports.remove = async function (user_id, collection_id) {
     const note_count = await noteService.noteTool.count(user_id, {collection_id, is_group: 3, status: 2, note_type: -1})
     if (common.empty(note_count)) {
         await collectionService.collectionTool.remove(collection_id)
-        await syncService.addCollectionPushQueue(user_id, collection_id)
-        // await syncService.pushLocalCollection(common.encodeDesktop(user_id), '', user_id, collection_id)
+        await syncService.pushLocalCollection(common.encodeDesktop(user_id), '', user_id, collection_id)
         return {status_code: 200, message: 'success', data: {}}
     }
     return {status_code: 501, message: '请选择关联操作', data: {note_count}}
@@ -128,8 +125,7 @@ exports.clearCollectionNotes = async function (user_id, collection_id) {
     }
     await collectionService.clearNotes(user_id, collection_id)
     await collectionService.collectionTool.remove(collection_id)
-    await syncService.addCollectionPushQueue(user_id, collection_id)
-    // await syncService.pushLocalCollection(common.encodeDesktop(user_id), '', user_id, collection_id)
+    await syncService.pushLocalCollection(common.encodeDesktop(user_id), '', user_id, collection_id)
     return {status_code: 200, message: 'success', data: {}}
 }
 
@@ -163,8 +159,7 @@ exports.moveCollectionNotes = async function (user_id, target_id, source_id) {
     }
     await collectionService.moveNotes(user_id, target_id, source_id)
     await collectionService.collectionTool.remove(source_id)
-    await syncService.addCollectionPushQueue(user_id, source_id)
-    // await syncService.pushLocalCollection(common.encodeDesktop(user_id), '', user_id, source_id)
+    await syncService.pushLocalCollection(common.encodeDesktop(user_id), '', user_id, source_id)
     return {status_code: 200, message: 'success', data: {}}
 }
 
@@ -178,7 +173,7 @@ exports.moveCollectionNotes = async function (user_id, target_id, source_id) {
 exports.mine = async function (user_id, page, size) {
     user_id = common.decode(user_id)
     size = 1000
-    const data = await collectionService.mine(user_id, page, size, ['id', 'user_id', 'collection', 'max_num', 'color', 'hash_code'])
+    const data = await collectionService.mine(user_id, page, size, ['id', 'user_id', 'collection', 'color', 'hash_code'])
     return {status_code: 200, message: 'success', data}
 }
 
@@ -202,106 +197,11 @@ exports.sort = async function (user_id, collection_ids) {
     const save_time = sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss');
     for (const index in self_list) {
         await collectionService.collectionTool.resort(user_id, self_list[index], index + 1, save_time)
-        await syncService.addCollectionPushQueue(user_id, self_list[index])
-        // await syncService.pushLocalCollection(common.encodeDesktop(user_id), '', user_id, self_list[index])
+        await syncService.pushLocalCollection(common.encodeDesktop(user_id), '', user_id, self_list[index])
     }
     for (const index in team_list) {
         await collectionService.collectionTool.resort(user_id, team_list[index], index + 1, save_time)
-        await syncService.addCollectionPushQueue(user_id, team_list[index])
-        // await syncService.pushLocalCollection(common.encodeDesktop(user_id), '', user_id, team_list[index])
+        await syncService.pushLocalCollection(common.encodeDesktop(user_id), '', user_id, team_list[index])
     }
     return {status_code: 200, message: 'success'}
-}
-
-/**
- * 设置collection最大标准值
- * @param user_id
- * @param collection_id
- * @param max_num
- * @returns {Promise<*>}
- */
-exports.setMaxNum = async function (user_id, collection_id, max_num) {
-    if (common.empty(user_id) || common.empty(collection_id)) {
-        return {status_code: 400, message: '缺少参数'}
-    }
-    user_id = common.decode(user_id)
-    collection_id = common.decode(collection_id)
-    // 权限验证
-    const user_right_result = await userService.userTool.userRights(user_id)
-    if (common.empty(user_right_result.is_pro)) {
-        return {status_code: 401, message: '升级pro权限可更改最大值', data: {}}
-    }
-    const record = await collectionService.collectionTool.get(collection_id, 'id,user_id,collection,color')
-    if (common.empty(record)) {
-        return {status_code: 400, message: '笔记本不存在'}
-    }
-    if (record.user_id !== user_id) {
-        return {status_code: 400, message: '权限错误'}
-    }
-    await collectionService.collectionTool.setMaxNum(collection_id, max_num)
-    await syncService.addCollectionPushQueue(user_id, collection_id)
-    // await syncService.pushLocalCollection(common.encodeDesktop(user_id), '', user_id, collection_id)
-    return {status_code: 200, message: 'success'}
-}
-
-/**
- * 紧急推送本地单个笔记本
- * @param user_id
- * @param collection_id
- * @returns {Promise<*>}
- */
-exports.urgentPush = async function (user_id, collection_id) {
-    user_id = common.decode(user_id)
-    collection_id = common.decode(collection_id)
-    const user_right_result = await userService.userTool.userRights(user_id)
-    if (common.empty(user_right_result.is_pro)) {
-        return {status_code: 400, message: 'pro权限可以操作', data: {}}
-    }
-    const record = await collectionService.collectionTool.get(collection_id, 'id,user_id,collection')
-    if (common.empty(record)) {
-        return {status_code: 400, message: '笔记本不存在', data: {}}
-    }
-    const note_list = await noteService.noteTool.list(collection_id, user_id, 1, 'id, collection_id')
-    if (note_list.length !== 0) {
-        for (const note of note_list) {
-            await syncService.initUrgentNoteQuoteQueue(common.encodeDesktop(user_id), '', user_id, note)
-            const sync_params = {note_id: note.id, collection_id: note.collection_id, sync_urgent: 1}
-            await syncService.syncTool.create(user_id, 21, 2, sync_params)
-        }
-    }
-    return {status_code: 200, message: 'success', data: {}}
-}
-
-/**
- * 紧急下拉单个笔记本
- * @param user_id
- * @param collection_id
- * @returns {Promise<*>}
- */
-exports.urgentPull = async function (user_id, collection_id) {
-    user_id = common.decode(user_id)
-    collection_id = common.decode(collection_id)
-    const user_right_result = await userService.userTool.userRights(user_id)
-    if (common.empty(user_right_result.is_pro)) {
-        return {status_code: 400, message: 'pro权限可以操作', data: {}}
-    }
-    const group_res = await collectionService.collectionTool.getIsGroup(user_id, collection_id)
-    if (!group_res.status) {
-        return {status_code: 400, message: group_res.message, data: {}}
-    }
-    const record = await collectionService.collectionTool.get(collection_id, 'id,remote_id,user_id,collection')
-    if (common.empty(record)) {
-        return {status_code: 400, message: '笔记本不存在', data: {}}
-    }
-    const remote_id = record.remote_id
-    if (common.empty(remote_id)) {
-        return {status_code: 400, message: '笔记本未上传', data: {}}
-    }
-    let sync = await syncService.syncTool.urgentCollection(user_id, remote_id, 1, 1)
-    if (!common.empty(sync)) {
-        return {status_code: 400, message: '笔记本正在手动同步', data: {}}
-    }
-    const params = {collection_id: remote_id, sync_urgent: 1}
-    await syncService.syncTool.create(user_id, 1, 1, params)
-    return {status_code: 200, message: 'success', data: {}}
 }

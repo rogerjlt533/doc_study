@@ -50,6 +50,8 @@ exports.import = async function (user_id, source, dest) {
         const params = {note_id, collection_id}
         await syncService.syncTool.create(user_id, 21, 2, params)
     }
+
+
     common.unlink(source)
     common.rmdir(dest)
     return {status_code: 200, message: 'success', data: {}}
