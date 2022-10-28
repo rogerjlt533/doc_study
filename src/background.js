@@ -208,9 +208,9 @@ app.on('ready', async () => {
     subWin.show()
   })
   // 注册关闭快捷窗口事件
-  globalShortcut.register('esc', function () {
-    subWin.hide()
-  })
+  // globalShortcut.register('esc', function () {
+  //   subWin.hide()
+  // })
 })
 
 if (isDevelopment) {
