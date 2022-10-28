@@ -173,8 +173,14 @@ exports.initCollectionDownQueue = async function (token, userid, data, logs) {
     if (common.empty(collection_id)) {
         return {init_status: false, local_collection: collection_id, default_collection: 0}
     }
-    if (common.compareTime(updated_at, record.updated_at) > 0 && sort_index >= 0) {
-        await collectionTool.resort(userid, collection_id, sort_index, common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss'))
+    if (common.compareTime(updated_at, record.updated_at) > 0) {
+        const sort_index_value = common.empty(sort_index) ? 0 : sort_index
+        await collectionTool.resort(userid, collection_id, sort_index_value, common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss'))
+    } else {
+        const index_result = await collectionTool.userIndex(userid, collection_id)
+        if (common.empty(index_result.relate)) {
+            await collectionTool.sort(user_id, collection_id, common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss'))
+        }
     }
     // sync_type=1 and sync_direct=1
     let sync = await syncTool.collection(userid, remote_id, 1, 1)
