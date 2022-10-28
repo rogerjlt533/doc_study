@@ -84,7 +84,7 @@
     }
     function handleChangeTags({ id, tag, group_id }){
         setTimeout(() => {
-            bus.emit("SET_TEXT_EDITOR_TAG", {
+            bus.emit("setTagToEditor", {
                 tag: tag
             })
 
@@ -100,8 +100,8 @@
             })
 
             store.commit("user/SHOW_NOTICE",{data: false})
-            bus.emit("CLEAR_KAYWORD")
-            bus.emit("MAKE_LIST_TOP")
+            bus.emit("clearSearchKeyword")
+            bus.emit("handleMakeListTop")
         })
     }
 

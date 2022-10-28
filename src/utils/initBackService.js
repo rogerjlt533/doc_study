@@ -30,6 +30,8 @@ watch(() => user_hash.value, () => {
 export const initSync = () => {
     if(!getToken() || !user_hash.value) return false
 
+    handleClearCompleteCollectionQueue()
+
     setTimeout(() => {
         handlePullRemoteNoteQueue()
         handleProcessDownNote()
@@ -153,3 +155,15 @@ function handlePushTagTop(){
     }
     pushTagTopApi(data)
 }
+
+
+const test = 0
+const object = {
+    test: test
+}
+/**
+ * 这里的 object 也可以写成
+ * const object = { test }
+ */
+
+console.log(object)  //  {test: 0}

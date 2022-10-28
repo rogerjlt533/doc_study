@@ -12,13 +12,13 @@ import { handleTagHtml } from '@/utils/tools'
 import {createImageExtension, handleTargetName} from "./pasteImage.js"
 import Image from "@tiptap/extension-image";
 
+let editor = null
 let timer = null
 let cachedHtml = computed(() => store.state.notes.cachedNote )
-
 // 简记模式
 // export const showOptions = ref(false)
 export function editorInstance(content, editorBox, isEdit = false, className, onSubmit = ()=>{}, editContent = ()=>{}){
-    const editor = new Editor({
+    editor = new Editor({
         content: content || cachedHtml.value,
         autofocus: false,
         parseOptions: {
@@ -42,7 +42,7 @@ export function editorInstance(content, editorBox, isEdit = false, className, on
                 placeholder: '💡在这里写下你的灵感和思考'
             }),
             new smartRules(),
-            new createImageExtension(),
+            new createImageExtension(handlePasteImage),
             dependence.Link.configure({
                 HTMLAttributes: {
                     class: 'link-class',
@@ -118,6 +118,11 @@ export function editorInstance(content, editorBox, isEdit = false, className, on
     });
 
     return editor;
+}
+
+const handlePasteImage = (src) => {
+    const imageHtml = `<img src="${src}"><p></p>`
+    editor.chain().insertContent( imageHtml ).focus().run()
 }
 
 // 采用单例模式建立editor

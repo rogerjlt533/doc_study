@@ -41,7 +41,7 @@ async function uploadFn(file) {
     }
 }
 
-export function createImageExtension () {
+export function createImageExtension ( func ) {
     return Node.create({
         name: 'image',
         group: 'block',
@@ -113,12 +113,13 @@ export function createImageExtension () {
 
                                     if (uploadFn && image) {
                                         uploadFn(image).then((src) => {
-                                            bus.emit('handlePasteImage', src)
-                                            const node = schema.nodes.image.create({
-                                                src: src
-                                            });
-                                            const transaction = view.state.tr.replaceSelectionWith(node);
-                                            view.dispatch(transaction);
+                                            func(src)
+                                            // bus.emit('handlePasteImage', { type, src })
+                                            // const node = schema.nodes.image.create({
+                                            // 	src: src
+                                            // });
+                                            // const transaction = view.state.tr.replaceSelectionWith(node);
+                                            // view.dispatch(transaction);
                                         });
                                     }
                                 } else {

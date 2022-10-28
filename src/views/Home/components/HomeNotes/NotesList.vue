@@ -158,21 +158,21 @@
     function refreshList(){
         ifRefresh.value = false;
         notesListRef.value?.setScrollTop(0)
-        bus.emit('CLEAR_KAYWORD')
+        bus.emit('clearSearchKeyword')
     }
     // 搜索笔记列表方法
-    bus.on('INPUT_SEARCH', (e) => {
+    bus.on('handleSearchNote', (e) => {
         getNotesList({
             keyword: e.keyword,
             start_time: e.start_time,
             end_time: e.end_time
         })
     })
-    bus.on("CLEAR_KAYWORD", () => {
+    bus.on("clearSearchKeyword", () => {
         page = 1
         getNotesList({})
     })
-    bus.on("MAKE_LIST_TOP", () => {
+    bus.on("handleMakeListTop", () => {
         nextTick(() => {
             notesListRef.value?.setScrollTop(0)
         })
@@ -317,9 +317,9 @@
 
     // 组件销毁前移除所有的监听
     onBeforeUnmount(() => {
-        bus.off('INPUT_SEARCH')
-        bus.off('CLEAR_KAYWORD')
-        bus.off('MAKE_LIST_TOP')
+        bus.off('handleSearchNote')
+        bus.off('clearSearchKeyword')
+        bus.off('handleMakeListTop')
     })
 </script>
 

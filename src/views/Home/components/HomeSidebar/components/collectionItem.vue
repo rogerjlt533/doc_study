@@ -150,8 +150,8 @@
 
         // writeInfo
         setTimeout(() => {
-            bus.emit("CLEAR_KAYWORD")
-            bus.emit("MAKE_LIST_TOP")
+            bus.emit("clearSearchKeyword")
+            bus.emit("handleMakeListTop")
         })
         setTimeout(() => {
             store.dispatch("notes/getTagsList")

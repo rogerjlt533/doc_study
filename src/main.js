@@ -2,7 +2,6 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
-import { initMigration } from "./assets/js/initBackService"
 import {
     ElButton, ElForm, ElFormItem, ElInput, ElDropdown, ElDropdownItem, ElDropdownMenu, ElSelect, ElOption, ElIcon, ElDialog, ElMenu, ElMenuItem, ElCollapse, ElCollapseItem, ElCollapseTransition, ElPopover, ElRow, ElCol, ElTimeline, ElTimelineItem, ElCard, ElEmpty, ElDivider, ElInputNumber, ElCheckbox, ElScrollbar, ElUpload, ElProgress, ElCascader, ElTooltip, ElImage, ElDrawer, ElPopconfirm, ElTable, ElTableColumn, ElRadio, ElOptionGroup, ElInfiniteScroll, ElLoading, ElSwitch, ElAvatar, ElTabs, ElTabPane, ElDatePicker
 } from 'element-plus'
@@ -33,9 +32,6 @@ app.component('svgFont', svgFont)
 app.component('FButton', FButton)
 app.component('vue-drag-resize', VueDragResize)
 
-async function migrationRun(){
-    await initMigration()
-}migrationRun().then(()=>{})
 
 
 app.use(store).use(router).mount('#app')

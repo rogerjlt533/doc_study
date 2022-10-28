@@ -34,18 +34,24 @@
             </div>
 
             <div class="tags-group-list" v-show="groupInitial.activeTab === 'pt'">
-                <div v-for='(item,index) in groupInitial.ptList' :key="index">
-                    <el-divider content-position="center">
-                        <span class="color-9 font-12">{{item.name}}</span>
-                    </el-divider>
-                    <div class="tags-box">
-                        <tag-item
-                                v-for="(tag,i) in item.list"
-                                :key="tag.id"
-                                :item="tag"
-                                :index="i"
-                        ></tag-item>
+                <template v-if="groupInitial.ptList.length">
+                    <div v-for='(item,index) in groupInitial.ptList' :key="index">
+                        <el-divider content-position="center">
+                            <span class="color-9 font-12">{{item.name}}</span>
+                        </el-divider>
+                        <div class="tags-box">
+                            <tag-item
+                                    v-for="(tag,i) in item.list"
+                                    :key="tag.id"
+                                    :item="tag"
+                                    :index="i"
+                            ></tag-item>
+                        </div>
                     </div>
+                </template>
+                <div v-else>
+                    <p class="text-center font-12 color-9 pt20">你还没有创建标签~</p>
+                    <p class="urlA cursor-p text-center font-12 color-9 pt10" @click="openUrlByBrowser('https://help.fangcun.in/help/tag.html')">如何创建？</p>
                 </div>
             </div>
             <div class="tags-group-list" v-show="groupInitial.activeTab === 'fz'">
@@ -71,7 +77,12 @@
                         </div>
                     </div>
                 </template>
-                <p class="text-center font-12 color-9 pt20" v-else>你还没有创建分组标签~</p>
+                <div v-else>
+                    <p class="text-center font-12 color-9 pt20">
+                        你还没有创建分组标签~
+                    </p>
+                    <p class="urlA cursor-p text-center font-12 color-9 pt10" @click="openUrlByBrowser('https://help.fangcun.in/help/group.html')">如何使用？</p>
+                </div>
             </div>
         </div>
     </VueDragResize>
@@ -83,6 +94,7 @@
     import { Search, Close } from '@element-plus/icons-vue'
     import VueDragResize from 'vue-drag-resize'
     import tagItem from "./tagItem.vue"
+    import openUrlByBrowser from "@/assets/js/openUrlByBrowser";
 
     const store = useStore()
     const emit = defineEmits(['close'])
@@ -102,9 +114,14 @@
     })
     let timer = null
     function searchGroupInitial(){
+        const isTrash = store.state.notes.catalogActiveState.trashActive
         if(timer) clearTimeout(timer)
         timer = setTimeout(() => {
-            store.dispatch('notes/getGroupInitial', { keyword: groupInitial.tagKeyword })
+            if(isTrash){
+                store.dispatch('notes/getGroupTrashInitial', { keyword: groupInitial.tagKeyword })
+            }else{
+                store.dispatch('notes/getGroupInitial', { keyword: groupInitial.tagKeyword })
+            }
         }, 500)
     }
     function clickTab(event) {
@@ -162,6 +179,11 @@
                 scrollbar-width: none;
                 &::-webkit-scrollbar {
                     display: none;
+                }
+                .urlA{
+                    &:hover{
+                        color: $purple;
+                    }
                 }
             }
             .group-tag{

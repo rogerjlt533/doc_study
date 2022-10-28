@@ -107,8 +107,8 @@
         setTimeout(()=>{
             store.dispatch("notes/getTagsList")
             store.commit("user/SHOW_NOTICE", {data: false})
-            bus.emit("CLEAR_KAYWORD")
-            bus.emit("MAKE_LIST_TOP")
+            bus.emit("clearSearchKeyword")
+            bus.emit("handleMakeListTop")
         })
     }
 

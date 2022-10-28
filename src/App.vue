@@ -12,13 +12,25 @@
 
 <script setup>
     import { ref } from 'vue'
+    import { useStore } from "vuex"
     import { checkVersionApi } from '@/apiDesktop/system'
-    import { ElConfigProvider } from "element-plus"
     import zhCn from 'element-plus/es/locale/lang/zh-cn'
+
+    const store = useStore()
+    const eStore = require('electron-store')
+    const electronStore = new eStore()
 
     const locale = ref(null)
     locale.value = zhCn
 
+    setInterval(() => {
+        handleReloadVuex()
+    }, 10 * 1000)
+
+    function handleReloadVuex(){
+        const vuex = JSON.parse(electronStore.get('vuex'))
+        store.commit('RESET_BASE_DATA', vuex)
+    }
 </script>
 
 <style lang="scss" scoped>

@@ -400,6 +400,7 @@
 
     // 组件销毁前，取消bus监听
     onBeforeUnmount(() => {
+        editor.value.destroy()
         bus.off('changeNotesListHeight')
         bus.off('setTagToEditor')
         bus.off('setAnnotationId')

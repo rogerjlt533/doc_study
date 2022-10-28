@@ -18,20 +18,18 @@
                 <el-form-item label="" prop="user_name">
                     <el-input v-model="registerForm.user_name" size="medium" placeholder="请设置用户名"></el-input>
                 </el-form-item>
-                <!--<el-form-item label="" prop="privacy">-->
-                <!--    <div class="userAgreement">-->
-                <!--        <el-checkbox v-model="registerForm.privacy" label="我已阅读并接受"></el-checkbox>-->
-                <!--        <a @click="showYinsi = true"> 隐私协议</a>-->
-                <!--    </div>-->
-                <!--</el-form-item>-->
+                <el-form-item label="" prop="privacy">
+                    <div class="userAgreement">
+                        <el-checkbox v-model="registerForm.privacy" label="我已阅读并接受"></el-checkbox>
+                        <a @click="showYinsi = true"> 隐私协议</a>
+                    </div>
+                </el-form-item>
             </el-form>
-            <el-button
-                    class="btn"
-                    color="#44445F"
+            <button class="water-ripple-btn btn"
                     @click="signUp()"
                     v-loading="disabled"
                     element-loading-background="rgba(0, 0, 0, 0.8)"
-            >注册，免费领取7天pro🎉</el-button>
+            >注册，免费领取7天pro🎉</button>
 
             <div class="other-login-way">
                 <p class="noneAccount" @click="router.replace({name:'Login'})">已有账号, <font>马上登录</font></p>
@@ -63,7 +61,7 @@
     import { useRouter } from 'vue-router'
     import { useStore } from "vuex"
     import { registerApi, registerSmsApi, registerWxApi, verifyRegisterWxApi } from "@/api/user"
-    import request from '@/utils/mainRequest'
+    import { initUserInfoApi, loginApi } from '@/apiDesktop/user'
     import { setToken, encryption } from "@/utils/auth"
     import text from "@/assets/js/yinsixieyi.js"
     import { ElNotification, ElMessage } from "element-plus"
@@ -117,7 +115,7 @@
         user_name: "",
         password: "",
         code: "",
-        // privacy: false
+        privacy: false
     })
     let rules = {
         emailMobile: [
@@ -132,9 +130,9 @@
         code: [
             { required: true, validator: checkCode, trigger: ['blur', 'change'] }
         ],
-        // privacy: [
-        //     { validator: validateAccept, message: '请您仔细阅读 隐私协议 并接受', trigger: 'change' }
-        // ]
+        privacy: [
+            { validator: validateAccept, message: '请您仔细阅读 隐私协议 并接受', trigger: 'change' }
+        ]
     }
 
     // 获取手机号验证码
@@ -168,7 +166,7 @@
                     disabled.value = false
                     passwordLogin()
                 }, 3000)
-                registerCallBack(res)
+                // registerCallBack(res)
             })
         });
     }
@@ -194,6 +192,7 @@
         verifyRegisterWxApi({
             qr_random: random
         }).then(res => {
+            console.log(res)
             if(res.code === 200){
                 closeWxQr()
                 registerCallBack(res)
@@ -205,30 +204,25 @@
         wxTimer = null
     }
 
-    function passwordLogin(){
+    async function passwordLogin(){
+        console.log(registerForm)
         const data = {
             mobile: registerForm.emailMobile,
             password: registerForm.password
         }
-        request({
-            api: 'loginApi',
-            key: 'loginApi',
-            data
-        }, (res) => {
-            if(res.status_code === 200){
-                registerCallBack(res)
-            }else{
-                ElMessage({
-                    message: res.message || "系统繁忙",
-                    type: "error"
-                })
-            }
-        })
-
+        const res = await loginApi(data)
+        if(res.status_code === 200){
+            await registerCallBack(res)
+        }else{
+            ElMessage({
+                message: res.message || "系统繁忙",
+                type: "error"
+            })
+        }
     }
 
     // 注册成功的回调函数
-    function registerCallBack(res){
+    async function registerCallBack(res){
         ElNotification({
             message: '恭喜你，注册成功！',
             type: 'success'
@@ -236,19 +230,16 @@
         setToken(res.data.token)
         res.data.id = res.data.user_hash
         store.commit('user/SET_USER_INFO', res.data)
-        store.dispatch('user/getUserBase')
         setTimeout(() => {
             router.replace({
                 name: "Home"
             })
         },1000)
-        request({
-            api: "initUserInfoApi",
-            key: "initUserInfoApi",
-            data: {
-                token: res.data.token
-            }
+        console.log('result', res)
+        const result = await initUserInfoApi({
+            token: res.data.token
         })
+        console.log('result', result)
     }
 
 
@@ -310,9 +301,13 @@
                 }
             }
             .btn{
+                display: block;
                 margin: 30px auto 0;
                 width: 300px;
                 height: 40px;
+                color: #fff;
+                border-radius: 4px;
+                background: #44445f;
             }
 
             .userAgreement{

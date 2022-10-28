@@ -47,7 +47,6 @@
                 <p class="change" v-else-if="loginWay === 'sms'" @click="loginWay = 'password'">账号密码登录</p>
             </div>
             <div class="other-login-way">
-                <!--                <p @click="shell.openExternal('https://fangcun.in')">了解方寸笔迹</p>-->
                 <div class="oauth-bg unselectable" @click="getWxQr">
                     <img data-v-14de1f73="" title="微信" alt="微信" src="@/assets/svgPath/wx.svg" class="oauth-btn">
                 </div>
@@ -75,7 +74,8 @@
     import { reactive, ref, unref } from "vue"
     import { useRouter, useRoute, onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
     import { useStore } from "vuex"
-    import { shell } from 'electron'
+    // import { ipcMain, ipcRenderer } from 'electron'
+    import { ipcRendererInvoke } from '@/utils/processIpc'
     import { getSmsApi, verifySmsApi, getWxQrApi, rotateWxApi } from "@/api/user"
     import { wxQrLoginApi } from "@/apiDesktop/user";
     import { loginApi, getUserBaseApi } from '@/apiDesktop/user'
@@ -238,6 +238,7 @@
         setToken(res.data.token)
         res.data.id = res.data.user_hash
         store.commit('user/SET_USER_INFO', res.data)
+        ipcRendererInvoke('triggerSync')
         setTimeout(() => {
             router.replace({
                 name: "Home"
@@ -245,6 +246,7 @@
             loginLoading.close()
         },600)
     }
+
 </script>
 <script>
     let backUrl = ""

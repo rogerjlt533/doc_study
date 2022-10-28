@@ -118,7 +118,7 @@
     let dateValue = ref('')
     let showSeniorSearch = ref(false)
     function inputSearch(){
-        bus.emit('INPUT_SEARCH',{
+        bus.emit('handleSearchNote',{
             keyword: keyword.value,
             start_time: dateValue.value ? dateValue.value[0] : undefined,
             end_time: dateValue.value ? dateValue.value[1] : undefined
