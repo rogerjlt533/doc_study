@@ -173,7 +173,7 @@ exports.moveCollectionNotes = async function (user_id, target_id, source_id) {
 exports.mine = async function (user_id, page, size) {
     user_id = common.decode(user_id)
     size = 1000
-    const data = await collectionService.mine(user_id, page, size, ['id', 'user_id', 'collection', 'color', 'hash_code'])
+    const data = await collectionService.mine(user_id, page, size, ['id', 'user_id', 'collection', 'max_num', 'color', 'hash_code'])
     return {status_code: 200, message: 'success', data}
 }
 
@@ -203,5 +203,29 @@ exports.sort = async function (user_id, collection_ids) {
         await collectionService.collectionTool.resort(user_id, team_list[index], index + 1, save_time)
         await syncService.pushLocalCollection(common.encodeDesktop(user_id), '', user_id, team_list[index])
     }
+    return {status_code: 200, message: 'success'}
+}
+
+/**
+ * 设置collection最大标准值
+ * @param user_id
+ * @param collection_id
+ * @param max_num
+ * @returns {Promise<*>}
+ */
+exports.setMaxNum = async function (user_id, collection_id, max_num) {
+    if (common.empty(user_id) || common.empty(collection_id)) {
+        return {status_code: 400, message: '缺少参数'}
+    }
+    user_id = common.decode(user_id)
+    collection_id = common.decode(collection_id)
+    const record = await collectionService.collectionTool.get(collection_id, 'id,user_id,collection,color')
+    if (common.empty(record)) {
+        return {status_code: 400, message: '笔记本不存在'}
+    }
+    if (record.user_id !== user_id) {
+        return {status_code: 400, message: '权限错误'}
+    }
+    await collectionService.collectionTool.setMaxNum(collection_id, max_num)
     return {status_code: 200, message: 'success'}
 }
