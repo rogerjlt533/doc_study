@@ -140,7 +140,7 @@ exports.processRemoteDeleted = async function (my_collection) {
  * @returns {Promise<*>}
  */
 exports.initCollectionDownQueue = async function (token, userid, data, logs) {
-    const {id, collection, color, user_id, sort_index, members, is_default, created_at, updated_at, deleted_at} = data
+    const {id, collection, color, max, remark, user_id, sort_index, members, is_default, created_at, updated_at, deleted_at} = data
     const remote_id = common.decode(id)
     const remote_userid = common.decode(user_id)
     let record = await collectionTool.remote(remote_id)
@@ -157,7 +157,7 @@ exports.initCollectionDownQueue = async function (token, userid, data, logs) {
     }
     let collection_id = 0
     if (common.empty(record)) {
-        collection_id = await collectionTool.createRemote(remote_userid, remote_id, collection, color, created_at, 0)
+        collection_id = await collectionTool.createRemote(remote_userid, remote_id, collection, color, created_at, remark, max)
         if (common.empty(collection_id)) {
             record = await collectionTool.remote(remote_id)
             collection_id = !common.empty(record) ? record.id : 0
@@ -167,7 +167,7 @@ exports.initCollectionDownQueue = async function (token, userid, data, logs) {
         collection_id = record.id
         if (common.compareTime(updated_at, record.updated_at) > 0) {
             // 远程修改时间大于本地修改时间
-            await collectionTool.edit(collection_id, collection, color, common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss'), 0)
+            await collectionTool.edit(collection_id, collection, color, common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss'), remark, max)
         }
     }
     if (common.empty(collection_id)) {
@@ -859,6 +859,8 @@ exports.pushLocalCollection = async function (token, pub_key, user_id, collectio
         collection: collection_record.collection,
         color: collection_record.color,
         sort_index,
+        max: collection_record.max_num,
+        remark: collection_record.remark,
         created_at: collection_record.created_at,
         updated_at: collection_record.updated_at,
         deleted_at: collection_record.deleted_at
