@@ -138,6 +138,46 @@ exports.tags = async function (user_id, collection_id, is_group, keyword, note_t
 }
 
 /**
+ * 获取标签列表
+ * @param user_id
+ * @param collection_id
+ * @param is_group
+ * @param keyword
+ * @param note_type
+ * @param columns
+ * @returns {Promise<any>}
+ */
+exports.trashTags = async function (user_id, collection_id, is_group, keyword, note_type = 0, columns = ['tags.id', 'tags.tag', 'tags.is_top']) {
+    columns = columns.join(',')
+    const condition = [], options = []
+    let sql = "select DISTINCT #COLUMNS# from tags" +
+        " left join note_tag_relation on tags.id=note_tag_relation.tag_id" +
+        " left join notes on notes.id=note_tag_relation.note_id" +
+        " left join collections on collections.id=notes.collection_id" +
+        " where #CONDITION#"
+    condition.push('notes.status=0')
+    if (!common.empty(collection_id)) {
+        condition.push('notes.collection_id=?')
+        options.push(collection_id)
+    }
+    if (!common.empty(keyword)) {
+        condition.push("tags.tag like '%" + keyword + "%'")
+    }
+    if (is_group === 1) {
+        condition.push('tags.user_id=?')
+        options.push(user_id)
+    }
+    if (!common.empty(note_type) && note_type > 0) {
+        condition.push('notes.note_type=?')
+        options.push(note_type)
+    }
+    condition.push('notes.deleted_at is null and collections.deleted_at is null')
+    sql = sql.replace('#COLUMNS#', columns)
+    sql = sql.replace('#CONDITION#', condition.join(' and '))
+    return await sqlite.all(sql, options)
+}
+
+/**
  * note标签列表
  * @param note_id
  * @returns {Promise<Array>}

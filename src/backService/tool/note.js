@@ -243,8 +243,10 @@ exports.notesWithKeyword = async function (user_id, params, sort = 'desc', page 
     const status = common.empty(params.status) ? 0 : params.status
     const note_type = common.empty(params.note_type) ? 1 : params.note_type
     sort = common.empty(sort) ? 'desc' : sort
+    let sort_column = common.empty(params.sort_column) ? 'notes.last_update' : params.sort_column
+    sort_column = common.empty(params.orderby_create) ? sort_column : 'notes.created_at'
     const left_join = [], conditions = [], options = []
-    let sql = "select #COLUMN# from notes #LEFT_JOIN# where #CONDITION# order by notes.last_update " + sort + " limit ? offset ?"
+    let sql = "select #COLUMN# from notes #LEFT_JOIN# where #CONDITION# order by " + sort_column + " " + sort + " limit ? offset ?"
     if (!common.empty(tag_id) || !common.empty(group_id)) {
         left_join.push("left join note_tag_relation on note_tag_relation.note_id=notes.id")
         conditions.push("note_tag_relation.deleted_at is null")
@@ -256,6 +258,12 @@ exports.notesWithKeyword = async function (user_id, params, sort = 'desc', page 
     if (!common.empty(group_id)) {
         conditions.push("note_tag_relation.group_id=?")
         options.push(group_id)
+    }
+    if (!common.empty(params.start_time)) {
+        conditions.push(sort_column + ">='" + params.start_time + "'")
+    }
+    if (!common.empty(params.end_time)) {
+        conditions.push(sort_column + "<='" + params.end_time + " 23:59:59'")
     }
     if (!common.empty(keyword)) {
         conditions.push("notes.note like '%" + keyword + "%'")
@@ -333,8 +341,10 @@ exports.notes = async function (user_id, params, sort = 'desc', page = 1, size =
     const status = common.empty(params.status) ? 0 : params.status
     const note_type = common.empty(params.note_type) ? 1 : params.note_type
     sort = common.empty(sort) ? 'desc' : sort
+    let sort_column = common.empty(params.sort_column) ? 'notes.last_update' : params.sort_column
+    sort_column = common.empty(params.orderby_create) ? sort_column : 'notes.created_at'
     const left_join = [], conditions = [], options = []
-    let sql = "select #COLUMN# from notes #LEFT_JOIN# where #CONDITION# order by notes.last_update " + sort + " limit ? offset ?"
+    let sql = "select #COLUMN# from notes #LEFT_JOIN# where #CONDITION# order by " + sort_column + " " + sort + " limit ? offset ?"
     if (!common.empty(tag_id) || !common.empty(group_id)) {
         left_join.push("left join note_tag_relation on note_tag_relation.note_id=notes.id")
         conditions.push("note_tag_relation.deleted_at is null")
@@ -346,6 +356,12 @@ exports.notes = async function (user_id, params, sort = 'desc', page = 1, size =
     if (!common.empty(group_id)) {
         conditions.push("note_tag_relation.group_id=?")
         options.push(group_id)
+    }
+    if (!common.empty(params.start_time)) {
+        conditions.push(sort_column + ">='" + params.start_time + "'")
+    }
+    if (!common.empty(params.end_time)) {
+        conditions.push(sort_column + "<='" + params.end_time + " 23:59:59'")
     }
     if (!common.empty(collection_id)) {
         conditions.push("notes.collection_id=?")
@@ -414,7 +430,7 @@ exports.count = async function (user_id, params) {
     const is_group = common.empty(params.is_group) ? 0 : params.is_group
     const status = common.empty(params.status) ? 0 : params.status
     const note_type = common.empty(params.note_type) ? 1 : params.note_type
-    const left_join = [], conditions = [], options = []
+    const left_join = [], conditions = ['notes.deleted_at is null'], options = []
     let sql = "select count(distinct notes.id) as ts_count from notes #LEFT_JOIN# where #CONDITION#"
     if (!common.empty(tag_id) || !common.empty(group_id)) {
         left_join.push("left join note_tag_relation on note_tag_relation.note_id=notes.id")

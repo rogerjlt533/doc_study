@@ -40,6 +40,8 @@ exports.new = async function (user_id, collection_id, note_type, source, content
     postil_list = common.empty(postil_list) ? [] : postil_list
     tag_list = common.empty(tag_list) ? [] : tag_list
     struct_list = common.empty(struct_list) ? [] : struct_list
+    // 去掉末尾的空格 @Ivone
+    content = content.trimEnd()
     const note_id = await noteService.noteTool.create(user_id, collection_id, note_type, source, content, common.empty(url) ? '' : url, JSON.stringify(tag_list), JSON.stringify(struct_list))
     if (common.empty(note_id)) {
         return {status_code: 500, message: '记录创建失败', data: {}}
@@ -122,6 +124,8 @@ exports.edit = async function (user_id, note_id, collection_id, content, postil_
         const save_time = common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
         await noteService.noteTool.history(note_id, 2, 2001, note.note, save_time, note.tag_json, note.struct_tag_json)
     }
+    // 去掉末尾的空格 @Ivone
+    content = content.trimEnd()
     await noteService.noteTool.update(note_id, collection_id, content, JSON.stringify(tag_list), JSON.stringify(struct_list), note.created_at)
     let origin_postil_list = await noteService.noteTool.postils(note_id, 'note_id')
     origin_postil_list = common.list_column(origin_postil_list, 'note_id')
