@@ -227,5 +227,6 @@ exports.setMaxNum = async function (user_id, collection_id, max_num) {
         return {status_code: 400, message: '权限错误'}
     }
     await collectionService.collectionTool.setMaxNum(collection_id, max_num)
+    await syncService.pushLocalCollection(common.encodeDesktop(user_id), '', user_id, collection_id)
     return {status_code: 200, message: 'success'}
 }

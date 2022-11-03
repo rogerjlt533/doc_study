@@ -467,3 +467,35 @@ exports.countByTag = async function (user_id, tag_id, collection_id) {
     const count = await noteService.noteTool.count(user_id, params)
     return {status_code: 200, message: 'success', data: {count}}
 }
+
+/**
+ * 转化为写作笔记
+ * @param user_id
+ * @param note_id
+ * @returns {Promise<*>}
+ */
+exports.convertToPage = async function (user_id, note_id) {
+    user_id = common.decode(user_id)
+    note_id = common.decode(note_id)
+    const note = await noteService.noteTool.get(note_id)
+    if (common.empty(note)) {
+        return {status_code: 400, message: '参数错误', data: {}}
+    }
+    if (note.user_id !== user_id) {
+        return {status_code: 400, message: '非本人记录不可删除', data: {}}
+    }
+    if (note.note_type !== 1) {
+        return {status_code: 400, message: '非卡片笔记不可转化', data: {}}
+    }
+    if (note.note_type === 2) {
+        return {status_code: 400, message: '该笔记已是写作笔记', data: {}}
+    }
+    const tag_json = JSON.parse(note.tag_json)
+    const struct_tag_json = await tagService.tagTool.convertTagToStruct(tag_json)
+    const save_time = common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
+    await noteService.noteTool.updateNoteType(note_id, 2, tag_json, struct_tag_json, save_time)
+    await noteService.noteTool.history(note_id, 2, 2001, note.note, save_time, note.tag_json, note.struct_tag_json)
+    await tagService.tagTool.clearNoteTag(note_id)
+    await noteService.bindStructTags(user_id, note_id, struct_tag_json)
+    return {status_code: 200, message: 'success', data: {}}
+}
