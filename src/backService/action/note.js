@@ -490,6 +490,11 @@ exports.convertToPage = async function (user_id, note_id) {
     if (note.note_type === 2) {
         return {status_code: 400, message: '该笔记已是写作笔记', data: {}}
     }
+    // 权限验证
+    const user_right_result = await userService.userTool.userRights(user_id)
+    if (common.empty(user_right_result.is_pro)) {
+        return {status_code: 401, message: '升级pro权限可切换卡片', data: {}}
+    }
     const tag_json = JSON.parse(note.tag_json)
     const struct_tag_json = await tagService.tagTool.convertTagToStruct(tag_json)
     const save_time = common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
