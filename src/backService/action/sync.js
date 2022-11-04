@@ -2,6 +2,7 @@ const common = require('../tool/common');
 const syncService = require('../service/sync');
 const fingerService = require('../service/finger');
 const collectionService = require('../service/collection')
+const httpTool = require('../tool/http');
 
 /**
  * 拉取collection同步的队列
@@ -132,6 +133,10 @@ exports.initCollectionNotePushQueue = async function (token, pub_key) {
  * @returns {Promise<{status_code: number, message: string}>}
  */
 exports.processNotePushQueue = async function (token, pub_key, platform = '', version = '') {
+    const isOnline = await httpTool.initOnlineStatus()
+    if (common.empty(isOnline)) {
+        return {status_code: 400, message: '网络中断'}
+    }
     const {status, data} = await syncService.getPushNotes(token, pub_key, platform, version, 60)
     // if (status) {
     //     // const collections = []
