@@ -27,7 +27,14 @@ exports.get = async function (route, query = {}, headers = {}) {
         route += '?' + query_params.join('&')
     }
     await rp({url: route, headers}).then(function (result) {
-        data = JSON.parse(result)
+        if (!common.empty(result)) {
+            data = JSON.parse(result)
+        } else {
+            data = {
+                code: '409',
+                message: '系统错误'
+            }
+        }
     }).catch(function (err) {
         data = {message: '请求失败'}
     })
@@ -51,7 +58,14 @@ exports.post = async function (route, body = {}, headers = {}) {
         headers['content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
     }
     await rp({url: route, method: 'POST', form: body, headers}).then(function (result) {
-        data = JSON.parse(result)
+        if (!common.empty(result)) {
+            data = JSON.parse(result)
+        } else {
+            data = {
+                code: '409',
+                message: '系统错误'
+            }
+        }
     }).catch(function (err) {
         data = {message: '请求失败'}
         console.log(err)

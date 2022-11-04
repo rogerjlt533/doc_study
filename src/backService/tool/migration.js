@@ -2,6 +2,7 @@ const fs = require('fs');
 const sqlite = require('./sqlitepool');
 const syncsqlite = require('./syncsqlitetool');
 const logsqlite = require('./logsqlitetool');
+const oplogsqlite = require('./oplogsqlitetool');
 const path = require('path')
 const env = require('../config/env');
 const sd = require('silly-datetime');
@@ -11,6 +12,7 @@ exports.run = async function () {
     await this.runMain()
     await this.runSync()
     await this.runLog()
+    await this.runOpLog()
 }
 
 exports.runMain = async function () {
@@ -106,5 +108,37 @@ exports.runLog = async function () {
         // console.log(sql)
         await logsqlite.connect().exec(sql)
         await logsqlite.insert("INSERT INTO migrations(migration, created_at) VALUES (?, ?)", [fileName, save_time])
+    }
+}
+
+exports.runOpLog = async function () {
+    let sql = `
+            CREATE TABLE IF NOT EXISTS migrations (
+              id INTEGER PRIMARY KEY,
+              migration VARCHAR (255) NOT NULL,
+              created_at DATETIME DEFAULT NULL
+            )
+            `;
+    await oplogsqlite.connect().exec(sql);
+    const fileName = 'user_operate_log.sql'
+    sql = 'CREATE TABLE IF NOT EXISTS user_operate_log(\n' +
+        '  id INTEGER PRIMARY KEY,\n' +
+        '  user_id INTEGER NOT NULL DEFAULT 0,\n' +
+        '  opr_type INTEGER NOT NULL DEFAULT 0,\n' +
+        '  opr_direct INTEGER NOT NULL DEFAULT 0,\n' +
+        '  obj_id INTEGER NOT NULL DEFAULT 0,\n' +
+        '  remote_id INTEGER NOT NULL DEFAULT 0,\n' +
+        '  obj_value TEXT DEFAULT NULL,\n' +
+        '  is_upload INTEGER NOT NULL DEFAULT 0,\n' +
+        '  deleted_time DATETIME DEFAULT NULL,\n' +
+        '  created_at DATETIME DEFAULT NULL,\n' +
+        '  updated_at DATETIME DEFAULT NULL\n' +
+        ')';
+    const row = await oplogsqlite.get("select * from migrations where migration=?", [fileName])
+    const save_time = sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
+    if (row === undefined || row === null) {
+        // console.log(sql)
+        await oplogsqlite.connect().exec(sql)
+        await oplogsqlite.insert("INSERT INTO migrations(migration, created_at) VALUES (?, ?)", [fileName, save_time])
     }
 }
