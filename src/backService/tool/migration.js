@@ -124,13 +124,16 @@ exports.runOpLog = async function () {
     sql = 'CREATE TABLE IF NOT EXISTS user_operate_log(\n' +
         '  id INTEGER PRIMARY KEY,\n' +
         '  user_id INTEGER NOT NULL DEFAULT 0,\n' +
-        '  opr_type INTEGER NOT NULL DEFAULT 0,\n' +
+        '  obj_type INTEGER NOT NULL DEFAULT 0,\n' +
         '  opr_direct INTEGER NOT NULL DEFAULT 0,\n' +
         '  obj_id INTEGER NOT NULL DEFAULT 0,\n' +
+        '  behavior VARCHAR (255) DEFAULT NULL,\n' +
         '  remote_id INTEGER NOT NULL DEFAULT 0,\n' +
-        '  obj_value TEXT DEFAULT NULL,\n' +
+        '  download_value TEXT DEFAULT NULL,\n' +
+        '  upload_value TEXT DEFAULT NULL,\n' +
+        '  result_value INTEGER NOT NULL DEFAULT 0,\n' +
+        '  response_value TEXT DEFAULT NULL,\n' +
         '  is_upload INTEGER NOT NULL DEFAULT 0,\n' +
-        '  deleted_time DATETIME DEFAULT NULL,\n' +
         '  created_at DATETIME DEFAULT NULL,\n' +
         '  updated_at DATETIME DEFAULT NULL\n' +
         ')';

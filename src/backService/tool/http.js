@@ -1,9 +1,13 @@
 const fs = require('fs');
 const common = require('./common');
 const rp = require('request-promise');
+const internetAvailable = require("internet-available")
 
+exports.domain_name = 'api.fang-cun.net'
 exports.host = 'https://api.fang-cun.net/'
 exports.sync_host = 'https://steam.fang-cun.net/'
+
+exports.is_online = 0
 
 /**
  * get请求
@@ -26,13 +30,26 @@ exports.get = async function (route, query = {}, headers = {}) {
         }
         route += '?' + query_params.join('&')
     }
-    await rp({url: route, headers}).then(function (result) {
-        if (!common.empty(result)) {
-            data = JSON.parse(result)
+    await rp({url: route, headers, resolveWithFullResponse: true}).then(function (response) {
+        if (parseInt(response.statusCode / 200) === 1 || parseInt(response.statusCode / 200) === 2) {
+            if (parseInt(response.statusCode / 200) === 1) {
+                data = {
+                    code: '409',
+                    message: '系统错误',
+                    status_code: response.statusCode,
+                    response: response.body
+                }
+            } else {
+                data = JSON.parse(response.body)
+                data.status_code = response.statusCode
+                data.response = response.body
+            }
         } else {
             data = {
                 code: '409',
-                message: '系统错误'
+                message: '系统错误',
+                status_code: response.statusCode,
+                response: ''
             }
         }
     }).catch(function (err) {
@@ -57,13 +74,26 @@ exports.post = async function (route, body = {}, headers = {}) {
     if (!headers.hasOwnProperty('content-Type')) {
         headers['content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
     }
-    await rp({url: route, method: 'POST', form: body, headers}).then(function (result) {
-        if (!common.empty(result)) {
-            data = JSON.parse(result)
+    await rp({url: route, method: 'POST', form: body, headers, resolveWithFullResponse: true}).then(function (response) {
+        if (parseInt(response.statusCode / 200) === 1 || parseInt(response.statusCode / 200) === 2) {
+            if (parseInt(response.statusCode / 200) === 1) {
+                data = {
+                    code: '409',
+                    message: '系统错误',
+                    status_code: response.statusCode,
+                    response: response.body
+                }
+            } else {
+                data = JSON.parse(response.body)
+                data.status_code = response.statusCode
+                data.response = response.body
+            }
         } else {
             data = {
                 code: '409',
-                message: '系统错误'
+                message: '系统错误',
+                status_code: response.statusCode,
+                response: ''
             }
         }
     }).catch(function (err) {
@@ -94,5 +124,18 @@ exports.upload = async function (route, path, headers = {}) {
         console.log(err)
     })
     return data
+}
+
+exports.initOnlineStatus = async function () {
+    await internetAvailable({
+        domainName: this.domain_name,
+        // port: 53,
+        host: '114.114.114.114' // 默认，国内请改成114.114.114.114
+    }).then(() => {
+        this.is_online = 1
+    }).catch(() => {
+        this.is_online = 0
+    });
+    return this.is_online
 }
 

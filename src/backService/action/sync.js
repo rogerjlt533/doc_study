@@ -212,3 +212,22 @@ exports.autoClearCollectionQueue = async function (token) {
 exports.manualPushCollection = async function (token) {
 
 }
+
+/**
+ * 自动下行同步已存在标签的置顶状态
+ * @param token
+ * @returns {Promise<void>}
+ */
+exports.pullTagTop = async function (token) {
+    await syncService.pullTagTop(token)
+}
+
+/**
+ * 推送标签置顶状态修改
+ * @param token
+ * @returns {Promise<void>}
+ */
+exports.pushTagTop = async function (token) {
+    await syncService.pushLocalTagTop(token)
+}
+
