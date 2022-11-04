@@ -477,6 +477,11 @@ exports.countByTag = async function (user_id, tag_id, collection_id) {
 exports.convertToPage = async function (user_id, note_id) {
     user_id = common.decode(user_id)
     note_id = common.decode(note_id)
+    // 权限验证
+    const user_right_result = await userService.userTool.userRights(user_id)
+    if (common.empty(user_right_result.is_pro)) {
+        return {status_code: 401, message: '升级pro权限可切换卡片', data: {}}
+    }
     const note = await noteService.noteTool.get(note_id)
     if (common.empty(note)) {
         return {status_code: 400, message: '参数错误', data: {}}
@@ -489,11 +494,6 @@ exports.convertToPage = async function (user_id, note_id) {
     }
     if (note.note_type === 2) {
         return {status_code: 400, message: '该笔记已是写作笔记', data: {}}
-    }
-    // 权限验证
-    const user_right_result = await userService.userTool.userRights(user_id)
-    if (common.empty(user_right_result.is_pro)) {
-        return {status_code: 401, message: '升级pro权限可切换卡片', data: {}}
     }
     const tag_json = JSON.parse(note.tag_json)
     const struct_tag_json = await tagService.tagTool.convertTagToStruct(tag_json)
