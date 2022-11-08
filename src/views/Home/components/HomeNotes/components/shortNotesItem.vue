@@ -1,6 +1,6 @@
 <template>
     <div @contextmenu="handleRightClick" >
-        <div class="line-one" draggable="true">
+        <div class="line-one" :id="'note-id-' + item.id" draggable="true">
             <div class="flex align-center">
                 <font-awesome-icon icon="grip-vertical" color="#6D7785" class="font-12 mr6" />
                 <el-tooltip
@@ -119,23 +119,21 @@
     import bus from '@/utils/bus'
     import {getNotesHistoryApi, removePostilApi, rollHistoryApi} from '@/apiDesktop/notes'
     // hooks ----
-    import { simpleEditor } from "../js/editor"
-    import { handleContentHtml, handleHtmlTagSpace } from '@/utils/processHtml'
+    import { simpleEditor } from "../js/cardEditor"
     import openUrlByBrowser from "@/assets/js/openUrlByBrowser";
     import { getNoteNodeClick } from '../js/editorMethods'
     import fcDialog from "@/components/dialog";
     // 组件 ----
     import previewImg from "@/components/imagePreview"
-    import {ElMessageBox, ElNotification} from "element-plus"
+    import { ElMessageBox, ElNotification } from "element-plus"
     import { RefreshLeft } from '@element-plus/icons-vue'
 
     const remote = require('electron').remote;
     const Menu = remote.Menu;
     const MenuItem = remote.MenuItem;
 
-    const store = useStore();
-    const emit = defineEmits(['deleteNote']);
-    const matchReg = /\#(\S+?)?\s{1}/g
+    const store = useStore()
+    const emit = defineEmits(['deleteNote'])
 
     const props = defineProps({
         item: {
@@ -182,16 +180,11 @@
         if(collection.id === props.item.collection_id) return false
 
         const editor = simpleEditor(props.item.note)
-        const contentJson = editor.getJSON()
-        const editorHtml = handleHtmlTagSpace(editor.getHTML())
-        const tag_list = editorHtml.match(matchReg) ? editorHtml.match(matchReg).map(item => item.substr(1).trim()) : []
-        const contentHtml = handleContentHtml(editor.getHTML())
-        const res = await store.dispatch("notes/editNote",{
-            contentHtml,
-            contentJson,
+        const res = await store.dispatch("notes/editNote", {
+            html: editor.getHTML(),
+            json: editor.getJSON(),
             collection_id: collection.id,
             noteId: props.item.id,
-            tag_list,
             postil_list: props.item.quote.map(item => item.id),
             index: props.index
         })
@@ -236,8 +229,8 @@
     }
     // 双击编辑笔记
     function dblclickNote(){
-        if(props.isTrash || props.item.is_self !== 1) return false;
-        editNote(props.item);
+        if(props.isTrash || props.item.is_self !== 1) return false
+        editNote()
     }
 
     // 回收站恢复笔记
@@ -264,6 +257,9 @@
     const showThumbnail = ref(true)
     function openCardDetails(){
         showThumbnail.value = !showThumbnail.value
+        if(showThumbnail.value){
+            document.getElementById(`note-id-${props.item.id}`).scrollIntoView()
+        }
     }
 
 
