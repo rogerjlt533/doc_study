@@ -324,41 +324,6 @@
 </script>
 
 <style lang="scss">
-    .content-html{
-        font-size: 14px;
-        color: #323334;
-        white-space: pre-wrap;
-        line-height: 30px;
-        .hashtag-suggestion {
-            display: inline-block;
-            color: $purple;
-            border-radius: 2px;
-            padding: 0 2px;
-            margin: 0 1px;
-            font-size: 14px;
-            background: rgba($purple, 0.1);
-            white-space: normal;
-            line-height: 20px;
-            cursor: pointer;
-            transition: all 300ms;
-            &:hover{
-                color: #fff;
-                background: rgba($purple, 0.8);
-            }
-        }
-        img{
-            max-width: 100%;
-        }
-        p{
-            min-height: 22px;
-        }
-        ol, ul{
-            margin: 0;
-            padding-left: 20px;
-        }
-    }
-
-
     .activeFilter{
         color: $purple;
         background-color: rgba(120, 133, 209, 0.1) !important

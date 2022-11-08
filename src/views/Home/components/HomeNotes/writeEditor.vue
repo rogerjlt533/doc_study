@@ -392,7 +392,7 @@
                 display: flex;
                 align-items: center;
                 .update-time{
-                    font-size: 14px;
+                    font-size: 12px;
                     color: #7B849B;
                 }
             }

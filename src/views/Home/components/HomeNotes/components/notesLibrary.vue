@@ -57,7 +57,7 @@
                 <!--        <div v-html='item.note'></div>-->
                 <!--    </div>-->
                 <!--</div>-->
-                <a href="javascript:void(0);" draggable="true" @dragstart="handleDragstart($event, item)">
+                <a href="javascript:void(0);" draggable="true">
                     <blockquote contenteditable="false">
                         <div v-html='item.note'></div>
                     </blockquote>
@@ -78,17 +78,14 @@
     import { computed, reactive, ref, onMounted } from "vue"
     import { useStore } from "vuex"
     import { getNotesApi } from "@/apiDesktop/notes"
-    import { deepClone } from "@/utils/tools"
+    import { deepClone, handleTagHtml } from "@/utils/tools"
+    import { simpleEditor } from "../js/editor"
     import { getGroupListApi, getTagListApi } from "@/apiDesktop/tag"
     import { Search } from '@element-plus/icons-vue'
 
     const store = useStore()
 
-    defineExpose({ getNoteList })
-
-    onMounted(() => {
-        getTagList()
-    })
+    defineExpose({ getNoteList, getTagList })
 
     const tagSelectRef = ref(null)
     const collectionActive = ref('')
@@ -224,6 +221,16 @@
         noteParams.page ++
         getNoteList()
     }
+
+    function handleTagFormat(note){
+        const editor = simpleEditor(note)
+        const json = editor.getJSON()
+        const html = editor.getHTML()
+        editor.commands.setContent(handleTagHtml(json, html, true))
+
+        return editor.getHTML()
+    }
+
 </script>
 
 <style lang="scss" scoped>

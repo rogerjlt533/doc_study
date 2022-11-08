@@ -1,24 +1,24 @@
 import { computed, ref } from "vue"
 import store from "@/store/index.js"
 import { closeTips } from "@/components/tipsButton"
-import dependence from './dependence'
+import dependence from '../../../../../components/tiptap-extensions/js/dependence'
 import { Editor } from '@tiptap/vue-3'
 import { Extension } from '@tiptap/core'
 import { generateJSON } from '@tiptap/html'
 import smartRules from "./smartRules"
-import suggestion from './suggestion'
+import suggestion from '../../../../../components/tiptap-extensions/js/suggestion'
 import { handleTagHtml } from '@/utils/tools'
 // 用于图片粘贴上传
 import {createImageExtension, handleTargetName} from "./pasteImage.js"
 import Image from "@tiptap/extension-image";
 
-let editor = null
+let cardEditor = null
 let timer = null
 let cachedHtml = computed(() => store.state.notes.cachedNote )
 // 简记模式
 // export const showOptions = ref(false)
 export function editorInstance(content, editorBox, isEdit = false, className, onSubmit = ()=>{}, editContent = ()=>{}){
-    editor = new Editor({
+    cardEditor = new Editor({
         content: content || cachedHtml.value,
         autofocus: false,
         parseOptions: {
@@ -72,10 +72,10 @@ export function editorInstance(content, editorBox, isEdit = false, className, on
             }),
         ],
         onCreate(){
-            const json = editor.getJSON()
-            const html = editor.getHTML()
+            const json = cardEditor.getJSON()
+            const html = cardEditor.getHTML()
             const data = handleTagHtml(json, html, isEdit)
-            editor.commands.setContent(data)
+            cardEditor.commands.setContent(data)
             if(isEdit) return false;
             store.commit("notes/SET_NOTES_LIST_HEIGHT", editorBox.value?.offsetHeight)
         },
@@ -113,16 +113,16 @@ export function editorInstance(content, editorBox, isEdit = false, className, on
             // showOptions.value = false
         },
         beforeDestroy() {
-            editor.destroy()
+            cardEditor.destroy()
         },
     });
 
-    return editor;
+    return cardEditor;
 }
 
 const handlePasteImage = (src) => {
     const imageHtml = `<img src="${src}"><p></p>`
-    editor.chain().insertContent( imageHtml ).focus().run()
+    cardEditor.chain().insertContent( imageHtml ).focus().run()
 }
 
 // 采用单例模式建立editor

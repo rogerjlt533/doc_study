@@ -1,8 +1,9 @@
 // import { compileNoteApi, quoteNoteApi } from "@/api/notes"
 import { compileNoteApi, quoteNoteApi } from "@/apiDesktop/notes"
 import { simpleEditor } from './editor'
-import { handleHtmlTagSpace } from '@/assets/js/processHtml'
+import { handleHtmlTagSpace } from '@/utils/processHtml'
 import store from "@/store"
+import { filterSpecialFont } from "@/utils/tools";
 
 const tagService = require('service/service/tag');
 const matchReg = /\#(\S+?)?\s{1}/g
@@ -47,7 +48,7 @@ class DropNoteFun {
                 user_id,
                 target_id: this.targetNote.id,
                 source_id: this.sourceNote.id,
-                tag_list,
+                tag_list: filterSpecialFont(tag_list),
                 struct_list
             }
             const res = await compileNoteApi(data)

@@ -298,7 +298,7 @@
         project.form.collection = `${startText}${detail.emoji.unicode}${endText}`;
     }
 
-    bus.on('ADD_COLLECTION', () => {
+    bus.on('handleAddCollection', () => {
         addCollection()
     })
     // 添加笔记本

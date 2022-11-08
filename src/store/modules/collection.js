@@ -17,7 +17,7 @@ export default {
                 return item;
             })
         },
-        ADD_COLLECTION(state, data){
+        handleAddCollection(state, data){
             data.id = data.collection_id;
             state.projectListSelf.push(data);
         },
@@ -67,7 +67,7 @@ export default {
                 color
             })
             if(res.status_code === 200){
-                commit("ADD_COLLECTION",res.data);
+                commit("handleAddCollection",res.data);
             }
             return res
         },

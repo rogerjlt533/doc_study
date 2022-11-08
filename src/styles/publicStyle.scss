@@ -4,12 +4,6 @@
     overflow: hidden;
     text-overflow:ellipsis;
 }
-.line1-1{
-    display: inline-block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
 
 .line-2{
     overflow: hidden;
@@ -75,34 +69,6 @@
     box-shadow: 1px 1px 8px -6px rgba($color: #000000, $alpha: 0.5);
 }
 
-// 水波纹按钮
-.water-ripple-btn{
-    position: relative;
-    box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.15), 0px 1px 5px 0px rgba(0, 0, 0, 0.12);
-    outline: 0;
-    border: 0;
-    cursor: pointer;
-    overflow: hidden;
-    transition: background-color .25s;
-    &::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-image: radial-gradient(circle, #ccc 10%, transparent 10.1%);
-        transform: scale(10);
-        opacity: 0;
-        transition: all .6s;
-    }
-    &:active::after {
-        transform: scale(0);
-        opacity: .5;
-        transition: 0s;
-    }
-}
-
 .cursor-p{
     cursor: pointer
 }
@@ -153,7 +119,6 @@
 .justify-around{
     justify-content: space-around;
 }
-
 
 .flod{
     display: inline-block;
@@ -251,6 +216,78 @@
     }
 }
 
+.editor-content-style{
+    .ProseMirror{
+        min-height: 14px;
+        max-height: calc(50vh);
+        overflow-y: scroll;
+        scrollbar-color: transparent transparent;
+    }
+    .ProseMirror::-webkit-scrollbar {
+        display: none;
+        color: #a4a2ca;
+    }
+    .ProseMirror-focused{
+        &:focus {
+            outline: none;
+        }
+    }
+    .ProseMirror p.is-editor-empty:first-child::before {
+        content: attr(data-placeholder);
+        float: left;
+        color: #adb5bd;
+        pointer-events: none;
+        height: 0;
+    }
+}
+.content-html {
+    font-size: 14px;
+    color: #323334;
+    white-space: pre-wrap;
+    line-height: 30px;
+
+    .hashtag-suggestion {
+        display: inline-block;
+        color: $purple;
+        border-radius: 2px;
+        padding: 0 2px;
+        margin: 0 1px;
+        font-size: 14px;
+        background: rgba($purple, 0.1);
+        white-space: normal;
+        line-height: 20px;
+        cursor: pointer;
+        transition: all 300ms;
+
+        &:hover {
+            color: #fff;
+            background: rgba($purple, 0.8);
+        }
+    }
+}
+.content-html, .editor-content-style{
+    img {
+        max-width: calc(100% - 20px);
+        border-radius: 10px;
+        outline: none;
+        margin: 0px 4px;
+        border: 4px solid #F6F8FC;
+
+        &.ProseMirror-selectednode {
+            border: 4px solid rgb(108 86 246 / 30%);
+        }
+    }
+
+    ul, ol {
+        margin: 0;
+        padding-left: 30px;
+    }
+
+    p {
+        margin: 0;
+        line-height: 30px;
+    }
+}
 
 // margin布局
 .m0{ margin: 0 }

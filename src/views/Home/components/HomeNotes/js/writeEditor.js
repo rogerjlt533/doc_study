@@ -56,7 +56,7 @@ export function writeEditor(){
             dependence.CharacterCount,
             dependence.DraggableItem,
             dependence.Placeholder.configure({
-                placeholder: '🍵 在这里，梳理你的卡片笔记，可以用原生Markdown格式写下你的思考。'
+                placeholder: '🍵 在这里，梳理你的卡片笔记，写下你的思考。'
             }),
             dependence.Heading,
             dependence.Italic,

@@ -181,7 +181,8 @@
             emit("deleteNote")
             store.dispatch("notes/removeNote",{
                 id: props.item.id,
-                index: props.index
+                index: props.index,
+                note_type: 2
             })
             store.dispatch("user/getUserBase")
         }).catch(()=>{})
@@ -199,7 +200,8 @@
         emit("deleteNote")
         store.dispatch("notes/deleteNote",{
             note_id: props.item.id,
-            index: props.index
+            index: props.index,
+            note_type: 2
         })
         store.dispatch("user/getUserBase")
     }

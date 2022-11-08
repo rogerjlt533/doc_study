@@ -21,6 +21,7 @@
     import { useStore } from "vuex"
     import { ipcRenderer } from "electron"
     import { handleContentHtml, handleHtmlTagSpace } from '@/utils/processHtml'
+    import { filterSpecialFont } from '@/utils/tools'
 
     const store = useStore()
     const { proxy } = getCurrentInstance()
@@ -50,7 +51,7 @@
             contentHtml,
             annotation_id: '',
             note_type: 1,
-            tag_list
+            tag_list: filterSpecialFont(tag_list)
         }
 
         store.dispatch("notes/addNotes", params).then(() => {

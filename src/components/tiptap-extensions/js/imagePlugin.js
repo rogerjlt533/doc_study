@@ -1,17 +1,13 @@
-import { Node, nodeInputRule, Extension } from '@tiptap/core';
-import { Plugin } from 'prosemirror-state';
-// 用于图片粘贴上传
-import {ElLoading, ElMessage} from "element-plus";
-import axios from "axios";
-import { getToken } from "@/utils/auth";
-import bus from '@/utils/bus'
+import { Plugin } from 'prosemirror-state'
+import Image from '@tiptap/extension-image'
+import ImageView from '../components/imagePluginComponents.vue'
+import { VueNodeViewRenderer } from '@tiptap/vue-3'
+import {ElLoading, ElMessage} from "element-plus"
+import axios from "axios"
+import { getToken } from "@/utils/auth"
 
-const IMAGE_INPUT_REGEX = /!\[(.+|:?)\]\((\S+)(?:(?:\s+)["'](\S+)["'])?\)/;
 export const inputRegex = /(!\[(.+|:?)]\((\S+)(?:(?:\s+)["'](\S+)["'])?\))/
 
-/**
- * 编辑器图片上传的方法
- */
 const api = process.env.VUE_APP_URL
 let targetName
 // 用于获取上传时的编辑框的显示loading
@@ -41,61 +37,55 @@ async function uploadFn(file) {
     }
 }
 
-export function createImageExtension ( func ) {
-    return Node.create({
-        name: 'image',
-        group: 'block',
-        draggable: true,
-        addAttributes: () => ({
-            src: {},
-            alt: { default: null },
-            title: { default: null },
-        }),
-        parseHTML: () => [{
-            tag: 'img[src]',
-            getAttrs: (dom) => {
-                if (typeof dom === 'string') return {};
+export const imagePluginFun = (func) => {
+    return Image.extend({
+        // inline: true,
+        // group: 'inline',
+        addAttributes() {
+            return {
+                src: {
+                    default: null
+                },
+                alt: {
+                    default: null
+                },
+                width: {
+                    default: ''
+                },
+                height: {
+                    default: ''
+                },
+                display: {
+                    default: 'block',
+                    renderHTML: ({ display }) => {
+                        if (!display) {
+                            return {};
+                        }
 
-                const element = dom
-                const src = element.getAttribute('src')
+                        const options = {
+                            inline: 'display: inline',
+                            block: 'display: block',
+                            left: 'float: left',
+                            right: 'float: right'
+                        };
 
-                if(src.indexOf("api.fang-cun.net") === -1 && src.indexOf("stor.fang-cun.net") === -1) return false
-
-                return {
-                    src: element.getAttribute('src'),
-                    title: element.getAttribute('title'),
-                    alt: element.getAttribute('alt'),
-                };
-            },
-        }],
-        renderHTML: ({ HTMLAttributes }) => {
-            return ['img', HTMLAttributes]
-        } ,
-
-        // @ts-ignore
-        addCommands() {
-            return (attrs) => (state, dispatch) => {
-                const { selection } = state;
-                const position = selection.$cursor
-                    ? selection.$cursor.pos
-                    : selection.$to.pos;
-                const node = this.type.create(attrs);
-                const transaction = state.tr.insert(position, node);
-                dispatch(transaction);
+                        return {
+                            style: options[display]
+                        };
+                    },
+                    parseHTML: element => {
+                        const display = element.style.float
+                            ? element.style.float.replace(/['"]+/g, '')
+                            : element.style.display.replace(/['"]+/g, '');
+                        return {
+                            display
+                        };
+                    }
+                }
             };
         },
-        addInputRules() {
-            return [
-                nodeInputRule({
-                    find: inputRegex,
-                    type: this.type,
-                    getAttributes: match => {
-                        const [,, alt, src, title] = match
-
-                        return { src, alt, title }
-                    },
-                }),
-            ];
+        addNodeView() {
+            return VueNodeViewRenderer(ImageView);
         },
         addProseMirrorPlugins() {
             return [
@@ -114,12 +104,6 @@ export function createImageExtension ( func ) {
                                     if (uploadFn && image) {
                                         uploadFn(image).then((src) => {
                                             func(src)
-                                            // bus.emit('handlePasteImage', { type, src })
-                                            // const node = schema.nodes.image.create({
-                                            // 	src: src
-                                            // });
-                                            // const transaction = view.state.tr.replaceSelectionWith(node);
-                                            // view.dispatch(transaction);
                                         });
                                     }
                                 } else {
@@ -170,11 +154,9 @@ export function createImageExtension ( func ) {
                                     const reader = new FileReader();
 
                                     if (uploadFn) {
-                                        const node = schema.nodes.image.create({
-                                            src: await uploadFn(image),
-                                        });
-                                        const transaction = view.state.tr.insert(coordinates.pos, node);
-                                        view.dispatch(transaction);
+                                        uploadFn(image).then((src) => {
+                                            func(src)
+                                        })
                                     } else {
                                         reader.onload = (readerEvent) => {
                                             const node = schema.nodes.image.create({
@@ -193,6 +175,6 @@ export function createImageExtension ( func ) {
                     },
                 })
             ];
-        },
-    });
-};
+        }
+    })
+}

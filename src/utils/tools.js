@@ -89,7 +89,7 @@ export function handleLoopCall({ func, startCount = 1, endCount = 1, time = 5 })
 // 过滤特殊字符的标签
 export function filterSpecialFont(data){
     const reg = /^#{2,}/g
-    return data.filter((tag) => !reg.test(tag))
+    return data?.length ? data.filter((tag) => !reg.test(tag)) : []
 }
 
 // 去除标签外包围的 span

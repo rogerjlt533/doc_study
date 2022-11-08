@@ -39,7 +39,7 @@ function getClickTagId(name){
     }
 }
 function filterTagsNotes(id, tag){
-    bus.emit("SET_TEXT_EDITOR_TAG", {
+    bus.emit("setTagToEditor", {
         tag: tag
     })
 
@@ -60,6 +60,6 @@ function filterTagsNotes(id, tag){
         tagTitle: `#${tag}`,
     })
     store.commit("user/SHOW_NOTICE",{data: false});
-    bus.emit("CLEAR_KAYWORD");
+    bus.emit("clearSearchKeyword");
 }
 

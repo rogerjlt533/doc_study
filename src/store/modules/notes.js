@@ -140,17 +140,17 @@ export default {
         SET_WRITE_NOTES_LIST(state, {list}){
             state.writeNotesList = list
         },
-        ADD_NOTE(state, {note_type, data}){
-            if(state.notes.trash) return
-            if(note_type === 1){
+        ADD_NOTE(state, {note_type, data}) {
+            if (state.notes.trash) return
+            if (note_type === 1) {
                 data = handleNoteImg(data)
                 state.notes.sort === "desc" ? state.noteslist.unshift(data) : state.noteslist.push(data)
-                state.catalogActiveState.short_note_count ++
+                state.catalogActiveState.short_note_count++
                 return
             }
-            if(note_type === 2){
+            if (note_type === 2) {
                 data.desc = removeHtmlTag(data.note)
-                state.catalogActiveState.long_note_count ++
+                state.catalogActiveState.long_note_count++
                 state.notes.sort === "desc" ? state.writeNotesList.unshift(data) : state.writeNotesList.push(data)
             }
         },

@@ -54,7 +54,7 @@
         </div>
         <!--:class="[ isOverHeight > 200 && !isFlod ? 'max-height' : '']"-->
         <div ref="htmlRef" class="line-two">
-            <div class="content-html" v-html="noteDetail" @click="getNoteNodeClick" @dblclick="dblclickNote"></div>
+            <div class="content-html" v-html="showThumbnail ? item.curtNote : item.note" @click="getNoteNodeClick" @dblclick="dblclickNote"></div>
             <div class="resource-url" v-if="item.url" @click="openUrlByBrowser(item.url)">
                 <div>
                     <span>来源网站</span>
@@ -114,7 +114,7 @@
 </template>
 
 <script setup>
-    import {ref, defineProps, onMounted, defineEmits, computed, defineAsyncComponent} from "vue";
+    import {ref, defineProps, onMounted, defineEmits, computed, watch, defineAsyncComponent} from "vue";
     import { useStore } from "vuex"
     import bus from '@/utils/bus'
     import {getNotesHistoryApi, removePostilApi, rollHistoryApi} from '@/apiDesktop/notes'
@@ -150,9 +150,11 @@
         }
     });
 
+    watch(() => props.item, (newval, oldval) => {
+        console.log(newval, oldval)
+    })
+
     // let noteDetailVal = props.item.curtNote
-    // const noteDetail = computed(() => noteDetailVal)
-    const noteDetail = ref(props.item.curtNote)
 
     // 右击笔记本
     const handleRightClick = () => {
@@ -219,7 +221,7 @@
 
     // 引用笔记
     function annotation(){
-        bus.emit("SET_ANNOTATION_ID", {
+        bus.emit("setAnnotationId", {
             item: props.item,
             isOverHeight: isOverHeight.value
         })
@@ -262,7 +264,6 @@
     const showThumbnail = ref(true)
     function openCardDetails(){
         showThumbnail.value = !showThumbnail.value
-        noteDetail.value = showThumbnail.value ? props.item.curtNote : props.item.note
     }
 
 

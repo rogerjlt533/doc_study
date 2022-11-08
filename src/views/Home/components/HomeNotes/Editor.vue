@@ -9,7 +9,7 @@
             <div class="content-html" v-html="annotationNote.note"></div>
         </div>
         <div class="anno-options">
-            <div class="flod-text"
+            <div class="fold-text"
                  @click="controlIsFlod"
             >{{!annotationNote.isFlod ? "展开" : "收起"}}</div>
             <div @click="closeAnnotation">
@@ -19,7 +19,7 @@
     </div>
     <div class="container-editor" :class="className" ref="editorBox">
         <editor-content
-                class="body"
+                class="editor-content-style"
                 :editor="editor"
                 @click="clickEditorNode"
                 @contextmenu="handleRightClick()"
@@ -163,8 +163,6 @@
         await nextTick()
         let annotationHeight = annotationRef.value ? annotationRef.value.offsetHeight : 0
         let editorBoxHeight = editorBox.value ? editorBox.value.offsetHeight : 0
-
-        console.log('editorBoxHeight',editorBoxHeight)
         store.commit('notes/SET_NOTES_LIST_HEIGHT', editorBoxHeight + annotationHeight)
     })
 
@@ -227,7 +225,9 @@
         })
         annotationNote.isOverHeight = isOverHeight;
         await nextTick();
-        store.commit('notes/SET_NOTES_LIST_HEIGHT', editorBox.value.offsetHeight + annotationRef.value.offsetHeight);
+        let annotationHeight = annotationRef.value ? annotationRef.value.offsetHeight : 0
+        let editorBoxHeight = editorBox.value ? editorBox.value.offsetHeight : 0
+        store.commit('notes/SET_NOTES_LIST_HEIGHT', editorBoxHeight + annotationHeight)
         editor.value.chain().focus();
     })
 
@@ -306,7 +306,7 @@
         })
     }
     function cancelEdit(){
-        emit('editNotesContent', false);
+        emit('editNotesContent', false)
         store.commit('notes/SET_EDIT_NOTE_COUNT', 0)
     }
 
@@ -402,9 +402,9 @@
     onBeforeUnmount(() => {
         editor.value.destroy()
         bus.off('changeNotesListHeight')
-        bus.off('setTagToEditor')
-        bus.off('setAnnotationId')
-        bus.off('handlePasteImage')
+        // bus.off('setTagToEditor')
+        // bus.off('setAnnotationId')
+        // bus.off('handlePasteImage')
     })
 
     /**
@@ -433,110 +433,8 @@
     //     }
     // })
 
-
 </script>
 
-<style lang="scss">
-    .body{
-        .ProseMirror{
-            min-height: 14px;
-            max-height: calc(50vh);
-            overflow-y: scroll;
-            scrollbar-color: transparent transparent;
-        }
-        .ProseMirror::-webkit-scrollbar {
-            display: none;
-            color: #a4a2ca;
-        }
-        .ProseMirror-focused{
-            &:focus {
-                outline: none;
-            }
-        }
-        .ProseMirror p.is-editor-empty:first-child::before {
-            content: attr(data-placeholder);
-            float: left;
-            color: #adb5bd;
-            pointer-events: none;
-            height: 0;
-        }
-
-        ul, ol{
-            margin: 0;
-            padding-left: 30px;
-        }
-        p{
-            margin: 0;
-            line-height: 30px;
-        }
-
-        .hashtag-suggestion {
-            color: $purple;
-            background-color: rgba($purple, 0.1);
-            border-radius: 2px;
-            padding: 0px 2px;
-            font-size: 14px;
-            white-space: normal;
-            display: inline-block;
-            line-height: 20px;
-        }
-        img{
-            display: block;
-            margin: 4px auto;
-            max-width: calc(100% - 20px);
-            border-radius: 4px;
-            outline: none;
-            &.ProseMirror-selectednode {
-                box-shadow: 0 0 0 4px rgb(108 86 246 / 30%);
-            }
-        }
-    }
-    .el-upload-list{
-        display: none;
-    }
-    .tooler{
-        .el-button--medium{
-            min-height: 0;
-            padding: 0;
-        }
-        .options{
-            .el-button{
-                height: 0;
-            }
-        }
-        .btn-style{
-            width: 60px;
-            height: 26px;
-        }
-        .collect{
-            background: #fff;
-            border: none;
-            cursor: pointer;
-            padding: 0px 3px;
-            border-radius: 4px;
-            .el-button{
-                min-height: 0;
-                padding: 0;
-            }
-        }
-    }
-
-    .orc-div{
-        text-align: right;
-        .orc-title{
-            text-align: center;
-            padding: 10px 0;
-        }
-    }
-    .tips{
-        position: fixed;
-        .el-button--primary{
-            background: rgba(#000, 0.7);
-            color: #fff;
-            border: rgba(#000, 0.7);
-        }
-    }
-</style>
 <style lang="scss" scoped>
     .annotation-box{
         position: relative;
@@ -571,9 +469,6 @@
             max-height: 36px;
             overflow: hidden;
         }
-        .content-html{
-            color: #999;
-        }
         .anno-options{
             width: 56px;
             >div{
@@ -592,8 +487,8 @@
                 color: $error;
                 margin-bottom: 4px;
             }
-            .flod-text{
-                color: #3d8aff;
+            .fold-text{
+                color: $purple;
                 margin-right: 2px;
             }
         }
@@ -673,5 +568,52 @@
     .is-active{
         background: red;
         color: #fff;
+    }
+</style>
+<style lang="scss">
+    .el-upload-list{
+        display: none;
+    }
+    .tooler{
+        .el-button--medium{
+            min-height: 0;
+            padding: 0;
+        }
+        .options{
+            .el-button{
+                height: 0;
+            }
+        }
+        .btn-style{
+            width: 60px;
+            height: 26px;
+        }
+        .collect{
+            background: #fff;
+            border: none;
+            cursor: pointer;
+            padding: 0px 3px;
+            border-radius: 4px;
+            .el-button{
+                min-height: 0;
+                padding: 0;
+            }
+        }
+    }
+
+    .orc-div{
+        text-align: right;
+        .orc-title{
+            text-align: center;
+            padding: 10px 0;
+        }
+    }
+    .tips{
+        position: fixed;
+        .el-button--primary{
+            background: rgba(#000, 0.7);
+            color: #fff;
+            border: rgba(#000, 0.7);
+        }
     }
 </style>
