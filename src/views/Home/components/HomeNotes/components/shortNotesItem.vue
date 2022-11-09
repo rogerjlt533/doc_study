@@ -62,7 +62,6 @@
                 </div>
             </div>
         </div>
-        <!--<span class="flod ml10" v-if="isOverHeight > 200" @click="isFlod = !isFlod">{{!isFlod ? "展开" : "收起"}}</span>-->
         <div class="picture-box" v-if="item.imgSrc?.length">
             <el-divider content-position="right">
                 <span class="card-detail unselectable" @click="openCardDetails">
@@ -72,11 +71,13 @@
             <div class="picture" v-show="showThumbnail">
                 <el-image
                         v-for="(img,index) in item.imgSrc"
+                        :key="index"
                         class="picture-img"
                         fit="cover"
                         :src="img"
                         :preview-src-list="item.imgSrc"
                         :initial-index="index"
+                        :hide-on-click-modal="true"
                 ></el-image>
             </div>
         </div>

@@ -215,7 +215,7 @@
                 .tags-group-title{
                     .title{
                         font-size: 12px;
-                        color: #79849d;
+                        color: #51555e;
                         padding: 6px 4px 6px 10px;
                     }
                 }

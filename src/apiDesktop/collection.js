@@ -1,54 +1,66 @@
+import request from '@/utils/request-desktop'
 const actionCollection = require('service/action/collection.js')
 
 // 获取笔记本
-async function getCollectionApi(data){
-    return await actionCollection.mine(...Object.values(data || {}))
+export function getCollectionApi(data){
+    return request({
+        url: 'actionCollection.mine',
+        action: actionCollection.mine,
+        data
+    })
 }
 
 // 新建笔记本
-async function newCollectionApi(data){
-    return await actionCollection.new(...Object.values(data || {}))
+export function newCollectionApi(data){
+    return request({
+        url: 'actionCollection.new',
+        action: actionCollection.new,
+        data
+    })
 }
 
 // 修改笔记本
-async function editCollectionApi(data){
-    return await actionCollection.edit(...Object.values(data || {}))
+export function editCollectionApi(data){
+    return request({
+        url: 'actionCollection.edit',
+        action: actionCollection.edit,
+        data
+    })
 }
 
 // 删除笔记本
-async function removeCollectionApi(data){
-    return await actionCollection.remove(...Object.values(data || {}))
+export function removeCollectionApi(data){
+    return request({
+        url: 'actionCollection.remove',
+        action: actionCollection.remove,
+        data
+    })
 }
 
 // 直接删除collection笔记
-async function clearCollectionNotesApi(data){
-    return await actionCollection.clearCollectionNotes(...Object.values(data || {}))
+export function clearCollectionNotesApi(data){
+    return request({
+        url: 'actionCollection.clearCollectionNotes',
+        action: actionCollection.clearCollectionNotes,
+        data
+    })
 }
 
 // 迁移笔记本
-async function moveCollectionNotesApi(data){
-    return await actionCollection.moveCollectionNotes(...Object.values(data || {}))
+export function moveCollectionNotesApi(data){
+    return request({
+        url: 'actionCollection.moveCollectionNotes',
+        action: actionCollection.moveCollectionNotes,
+        data
+    })
 }
 
 // 笔记本排序
-async function sortCollectionApi(data){
-    return await actionCollection.sort(...Object.values(data || {}))
+export function sortCollectionApi(data){
+    return request({
+        url: 'actionCollection.sort',
+        action: actionCollection.sort,
+        data
+    })
 }
-
-// 设置笔记本笔记最大上限
-async function setMaxNumApi(data){
-    return await actionCollection.setMaxNum(...Object.values(data || {}))
-}
-
-export default {
-    getCollectionApi,
-    newCollectionApi,
-    editCollectionApi,
-    removeCollectionApi,
-    clearCollectionNotesApi,
-    moveCollectionNotesApi,
-    sortCollectionApi,
-    setMaxNumApi
-}
-
 

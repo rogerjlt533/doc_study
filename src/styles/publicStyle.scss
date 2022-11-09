@@ -267,15 +267,39 @@
 }
 .content-html, .editor-content-style{
     img {
-        max-width: calc(100% - 20px);
-        border-radius: 10px;
+        //max-width: calc(100% - 20px);
+        //border-radius: 10px;
+        //outline: none;
+        //margin: 0px 4px;
+        //border: 4px solid #F6F8FC;
+
+        display: block;
+        max-width: 100%;
+        margin: 4px;
+        border-radius: 4px;
         outline: none;
-        margin: 0px 4px;
-        border: 4px solid #F6F8FC;
 
         &.ProseMirror-selectednode {
             border: 4px solid rgb(108 86 246 / 30%);
         }
+    }
+    .custom-image-small {
+        width: 25%;
+    }
+    .custom-image-medium {
+        width: 50%;
+    }
+    .custom-image-large {
+        width: calc(100% - 20px);
+    }
+    .custom-image-float-none {
+        float: none;
+    }
+    .custom-image-float-left {
+        float: left;
+    }
+    .custom-image-float-right {
+        float: right;
     }
 
     ul, ol {

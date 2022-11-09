@@ -115,11 +115,11 @@ function loopData(isEdit, data){
                     delete item.attrs
                 }else if(tagsInLast(item, data, index)){
                     item.type = 'text'
-                    item.text = `${item.attrs.id || '#'} `
+                    item.text = `${item.attrs.id || '#'}`
                     delete item.attrs
                 }else if(onlyTag(item, data, index)){
                     item.type = 'text'
-                    item.text = isEdit ? `#${item.attrs.id} ` : `#${item.attrs.id}`
+                    item.text = `#${item.attrs.id}`
                     delete item.attrs
                 }
             }

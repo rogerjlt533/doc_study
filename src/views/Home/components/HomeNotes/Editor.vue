@@ -23,6 +23,7 @@
                 :editor="editor"
                 @click="clickEditorNode"
                 @contextmenu="handleRightClick()"
+                @imageToWord="haveImageToWord"
         />
         <div class="tooler" v-if="editor">
             <div class="options">
@@ -81,16 +82,16 @@
     import { useStore } from "vuex"
     import { getToken } from "@/utils/auth"
     // 组件 ------
-    import { ElNotification } from "element-plus"
-    import { EditorContent } from '@tiptap/vue-3'
+    import { ElMessage, ElNotification } from "element-plus"
+    import { EditorContent, BubbleMenu } from '@tiptap/vue-3'
     import { VuemojiPicker } from 'vuemoji-picker'
-    import { tipsBtn, closeTips } from "@/components/tipsButton"
+    // import { tipsBtn, closeTips } from "@/components/tipsButton"
     // hooks ----
-    import { editorInstance } from "./js/editor.js";
+    import { editorInstance } from "./js/cardEditor"
     import { imageToWordApi } from "@/api/notes"
-    import { handleContentHtml, handleHtmlTagSpace } from '@/utils/processHtml'
     import openUrlByBrowser from "@/assets/js/openUrlByBrowser"
     import { filterSpecialFont } from '@/utils/tools'
+
 
     const remote = require('electron').remote;
     const Menu = remote.Menu;
@@ -98,7 +99,6 @@
 
     const store = useStore();
     let api = process.env.VUE_APP_URL
-    const matchReg = /\#(\S+?)?\s{1}/g
 
     const props = defineProps({
         item: {
@@ -244,17 +244,11 @@
             return
         }
 
-        const contentJson = editor.value.getJSON()
-        const editorHtml = handleHtmlTagSpace(editor.value.getHTML())
-        const tag_list = editorHtml.match(matchReg) ? editorHtml.match(matchReg).map(item => item.substr(1).trim()) : []
-        const contentHtml = handleContentHtml(editor.value.getHTML())
-
         let params = {
-            contentJson,
-            contentHtml,
+            json: editor.value.getJSON(),
+            html: editor.value.getHTML(),
             annotation_id: annotationNote.id,
-            note_type: 1,
-            tag_list: filterSpecialFont(tag_list)
+            note_type: 1
         }
 
         isDisabled.value = true
@@ -284,18 +278,12 @@
             return false;
         }
 
-        const contentJson = editor.value.getJSON()
-        const editorHtml = handleHtmlTagSpace(editor.value.getHTML())
-        const tag_list = editorHtml.match(matchReg) ? editorHtml.match(matchReg).map(item => item.substr(1).trim()) : []
-        const contentHtml = handleContentHtml(editor.value.getHTML())
-
         let params = {
-            contentHtml,
-            contentJson,
+            html: editor.value.getHTML(),
+            json: editor.value.getJSON(),
             collection_id: props.collectionId,
             noteId: props.noteId,
             index: props.index,
-            tag_list: filterSpecialFont(tag_list),
             postil_list: props.item.quote.map(item => item.id)
         }
 
@@ -361,50 +349,41 @@
         showEmoji.value = false;
     }
 
-    // 点击编辑框  ORC功能  图片识别文字   ----start-----
-    let imageUrl = "";
+    // 点击编辑器
     function clickEditorNode(e){
-        closeTips()
-        if(e.target.src){
-            imageUrl = e.target.src;
-            tipsBtn({
-                show: true,
-                url: e.target.src
-            }).then(()=>{
-                haveImageToWord();
-            })
-            return false
-        }
         if(e.target.localName === 'a' && e.target.href){
             e.preventDefault()
             const url = e.target.href
             openUrlByBrowser(url)
             return false
         }
-        closeTips()
     }
-    function haveImageToWord(){
+    // ORC功能  图片识别文字   ----start-----
+    function haveImageToWord(e){
+        if(!e.src) {
+            ElMessage.warning('图片识别错误，请重新选择图片~')
+            return
+        }
         imageToWordApi({
-            path: imageUrl
+            path: e.src
         }).then((res) => {
-            if(res.code == 200){
-                let html = '';
-                res.data.words.forEach(item => {
-                    html += `<p>${item}</p>`
-                })
-                editor.value.chain().focus("end").insertContent(html).run();
+            if(res?.code === 200){
+                let html = ''
+                const contentHtml = editor.value.getHTML()
+                if(res.data.words && res.data.words.length) {
+                    html = `${contentHtml}<p>${res.data.words.join(' ')}</p>`
+                } else {
+                    html = `${contentHtml}`
+                }
+                editor.value.chain().setContent(html).run()
             }
         })
     }
-    //  ----end-----
 
     // 组件销毁前，取消bus监听
     onBeforeUnmount(() => {
         editor.value.destroy()
         bus.off('changeNotesListHeight')
-        // bus.off('setTagToEditor')
-        // bus.off('setAnnotationId')
-        // bus.off('handlePasteImage')
     })
 
     /**

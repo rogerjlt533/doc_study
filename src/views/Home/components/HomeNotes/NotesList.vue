@@ -12,7 +12,12 @@
             </div>
         </div>
         <div class="filter">
-            <span class="font-12 color-9 pr20">卡片总数：{{ notesCount }}</span>
+            <div class="font-12 color-9 pr20">
+                <span @click="changeMaxNum">卡片总数：{{ notesCount }} / </span>
+                <span v-if="ifChangeMaxNum" @click="changeMaxNum">{{ notesMaxNum }}</span>
+                <input v-else class="input-num" v-model="notesMaxNum" type="number">
+                <span class="block ml10" :class="statusClass"></span>
+            </div>
             <el-dropdown trigger="click">
                 <span class="el-dropdown-link mr10">
                     {{sortDefault.label}}
@@ -81,13 +86,6 @@
                                     @close="closeQuote(item, qi)"
                             ></NoteAnnotation>
                         </template>
-                        <!--长笔记-->
-                        <!--<writeNotesItem-->
-                        <!--    v-if="item.note_type === 2"-->
-                        <!--    :item="item"-->
-                        <!--    :index="index"-->
-                        <!--    :isTrash="isTrash"-->
-                        <!--/>-->
                     </div>
                     <div v-if="item.ifEditCon" class="mb20">
                         <home-notes-editor
@@ -141,7 +139,6 @@
 
         return `${collectionTitle}${groupTitle ? collectionTitle ? '/' + groupTitle : groupTitle : ''}${tagTitle ? groupTitle || collectionTitle ? '/' + tagTitle : tagTitle : ''}`
     })
-
     // 根据编辑框高度动态修改列表的高度;
     let finallyHeight = computed(() => store.state.notes.notesListHeight )
     // 当前笔记分类参数
@@ -149,6 +146,30 @@
     let isTrash = computed(() => store.state.notes.notes.trash )
     let notesList = computed(() => store.state.notes.noteslist )
     let notesCount = computed(() => store.state.notes.catalogActiveState.short_note_count )
+    let notesMaxNum = computed({
+        get(){
+            let collectionActive = store.state.notes.catalogActiveState.collectionActive
+            let collection = store.state.collection.projectListSelf.find(item => item.id === collectionActive)
+            return collection.max_num
+        },
+        set(val){
+            let collectionActive = store.state.notes.catalogActiveState.collectionActive
+            store.commit('collection/SET_COLLECTION_MAX_NUM', { collectionActive, val })
+            ifChangeMaxNum.value = true
+        }
+    })
+    let statusClass = computed(() => {
+        const number = Math.floor( notesCount.value / notesMaxNum.value )
+        let statusClass = ''
+        if( number < 80 ){
+            statusClass = 'block-success'
+        } else if ( number > 100 ) {
+            statusClass = 'block-error'
+        } else {
+            statusClass = 'block-warning'
+        }
+        return statusClass
+    })
 
     // 翻页的页数
     let page = 1
@@ -221,6 +242,11 @@
         })
         sortDefault.label = e.label
         getNotesList({})
+    }
+
+    let ifChangeMaxNum = ref(true)
+    function changeMaxNum(){
+        ifChangeMaxNum.value = false
     }
 
     // 编辑该笔记
@@ -393,6 +419,38 @@
                 display: flex;
                 align-items: center;
                 margin-left: 10px;
+            }
+            .input-num{
+                width: 22px;
+                height: 10px;
+                line-height: 10px;
+                color: #999999;
+                border: 1px solid #999999;
+                border-radius: 2px;
+                font-size: 12px;
+                &::-webkit-outer-spin-button,
+                &::-webkit-inner-spin-button {
+                    -webkit-appearance: none !important;
+                    margin: 0;
+                }
+                &[type="number"] {
+                    -moz-appearance: textfield;
+                }
+            }
+            .block{
+                display: inline-block;
+                width: 8px;
+                height: 8px;
+                border-radius: 4px;
+            }
+            .block-success{
+                background: $success;
+            }
+            .block-warning{
+                background: $warning;
+            }
+            .block-error{
+                background: $error;
             }
         }
     }
