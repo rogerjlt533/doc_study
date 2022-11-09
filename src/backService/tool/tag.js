@@ -600,6 +600,15 @@ exports.clearNoteTagNode = async function (note_id) {
 }
 
 /**
+ * 清空笔记相关卡片标签
+ * @param note_id
+ * @returns {Promise<void>}
+ */
+exports.clearNoteTag = async function (note_id) {
+    await sqlite.delete('note_tag_relation', 'note_id=' + note_id)
+}
+
+/**
  * 创建笔记相关结构化标签节点
  * @param note_id
  * @param tag
@@ -685,4 +694,37 @@ exports.formatTagContent = function (tag) {
         result.tag_value = values.join('/')
     }
     return result
+}
+
+/**
+ * 转化标签为结构化标签
+ * @param tags
+ * @returns {Promise<Array>}
+ */
+exports.convertTagToStruct = async function (tags) {
+    const struct_tags = [], value_list = []
+    if (common.empty(tags)) {
+        return struct_tags
+    }
+    for (const item of tags) {
+        let item = item.replace("-", '/')
+        const tag_list = item.split('/')
+        for (const tag_item of tag_list) {
+            if (value_list.indexOf(tag_item) === -1) {
+                value_list.push(tag_item)
+            }
+        }
+    }
+    if (value_list.length > 0) {
+        const unit = {
+            tag: '',
+            level: 0,
+            data: []
+        }
+        for (const tag of value_list) {
+            unit.data.push({tag, level: 0, data: []})
+        }
+        struct_tags.push(unit)
+    }
+    return struct_tags
 }
