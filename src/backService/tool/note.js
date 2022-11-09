@@ -108,6 +108,25 @@ exports.update = async function (note_id, collection_id, content, tag_json, stru
 }
 
 /**
+ * 更改笔记类型
+ * @param note_id
+ * @param note_type
+ * @param tag_json
+ * @param struct_tag_json
+ * @param save_time
+ * @returns {Promise<void>}
+ */
+exports.updateNoteType = async function (note_id, note_type, tag_json, struct_tag_json, save_time = '') {
+    tag_json = !common.empty(tag_json) ? tag_json : ''
+    struct_tag_json = !common.empty(struct_tag_json) ? struct_tag_json : ''
+    if (common.empty(save_time)) {
+        save_time = common.sd.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
+    }
+    const sql = "update notes set tag_json=?, struct_tag_json=?, last_update=?, updated_at=? where id=?"
+    return await sqlite.update(sql, [tag_json, struct_tag_json, save_time, save_time, note_id]);
+}
+
+/**
  * 更换笔记本
  * @param note
  * @param collection_id
