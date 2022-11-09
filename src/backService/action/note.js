@@ -502,7 +502,7 @@ exports.convertToPage = async function (user_id, note_id) {
     await noteService.noteTool.history(note_id, 2, 2001, note.note, save_time, note.tag_json, note.struct_tag_json)
     await tagService.tagTool.clearNoteTag(note_id)
     await noteService.bindStructTags(user_id, note_id, struct_tag_json)
-    const params = {note_id, collection_id}
+    const params = {note_id, collection_id: note.collection_id}
     await syncService.syncTool.create(user_id, 21, 2, params)
     return {status_code: 200, message: 'success', data: {}}
 }
