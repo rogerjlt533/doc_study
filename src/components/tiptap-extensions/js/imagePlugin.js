@@ -10,7 +10,6 @@ export const inputRegex = /(!\[(.+|:?)]\((\S+)(?:(?:\s+)["'](\S+)["'])?\))/
 
 const api = process.env.VUE_APP_URL
 let targetName
-// 用于获取上传时的编辑框的显示loading
 export const handleTargetName = (dom) => {
     targetName = dom ? dom : ".container-editor"
 }
@@ -39,8 +38,6 @@ async function uploadFn(file) {
 
 export const imagePluginFun = (func) => {
     return Image.extend({
-        // inline: true,
-        // group: 'inline',
         addAttributes() {
             return {
                 src: {
@@ -95,16 +92,22 @@ export const imagePluginFun = (func) => {
                             const items = Array.from(event.clipboardData?.items || []);
                             const { schema } = view.state;
 
+                            console.log('event.clipboardData', event.clipboardData)
+
                             items.forEach((item) => {
                                 const image = item.getAsFile();
 
+
                                 if (item.type.indexOf('image') === 0) {
                                     event.preventDefault();
-
-                                    if (uploadFn && image) {
-                                        uploadFn(image).then((src) => {
+                                    if(image){
+                                        uploadFn && uploadFn(image).then((src) => {
                                             func(src)
                                         });
+                                    }else{
+                                        item.getAsString((e) => {
+                                            handleNoteImg(e)
+                                        })
                                     }
                                 } else {
                                     const reader = new FileReader();
@@ -177,5 +180,33 @@ export const imagePluginFun = (func) => {
             ];
         }
     })
+}
 
+// 提取src
+function handleNoteImg(content){
+    content.replace(/<img [^>]*src=['"]([^'"]+)[^>]*>/gi, function (match, capture) {
+        console.log(capture);
+    });
+}
+
+function imgUrlToFile(img, callback) {
+    let fileName = img.split('/').pop()
+    let type = fileName.split('.').pop()
+    dataURLtoBlob(img, function(blobData) {
+        let file = new File([blobData], fileName, {type: 'image/' + type})
+        callback(file);
+    });
+}
+// 图片url格式转为blob格式
+function dataURLtoBlob(dataUrl, callback) {
+    let xhr = new XMLHttpRequest()
+    xhr.open("get", dataUrl, true)
+    xhr.responseType = "blob"
+    xhr.onload = function (res) {
+        if (this.status === 200) {
+            var blob = this.response
+            callback(blob);
+        }
+    }
+    xhr.send()
 }
