@@ -1,5 +1,7 @@
-import request from '@/utils/request-desktop'
+import request from '@/utils/syncRequest'
 const actionSync = require('service/action/sync')
+const actionTag = require('service/action/tag')
+const actionUser = require('service/action/user')
 
 // 拉取collection同步的队列
 export function pullRemoteCollectionQueueApi(data){
@@ -83,6 +85,75 @@ export function autoClearCollectionQueueApi(data){
     })
 }
 
+// 下行置顶标签
+export function pullTagTopApi(data){
+    return request({
+        url: 'actionSync.pullTagTop',
+        action: actionSync.pullTagTop,
+        data
+    })
+}
 
+// 上行置顶标签
+export function pushTagTopApi(data){
+    return request({
+        url: 'actionSync.pushTagTop',
+        action: actionSync.pushTagTop,
+        data
+    })
+}
 
+//
+export function uploadLogApi(data){
+    return request({
+        url: 'actionSync.uploadLog',
+        action: actionSync.uploadLog,
+        data
+    })
+}
+
+// 更新标签声母，填充空声母
+export function fillTagInitialApi(data){
+    return request({
+        url: 'actionTag.fillTagInitial',
+        action: actionTag.fillTagInitial,
+        data
+    })
+}
+
+// 刷新pro权限
+export function refreshProInfoApi(data){
+    return request({
+        url: 'actionUser.refreshProInfo',
+        action: actionUser.refreshProInfo,
+        data
+    })
+}
+
+// 填充笔记无标签内容
+export function fillNoteContentApi(data){
+    return request({
+        url: 'actionSync.fillNoteContent',
+        action: actionSync.fillNoteContent,
+        data
+    })
+}
+
+// 定时处理note队列
+export function processUrgentDownNoteApi(data){
+    return request({
+        url: 'actionSync.processUrgentDownNote',
+        action: actionSync.processUrgentDownNote,
+        data
+    })
+}
+
+// 拉取紧急collection下notes同步的队列
+export function pullUrgentRemoteNoteQueueApi(data){
+    return request({
+        url: 'actionSync.pullUrgentRemoteNoteQueue',
+        action: actionSync.pullUrgentRemoteNoteQueue,
+        data
+    })
+}
 
